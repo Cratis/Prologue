@@ -5,6 +5,7 @@
         <AssemblyName>Cratis.Prologue.Extractor</AssemblyName>
         <RootNamespace>Cratis.Prologue.Extractor</RootNamespace>
         <NoWarn>$(NoWarn);CS7022</NoWarn>
+        <WarnOnPackingNonPackableProject>false</WarnOnPackingNonPackableProject>
     </PropertyGroup>
 
     <ItemGroup>

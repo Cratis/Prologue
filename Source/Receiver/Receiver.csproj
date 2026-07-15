@@ -5,6 +5,7 @@
         <AssemblyName>Cratis.Prologue.Receiver</AssemblyName>
         <RootNamespace>Cratis.Prologue.Receiver</RootNamespace>
         <NoWarn>$(NoWarn);CS7022</NoWarn>
+        <WarnOnPackingNonPackableProject>false</WarnOnPackingNonPackableProject>
     </PropertyGroup>
 
     <ItemGroup>
