@@ -1,0 +1,13 @@
+<Project Sdk="Microsoft.NET.Sdk">
+    <PropertyGroup>
+        <GenerateDocumentationFile>true</GenerateDocumentationFile>
+        <AssemblyName>Cratis.Prologue.Contracts</AssemblyName>
+        <RootNamespace>Cratis.Prologue.Contracts</RootNamespace>
+        <IsPackable>true</IsPackable>
+        <Description>The Cratis Prologue capture contract — capture and observation types with the canonical JSON and capture-file serialization.</Description>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <PackageReference Include="Cratis.Fundamentals" />
+    </ItemGroup>
+</Project>

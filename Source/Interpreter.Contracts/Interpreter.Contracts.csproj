@@ -1,0 +1,9 @@
+<Project Sdk="Microsoft.NET.Sdk">
+    <PropertyGroup>
+        <AssemblyName>Cratis.Prologue.Interpreter.Contracts</AssemblyName>
+        <RootNamespace>Cratis.Prologue.Interpreter.Contracts</RootNamespace>
+        <GenerateDocumentationFile>true</GenerateDocumentationFile>
+        <IsPackable>true</IsPackable>
+        <Description>The Cratis Prologue extraction result contract — the extracted event model tree and its result-file serialization.</Description>
+    </PropertyGroup>
+</Project>

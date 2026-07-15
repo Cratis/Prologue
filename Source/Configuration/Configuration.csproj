@@ -1,0 +1,9 @@
+<Project Sdk="Microsoft.NET.Sdk">
+    <PropertyGroup>
+        <GenerateDocumentationFile>true</GenerateDocumentationFile>
+        <AssemblyName>Cratis.Prologue.Configuration</AssemblyName>
+        <RootNamespace>Cratis.Prologue.Configuration</RootNamespace>
+        <IsPackable>true</IsPackable>
+        <Description>Well-defined configuration types for Cratis Prologue and serialization helpers for reading and writing cratis-prologue.json.</Description>
+    </PropertyGroup>
+</Project>
