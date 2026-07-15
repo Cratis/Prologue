@@ -1,0 +1,28 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+    <PropertyGroup>
+        <GenerateDocumentationFile>true</GenerateDocumentationFile>
+        <OutputType>Exe</OutputType>
+        <AssemblyName>Cratis.Prologue.Extractor</AssemblyName>
+        <RootNamespace>Cratis.Prologue.Extractor</RootNamespace>
+        <NoWarn>$(NoWarn);CS7022</NoWarn>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <PackageReference Include="Cratis.Fundamentals" />
+        <PackageReference Include="Microsoft.Data.SqlClient" />
+        <PackageReference Include="Npgsql" />
+        <PackageReference Include="Yarp.ReverseProxy" />
+        <PackageReference Include="Grpc.AspNetCore" />
+        <PackageReference Include="Grpc.Net.Client" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="../Contracts/Contracts.csproj" />
+        <ProjectReference Include="../Configuration/Configuration.csproj" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <!-- Vendored OTLP contracts; Grpc.Tools generates the messages and the TraceService server/client. -->
+        <Protobuf Include="Protos/**/*.proto" ProtoRoot="Protos" GrpcServices="Both" />
+    </ItemGroup>
+</Project>

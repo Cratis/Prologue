@@ -1,0 +1,11 @@
+<Solution>
+    <Folder Name="/Source/">
+        <Project Path="Source/Contracts/Contracts.csproj" />
+        <Project Path="Source/Configuration/Configuration.csproj" />
+        <Project Path="Source/Storage/Storage.csproj" />
+        <Project Path="Source/Extractor/Extractor.csproj" />
+        <Project Path="Source/Interpreter.Contracts/Interpreter.Contracts.csproj" />
+        <Project Path="Source/Interpreter/Interpreter.csproj" />
+        <Project Path="Source/Receiver/Receiver.csproj" />
+    </Folder>
+</Solution>

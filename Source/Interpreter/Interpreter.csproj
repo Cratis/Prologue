@@ -1,0 +1,26 @@
+<Project Sdk="Microsoft.NET.Sdk">
+    <PropertyGroup>
+        <OutputType>Exe</OutputType>
+        <GenerateDocumentationFile>true</GenerateDocumentationFile>
+        <AssemblyName>Cratis.Prologue.Interpreter</AssemblyName>
+        <RootNamespace>Cratis.Prologue.Interpreter</RootNamespace>
+        <NoWarn>$(NoWarn);CS7022</NoWarn>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <PackageReference Include="Anthropic" />
+        <PackageReference Include="Microsoft.Extensions.Hosting" />
+        <PackageReference Include="Microsoft.Extensions.AI" />
+        <PackageReference Include="Microsoft.Extensions.AI.OpenAI" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="../Contracts/Contracts.csproj" />
+        <ProjectReference Include="../Configuration/Configuration.csproj" />
+        <ProjectReference Include="../Interpreter.Contracts/Interpreter.Contracts.csproj" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <EmbeddedResource Include="Prompts/**/*.txt" />
+    </ItemGroup>
+</Project>

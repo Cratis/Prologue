@@ -1,0 +1,52 @@
+{
+    "prologue": {
+        "output": {
+            "kind": "Json",
+            "json": {
+                "directory": "./captures",
+                "maxEntriesPerFile": 10000
+            }
+        },
+        "correlation": {
+            "windowMilliseconds": 2000
+        },
+        "sqlServer": [],
+        "postgres": [],
+        "openTelemetry": {
+            "enabled": false,
+            "upstream": {
+                "http": "",
+                "grpc": ""
+            },
+            "serviceNames": [],
+            "attributeKeys": [
+                "http.request.method",
+                "http.route",
+                "url.path",
+                "http.response.status_code",
+                "db.system",
+                "db.name",
+                "db.operation"
+            ]
+        }
+    },
+    "reverseProxy": {
+        "routes": {
+            "monitored": {
+                "clusterId": "monitored",
+                "match": {
+                    "path": "{**catch-all}"
+                }
+            }
+        },
+        "clusters": {
+            "monitored": {
+                "destinations": {
+                    "primary": {
+                        "address": "http://localhost:8081/"
+                    }
+                }
+            }
+        }
+    }
+}
