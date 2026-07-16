@@ -15,11 +15,10 @@
 ---
 
 Before the main action, a play has a **prologue** — the opening that recounts everything that happened before
-the curtain rose. Cratis Prologue is that opening act for an existing system. It stands beside a running, often
-legacy application, captures what it *truly does* — SQL Server and Postgres changes, HTTP commands,
+the curtain rose. Cratis Prologue is that opening act for an existing system. It stands beside an existing, running application, captures what it *truly does* — SQL Server and Postgres changes, HTTP commands,
 OpenTelemetry traces — and interprets those captures into an **event model** that can be brought into
 [Cratis Studio](https://github.com/Cratis/Studio) or used from the Cratis CLI (and, from there, performed live
-by **Stage**). It's how a brownfield system enters the Cratis story — by writing down the backstory it's been
+by **Stage**). It's how an existing system enters the Cratis story — by writing down the backstory it's been
 telling all along.
 
 It captures **metadata, not data**: which tables and columns changed, which endpoints were called, which spans
@@ -43,7 +42,7 @@ Three reasons, and they all line up:
 
 ## 🎥 From a running system to a script
 
-The Extractor watches a brownfield system from a few angles at once, correlates what it sees into captures, and
+The Extractor watches an existing system from a few angles at once, correlates what it sees into captures, and
 the Interpreter reads those captures back into an event model:
 
 ```mermaid
