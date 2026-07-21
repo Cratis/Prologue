@@ -8,4 +8,10 @@
         <Project Path="Source/Interpreter/Interpreter.csproj" />
         <Project Path="Source/Receiver/Receiver.csproj" />
     </Folder>
+    <Folder Name="/Samples/Library/">
+        <Project Path="Samples/Library/ServiceDefaults/ServiceDefaults.csproj" />
+        <Project Path="Samples/Library/Core/Core.csproj" />
+        <Project Path="Samples/Library/Composition/Composition.csproj" />
+        <Project Path="Samples/Library/Tests/Tests.csproj" />
+    </Folder>
 </Solution>

@@ -1,0 +1,38 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <AssemblyName>Library.Tests</AssemblyName>
+        <RootNamespace>Library.Tests</RootNamespace>
+        <IsTestProject>true</IsTestProject>
+
+        <!--
+            The samples carry their specs inline behind #if DEBUG; this one is a separate project, so the sample
+            conventions leave it alone.
+        -->
+        <DedicatedSpecsProject>true</DedicatedSpecsProject>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <PackageReference Include="Aspire.Hosting.Testing" />
+        <PackageReference Include="Microsoft.Playwright" />
+        <PackageReference Include="MongoDB.Driver" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <PackageReference Include="Cratis.Specifications" />
+        <PackageReference Include="Cratis.Specifications.XUnit" />
+        <PackageReference Include="Microsoft.NET.Test.Sdk" />
+        <PackageReference Include="xunit" />
+        <PackageReference Include="xunit.runner.visualstudio" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <!--
+            A plain project reference — the tests are not an Aspire host themselves, they compile against the
+            Projects.* metadata the reference generates and hand Projects.Composition to the testing builder.
+        -->
+        <ProjectReference Include="../Composition/Composition.csproj" />
+        <ProjectReference Include="../../../Source/Storage/Storage.csproj" />
+    </ItemGroup>
+
+</Project>

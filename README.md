@@ -105,6 +105,11 @@ expect.
 
 - The **Extractor** looks for `cratis-prologue.json` in its working directory (override with the
   `PROLOGUE_CONFIG` environment variable) and binds the `prologue` section.
+- **The file is the baseline; environment variables override it.** A deployed tool is configured by its host — a
+  container, an orchestrator, or an Aspire composition — so any setting can be supplied in the usual
+  double-underscore form (`Prologue__Output__Kind`, `Prologue__SqlServer__0__ConnectionString`,
+  `ReverseProxy__Clusters__monitored__Destinations__primary__Address`). Use `AddPrologueConfiguration()` from
+  `Cratis.Prologue.Configuration` to get that precedence right in your own host.
 - The **Interpreter** reads the same file (mounted into its container at `/config/cratis-prologue.json`) and
   binds the `llm` section for optional LLM-based refinement. Supported `kind` values: `Ollama` (default, native
   chat API), `OpenAI`, `AzureOpenAI` (the `modelId` is the deployment name), `OpenAICompatible` (any `/v1`
@@ -121,13 +126,34 @@ Extractor ──(capture .jsonl files)──▶ mounted folder ──▶ Interpr
 The Extractor emits one `CapturedEntry` per line (JSON lines), partitioned per source kind. The Interpreter
 reads a folder of those files, reconstructs the correlated captures, and produces an `ExtractionResult`.
 
+## 📚 Seeing it work — the Library sample
+
+[`Samples/Library`](Samples/Library) is a complete, ordinary ASP.NET + Entity Framework Core system — a library
+with authors, members, a catalog, inventory, reservations, and lending — built with **no Cratis constructs at
+all**, exactly the kind of system Prologue gets pointed at. Its Aspire composition wires the whole capture
+pipeline around it and can generate realistic load on demand:
+
+```shell
+cd Samples/Library
+aspire run                        # PostgreSQL
+aspire run -- --database mssql    # SQL Server
+```
+
+Then use the **Simulate load** command on the `core` resource in the Aspire dashboard and watch captures land in
+MongoDB. All three capture sources are live: HTTP commands through the reverse proxy, database changes through
+CDC or logical replication, and OpenTelemetry traces, metrics, and logs. See the
+[sample's README](Samples/Library/README.md) for the details.
+
 ## 🚀 Building
 
 ```shell
 dotnet build                # Debug — includes inline specs
-dotnet test                 # run the specs
+dotnet test                 # run the specs (Debug only — Release strips them)
 dotnet build -c Release     # Release — warnings are errors
 ```
+
+> The inline specs are compiled only in Debug, so run `dotnet test` in Debug. The Library sample's integration
+> tests need Docker and browsers and are excluded with `--filter "Category!=Integration"`.
 
 Container images are built from the repository root:
 
