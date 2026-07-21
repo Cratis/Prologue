@@ -16,7 +16,14 @@ aspire run                        # PostgreSQL (the default)
 aspire run -- --database mssql    # SQL Server
 ```
 
-Then open the Aspire dashboard. On the **core** resource there is a **Simulate load** command — click it, say how
+The dashboard is always at **<http://localhost:18880>**, with no login token — a fixed address you can keep open in
+a tab across restarts, rather than a fresh port and a fresh token every run. That is a deliberate convenience for a
+sample that is meant to be started and stopped constantly; it is not how you would configure a dashboard anyone
+else can reach.
+
+Not Aspire's usual 18888: the Cratis Studio docker-compose stack publishes its own dashboard there, and two things
+on one port means whichever starts second fails to bind. 18881–18883 alongside it carry OTLP and the resource
+service. Change them in `Composition/Properties/launchSettings.json` if they clash with something of yours. On the **core** resource there is a **Simulate load** command — click it, say how
 many transactions you want (10 000 by default), and the library starts behaving like a system in real use. Watch
 the captures accumulate in MongoDB.
 

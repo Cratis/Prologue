@@ -32,6 +32,13 @@ var mongo = builder.AddMongoDB("mongo")
 var captureStore = mongo.AddDatabase("prologue");
 
 var receiver = builder.AddProject<Projects.Receiver>("receiver")
+
+    // The Receiver carries no launch profile and no Kestrel configuration — it is normally a container, where
+    // ASPNETCORE_URLS decides — so Aspire has nothing to derive an endpoint from and gives it none. Declaring one
+    // is what makes receiver.GetEndpoint("http") below resolvable; without it the extractor dies at startup trying
+    // to resolve an endpoint that does not exist, reported only as a bare FailedToStart.
+    .WithHttpEndpoint()
+
     .WithEnvironment("Prologue__Mongo__ConnectionString", captureStore)
     .WithEnvironment("Prologue__Mongo__Database", "Prologue")
     .WithEnvironment("Prologue__Mongo__Collection", "captures")
@@ -76,27 +83,21 @@ var core = builder.AddProject<Projects.Core>("core")
     .WithHttpHealthCheck("/health");
 
 // ── The Prologue Extractor ──────────────────────────────────────────────────────────────────────────────────────
-// The extractor's own appsettings.json declares three Kestrel endpoints — Proxy (:8080), OtlpHttp (:4318) and
-// OtlpGrpc (:4317) — because it also runs standalone and as a container, where nothing else assigns its ports.
-// Aspire derives its endpoints from that Kestrel configuration automatically, lowercasing the names, so declaring
-// them again here would collide ("Endpoint with name 'proxy' already exists"). They are referenced by the derived
-// names instead; see LibraryComposition.
 var extractor = builder.AddProject<Projects.Extractor>("extractor")
 
-    // The extractor's Kestrel section pins 8080/4318/4317 because it also runs standalone and as a container,
-    // where those are the right conventional ports. On a developer machine they are contended — Docker Desktop
-    // alone commonly holds 8080 and 4317 — and losing the race means Kestrel cannot bind, the process dies at
-    // startup, and the endpoint proxy is left accepting connections with nothing behind it. That failure reads
-    // from the outside as a proxy that simply hangs, which is a miserable thing to debug.
+    // The extractor's endpoints come from the Kestrel section in its own appsettings.json — Proxy, OtlpHttp and
+    // OtlpGrpc — which Aspire discovers, so nothing here may redeclare them. Aspire assigns the extractor a free
+    // port to listen on, but publishes on Kestrel's: 8080, 4317 and 4318, which on a developer machine are
+    // exactly the ports something else already holds (Docker Desktop, most often). The published address is then
+    // dead while the extractor itself is perfectly healthy, and everything pointed at the proxy — both frontends,
+    // the simulation — fails with a connection reset that looks like the extractor's fault.
     //
-    // Aspire takes both ports from Kestrel and rewrites neither, so each endpoint needs saying twice over:
-    //   TargetPort — what the extractor binds; matched by the Kestrel overrides further down.
-    //   Port       — what the host publishes. Left at Kestrel's value it would try to bind 8080 and 4317 on the
-    //                machine itself, and DCP reports the clash only as a bare FailedToStart. Nulling it lets
-    //                Aspire pick something free, which is what it does for every resource that stays out of its way.
-    .WithEndpoint(LibraryComposition.ProxyEndpointName, endpoint => Assign(endpoint, LibraryComposition.ProxyPort))
-    .WithEndpoint(LibraryComposition.OtlpHttpEndpointName, endpoint => Assign(endpoint, LibraryComposition.OtlpHttpPort))
-    .WithEndpoint(LibraryComposition.OtlpGrpcEndpointName, endpoint => Assign(endpoint, LibraryComposition.OtlpGrpcPort))
+    // Nulling the published port lets Aspire pick a free one, as it does for every resource that does not
+    // configure Kestrel. The conventional ports stay in appsettings.json for standalone and container runs, where
+    // they are correct and namespaced.
+    .WithEndpoint(LibraryComposition.ProxyEndpointName, endpoint => endpoint.Port = null)
+    .WithEndpoint(LibraryComposition.OtlpHttpEndpointName, endpoint => endpoint.Port = null)
+    .WithEndpoint(LibraryComposition.OtlpGrpcEndpointName, endpoint => endpoint.Port = null)
     .WithExternalHttpEndpoints()
 
     .WithEnvironment("Prologue__PrologueId", prologueId)
@@ -152,25 +153,6 @@ var extractor = builder.AddProject<Projects.Extractor>("extractor")
     // endpoint that has not been allocated yet, reported only as a bare FailedToStart.
     .WaitFor(core);
 
-// Hand the ports Aspire allocated back to Kestrel, so the extractor binds exactly what the endpoint proxy expects
-// instead of the conventional ports baked into its appsettings.json. Environment variables outrank appsettings, and
-// EndpointProperty.TargetPort resolves after allocation, so no port number has to be guessed anywhere.
-extractor
-    .WithEnvironment("Kestrel__Endpoints__Proxy__Url", Address(LibraryComposition.ProxyPort))
-    .WithEnvironment("Kestrel__Endpoints__OtlpHttp__Url", Address(LibraryComposition.OtlpHttpPort))
-    .WithEnvironment("Kestrel__Endpoints__OtlpGrpc__Url", Address(LibraryComposition.OtlpGrpcPort))
-
-    // The gRPC receiver still needs plaintext HTTP/2; overriding the URL alone would drop it to the default.
-    .WithEnvironment("Kestrel__Endpoints__OtlpGrpc__Protocols", "Http2");
-
-static string Address(int port) => string.Create(CultureInfo.InvariantCulture, $"http://0.0.0.0:{port}");
-
-static void Assign(EndpointAnnotation endpoint, int targetPort)
-{
-    endpoint.TargetPort = targetPort;
-    endpoint.Port = null;
-}
-
 // The system's telemetry must reach the extractor rather than going straight to the dashboard, and its simulated
 // load must travel through the extractor's proxy — traffic that bypasses the proxy is never captured.
 core
@@ -178,7 +160,7 @@ core
     .WithEnvironment("OTEL_EXPORTER_OTLP_PROTOCOL", "http/protobuf")
     .WithEnvironment("OTEL_SERVICE_NAME", "library")
     .WithEnvironment("Library__Simulation__BaseAddress", extractor.GetEndpoint(LibraryComposition.ProxyEndpointName))
-    .WithEnvironment("Library__Simulation__DefaultTransactionCount", LibraryComposition.DefaultTransactionCount.ToString(System.Globalization.CultureInfo.InvariantCulture))
+    .WithEnvironment("Library__Simulation__DefaultTransactionCount", LibraryComposition.DefaultTransactionCount.ToString(CultureInfo.InvariantCulture))
     .WithSimulationCommands(LibraryComposition.DefaultTransactionCount);
 
 // ── The React frontend ──────────────────────────────────────────────────────────────────────────────────────────
