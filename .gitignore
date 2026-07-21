@@ -308,3 +308,9 @@ vite*.map
 *.lscache
 # Local NuGet feed output
 .local-feed/
+
+# Prologue Extractor default capture output when run without an output directory configured
+captures/
+
+# Playwright MCP session artifacts
+.playwright-mcp/
