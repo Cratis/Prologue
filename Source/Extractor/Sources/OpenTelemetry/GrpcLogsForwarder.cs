@@ -1,19 +1,19 @@
 // Copyright (c) Cratis. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using OpenTelemetry.Proto.Collector.Trace.V1;
+using OpenTelemetry.Proto.Collector.Logs.V1;
 
 namespace Cratis.Prologue.Extractor.Sources.OpenTelemetry;
 
 /// <summary>
-/// Forwards OTLP trace export requests to the upstream OTLP/gRPC collector, if one is configured. When no upstream
+/// Forwards OTLP log export requests to the upstream OTLP/gRPC collector, if one is configured. When no upstream
 /// is configured the engine is a terminal sink and an empty response is returned.
 /// </summary>
 /// <param name="upstream">The shared channel to the upstream collector.</param>
-public sealed class GrpcTraceForwarder(OtlpUpstreamChannel upstream)
+public sealed class GrpcLogsForwarder(OtlpUpstreamChannel upstream)
 {
-    readonly TraceService.TraceServiceClient? _client =
-        upstream.Channel is null ? null : new TraceService.TraceServiceClient(upstream.Channel);
+    readonly LogsService.LogsServiceClient? _client =
+        upstream.Channel is null ? null : new LogsService.LogsServiceClient(upstream.Channel);
 
     /// <summary>
     /// Forwards the request to the upstream collector, or returns an empty response when no upstream is configured.
@@ -21,8 +21,8 @@ public sealed class GrpcTraceForwarder(OtlpUpstreamChannel upstream)
     /// <param name="request">The OTLP export request.</param>
     /// <param name="cancellationToken">A <see cref="CancellationToken"/> for the operation.</param>
     /// <returns>The upstream response, or an empty response.</returns>
-    public async Task<ExportTraceServiceResponse> Forward(ExportTraceServiceRequest request, CancellationToken cancellationToken) =>
+    public async Task<ExportLogsServiceResponse> Forward(ExportLogsServiceRequest request, CancellationToken cancellationToken) =>
         _client is null
-            ? new ExportTraceServiceResponse()
+            ? new ExportLogsServiceResponse()
             : await _client.ExportAsync(request, cancellationToken: cancellationToken);
 }

@@ -39,17 +39,41 @@ with the Prologue Receiver.
 - `Api.Endpoint` — the base address of the Prologue Receiver captures are posted to.
 - `Correlation.WindowMilliseconds` — the correlation window.
 - `SqlServer[]` / `Postgres[]` — one entry per database to watch (connection string + source name).
+  `SqlServer[].EnableChangeDataCapture` (default `true`) lets the extractor turn CDC on itself; `SqlServer[].Tables`
+  narrows it to named tables (`schema.table` or bare `table`) instead of every user table.
+- `PrologueId` — the Prologue captures belong to. When set, captures are stamped with it and posted to the
+  Receiver's Prologue-scoped endpoint so they can later be interpreted on their own.
 - `ReverseProxy` (standard YARP section) — the catch-all route/cluster pointing at the monitored system.
 
-## Prerequisites on the target databases
+## Preparing the target databases
 
-- **SQL Server** — CDC must be enabled (`sql/enable-sqlserver-cdc.sql`); requires SQL Server Agent.
-- **PostgreSQL** — `wal_level = logical`; the connecting role needs the `REPLICATION` attribute. The extractor
-  creates the publication and replication slot it consumes if they do not already exist.
+**The extractor prepares the databases itself.** A system being captured was built without knowing Prologue
+exists, so it must not have to carry setup code for the tool watching it — that is the whole point of being able
+to point Prologue at software that already exists. What is left for an operator is only what a database connection
+genuinely cannot do:
+
+| | The extractor does | You must do |
+|---|---|---|
+| **SQL Server** | Enables CDC on the database and on every user table with a primary key, skipping what is already enabled (`SqlServer[].EnableChangeDataCapture`, on by default; narrow it with `SqlServer[].Tables`). Needs `sysadmin`. | Have **SQL Server Agent running** — CDC captures nothing without it. |
+| **PostgreSQL** | Creates the publication and replication slot it consumes, and checks the server is actually usable before it starts. | Run the server with **`wal_level = logical`** (needs a restart) and give the connecting role the **`REPLICATION`** attribute. |
+
+Neither of the remaining two can be changed over a normal connection, so the extractor detects them and says
+exactly what is wrong rather than idling silently. If CDC cannot be enabled — no `sysadmin`, or a DBA has done it
+already — the extractor logs a warning and watches whatever capture instances it finds;
+`sql/enable-sqlserver-cdc.sql` is there for that case.
 
 ## Running locally
 
-`Source/docker-compose.yml` provides `prologue-sqlserver` (CDC-ready) and `prologue-postgres`
-(`wal_level=logical`) alongside MongoDB. Run the Prologue Receiver, point the proxy's destination at your target
-system, enable CDC on the SQL Server tables, run the extractor, then issue `POST`/`PUT`/`DELETE` requests through
-the proxy and inspect the `captures` collection in MongoDB.
+The quickest way to see the extractor working is the **Library sample** in [`Samples/Library`](../../Samples/Library):
+an ordinary ASP.NET + EF Core system with an Aspire composition that already wires everything up — the database
+(PostgreSQL with `wal_level=logical`, or SQL Server with the Agent enabled for CDC), the extractor in front of the
+system, the Receiver, and MongoDB. It also generates realistic load on demand.
+
+```shell
+cd Samples/Library && aspire run                     # PostgreSQL
+cd Samples/Library && aspire run -- --database mssql # SQL Server
+```
+
+To wire it up by hand instead: run the Prologue Receiver, point the proxy's destination at your target system,
+enable CDC on the SQL Server tables (`sql/enable-sqlserver-cdc.sql`), run the extractor, then issue
+`POST`/`PUT`/`DELETE` requests through the proxy and inspect the `captures` collection in MongoDB.

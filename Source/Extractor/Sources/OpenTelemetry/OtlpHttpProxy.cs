@@ -6,23 +6,29 @@ using Cratis.Prologue.Configuration;
 using Cratis.Prologue.Extractor.Capturing;
 using Google.Protobuf;
 using Microsoft.Extensions.Options;
+using OpenTelemetry.Proto.Collector.Logs.V1;
+using OpenTelemetry.Proto.Collector.Metrics.V1;
 using OpenTelemetry.Proto.Collector.Trace.V1;
 
 namespace Cratis.Prologue.Extractor.Sources.OpenTelemetry;
 
 /// <summary>
-/// Represents the OTLP/HTTP receiver. It captures span metadata from <c>/v1/traces</c> (protobuf or JSON) and
-/// forwards the raw payload to the upstream collector; <c>/v1/metrics</c> and <c>/v1/logs</c> are forwarded
-/// transparently without capture so the proxy does not disrupt the monitored system's other signals.
+/// Represents the OTLP/HTTP receiver. It captures metadata from all three signals — traces, metrics, and logs —
+/// and forwards the raw payload unchanged to the upstream collector, so the proxy never disrupts the monitored
+/// system's telemetry.
 /// </summary>
 /// <param name="channel">The channel observations are published to.</param>
-/// <param name="factory">The factory that maps spans to observations.</param>
+/// <param name="spans">The factory that maps spans to observations.</param>
+/// <param name="metrics">The factory that maps metrics to observations.</param>
+/// <param name="logs">The factory that maps log records to observations.</param>
 /// <param name="httpClientFactory">The factory for the upstream forwarding client.</param>
 /// <param name="options">The Prologue options carrying the upstream HTTP endpoint.</param>
 /// <param name="logger">The logger.</param>
 public class OtlpHttpProxy(
     IObservationChannel channel,
-    SpanObservationFactory factory,
+    SpanObservationFactory spans,
+    MetricObservationFactory metrics,
+    LogObservationFactory logs,
     IHttpClientFactory httpClientFactory,
     IOptions<PrologueOptions> options,
     ILogger<OtlpHttpProxy> logger)
@@ -32,6 +38,21 @@ public class OtlpHttpProxy(
     /// </summary>
     public const string UpstreamClientName = "otlp-upstream";
 
+    /// <summary>
+    /// The OTLP/HTTP path traces are exported to.
+    /// </summary>
+    public const string TracesPath = "/v1/traces";
+
+    /// <summary>
+    /// The OTLP/HTTP path metrics are exported to.
+    /// </summary>
+    public const string MetricsPath = "/v1/metrics";
+
+    /// <summary>
+    /// The OTLP/HTTP path logs are exported to.
+    /// </summary>
+    public const string LogsPath = "/v1/logs";
+
     const string ProtobufContentType = "application/x-protobuf";
 
     /// <summary>
@@ -39,43 +60,24 @@ public class OtlpHttpProxy(
     /// </summary>
     /// <param name="context">The HTTP context.</param>
     /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
-    public async Task HandleTraces(HttpContext context)
-    {
-        var body = await ReadBody(context);
-        var isJson = (context.Request.ContentType ?? string.Empty).Contains("json", StringComparison.OrdinalIgnoreCase);
-
-        try
-        {
-            var request = isJson
-                ? JsonParser.Default.Parse<ExportTraceServiceRequest>(Encoding.UTF8.GetString(body))
-                : ExportTraceServiceRequest.Parser.ParseFrom(body);
-
-            foreach (var observation in factory.ToObservations(request))
-            {
-                await channel.Publish(observation, context.RequestAborted);
-            }
-        }
-        catch (Exception exception)
-        {
-            OtlpHttpProxyLog.ParseFailed(logger, exception);
-        }
-
-        await Forward(context, "/v1/traces", body, isJson);
-    }
+    public Task HandleTraces(HttpContext context) =>
+        Handle(context, TracesPath, ExportTraceServiceRequest.Parser, spans.ToObservations, new ExportTraceServiceResponse());
 
     /// <summary>
-    /// Forwards an OTLP/HTTP metrics export upstream without capture.
+    /// Handles an OTLP/HTTP metric export — captures metric metadata, then forwards the payload upstream.
     /// </summary>
     /// <param name="context">The HTTP context.</param>
     /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
-    public async Task HandleMetrics(HttpContext context) => await ForwardOnly(context, "/v1/metrics");
+    public Task HandleMetrics(HttpContext context) =>
+        Handle(context, MetricsPath, ExportMetricsServiceRequest.Parser, metrics.ToObservations, new ExportMetricsServiceResponse());
 
     /// <summary>
-    /// Forwards an OTLP/HTTP logs export upstream without capture.
+    /// Handles an OTLP/HTTP log export — captures log metadata, then forwards the payload upstream.
     /// </summary>
     /// <param name="context">The HTTP context.</param>
     /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
-    public async Task HandleLogs(HttpContext context) => await ForwardOnly(context, "/v1/logs");
+    public Task HandleLogs(HttpContext context) =>
+        Handle(context, LogsPath, ExportLogsServiceRequest.Parser, logs.ToObservations, new ExportLogsServiceResponse());
 
     static async Task<byte[]> ReadBody(HttpContext context)
     {
@@ -84,10 +86,13 @@ public class OtlpHttpProxy(
         return memory.ToArray();
     }
 
-    static async Task WriteEmptyResponse(HttpContext context, bool isJson)
+    static bool IsJsonRequest(HttpContext context) =>
+        (context.Request.ContentType ?? string.Empty).Contains("json", StringComparison.OrdinalIgnoreCase);
+
+    static async Task WriteEmptyResponse(HttpContext context, bool isJson, IMessage response)
     {
-        var response = new ExportTraceServiceResponse();
         context.Response.StatusCode = StatusCodes.Status200OK;
+
         if (isJson)
         {
             context.Response.ContentType = "application/json";
@@ -100,14 +105,37 @@ public class OtlpHttpProxy(
         }
     }
 
-    async Task ForwardOnly(HttpContext context, string path)
+    async Task Handle<TRequest>(
+        HttpContext context,
+        string path,
+        MessageParser<TRequest> parser,
+        Func<TRequest, IEnumerable<Observation>> toObservations,
+        IMessage emptyResponse)
+        where TRequest : IMessage<TRequest>, new()
     {
         var body = await ReadBody(context);
-        var isJson = (context.Request.ContentType ?? string.Empty).Contains("json", StringComparison.OrdinalIgnoreCase);
-        await Forward(context, path, body, isJson);
+        var isJson = IsJsonRequest(context);
+
+        try
+        {
+            var request = isJson
+                ? JsonParser.Default.Parse<TRequest>(Encoding.UTF8.GetString(body))
+                : parser.ParseFrom(body);
+
+            foreach (var observation in toObservations(request))
+            {
+                await channel.Publish(observation, context.RequestAborted);
+            }
+        }
+        catch (Exception exception) when (exception is not OperationCanceledException)
+        {
+            OtlpHttpProxyLog.ParseFailed(logger, path, exception);
+        }
+
+        await Forward(context, path, body, isJson, emptyResponse);
     }
 
-    async Task Forward(HttpContext context, string path, byte[] body, bool isJson)
+    async Task Forward(HttpContext context, string path, byte[] body, bool isJson, IMessage emptyResponse)
     {
         var upstream = options.Value.OpenTelemetry.Upstream.Http;
         var contentType = context.Request.ContentType ?? (isJson ? "application/json" : ProtobufContentType);
@@ -115,7 +143,7 @@ public class OtlpHttpProxy(
         if (string.IsNullOrWhiteSpace(upstream))
         {
             // Terminal capture — acknowledge with an empty export response in the requested encoding.
-            await WriteEmptyResponse(context, isJson);
+            await WriteEmptyResponse(context, isJson, emptyResponse);
             return;
         }
 
@@ -127,6 +155,7 @@ public class OtlpHttpProxy(
             using var response = await client.PostAsync($"{upstream.TrimEnd('/')}{path}", content, context.RequestAborted);
             context.Response.StatusCode = (int)response.StatusCode;
             var responseBody = await response.Content.ReadAsByteArrayAsync(context.RequestAborted);
+
             if (responseBody.Length > 0)
             {
                 context.Response.ContentType = response.Content.Headers.ContentType?.ToString() ?? contentType;
@@ -136,7 +165,7 @@ public class OtlpHttpProxy(
         catch (Exception exception) when (exception is not OperationCanceledException)
         {
             OtlpHttpProxyLog.ForwardFailed(logger, path, exception);
-            await WriteEmptyResponse(context, isJson);
+            await WriteEmptyResponse(context, isJson, emptyResponse);
         }
     }
 }

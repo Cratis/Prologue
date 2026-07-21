@@ -8,6 +8,9 @@ internal static partial class SqlServerChangeSourceLog
     [LoggerMessage(LogLevel.Information, "SQL Server source '{Source}' watching {InstanceCount} capture instances in '{Database}'")]
     internal static partial void Watching(ILogger logger, string source, int instanceCount, string database);
 
+    [LoggerMessage(LogLevel.Warning, "SQL Server source '{Source}' found no CDC capture instances in '{Database}' — nothing will be captured until Change Data Capture is enabled on its tables")]
+    internal static partial void NothingToWatch(ILogger logger, string source, string database);
+
     [LoggerMessage(LogLevel.Error, "SQL Server source '{Source}' failed; retrying")]
     internal static partial void WatchFailed(ILogger logger, string source, Exception exception);
 }

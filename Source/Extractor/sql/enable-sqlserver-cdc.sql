@@ -1,6 +1,10 @@
 -- Sample script to enable SQL Server CDC for the Prologue Engine change-capture tool.
+-- The extractor normally does this itself at startup (SqlServer[].EnableChangeDataCapture,
+-- on by default), so this script is the fallback for when it cannot: the connecting
+-- account is not sysadmin, or a DBA prefers to enable CDC deliberately.
+--
 -- Run against the target database. Requires sysadmin and a running SQL Server Agent
--- (the docker-compose 'prologue-sqlserver' service sets MSSQL_AGENT_ENABLED=true).
+-- (start the container with MSSQL_AGENT_ENABLED=true).
 --
 -- Prologue Engine only reads CDC metadata (table + changed column names per transaction);
 -- it never reads row data.

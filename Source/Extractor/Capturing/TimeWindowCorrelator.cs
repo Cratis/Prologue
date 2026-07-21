@@ -8,12 +8,12 @@ namespace Cratis.Prologue.Extractor.Capturing;
 
 /// <summary>
 /// Represents an <see cref="ICorrelator"/> that correlates an HTTP command with the evidence it produced — the
-/// database transactions and OpenTelemetry spans within a configurable time window after it, plus any spans sharing
-/// the command's trace id. A command and its evidence become one capture. Spans with no preceding command are
-/// grouped into one capture per trace (the intent and events of a trace); standalone database transactions each
+/// database transactions and OpenTelemetry signals within a configurable time window after it, plus any telemetry
+/// sharing the command's trace id. A command and its evidence become one capture. Trace-carrying telemetry with no
+/// preceding command is grouped into one capture per trace; standalone database transactions and metrics each
 /// become their own capture.
 /// </summary>
-/// <param name="options">The Prologue options carrying the correlation window.</param>
+/// <param name="options">The Prologue options carrying the correlation window and the Prologue captures belong to.</param>
 public class TimeWindowCorrelator(IOptions<PrologueOptions> options) : ICorrelator
 {
     readonly List<Observation> _pending = [];
@@ -42,41 +42,40 @@ public class TimeWindowCorrelator(IOptions<PrologueOptions> options) : ICorrelat
             {
                 var evidence = RelatedEvidence(command, window, claimed);
                 claimed.Add(command);
+
                 foreach (var observation in evidence)
                 {
                     claimed.Add(observation);
                 }
 
-                captures.Add(new Capture(Guid.NewGuid(), command.Occurred, [command, .. evidence]));
+                captures.Add(NewCapture(command.Occurred, [command, .. evidence]));
             }
 
-            // Spans with no correlated command, grouped into one capture per trace.
-            foreach (var trace in SettledStandaloneTelemetry(settledCutoff, claimed).GroupBy(observation => ((TelemetryObserved)observation.Payload).TraceId))
+            // Trace-carrying telemetry with no correlated command, grouped into one capture per trace.
+            foreach (var trace in SettledStandalone(settledCutoff, claimed, CarriesTrace).GroupBy(TraceIdOf, StringComparer.Ordinal))
             {
-                if (string.IsNullOrEmpty(trace.Key))
-                {
-                    foreach (var span in trace)
-                    {
-                        claimed.Add(span);
-                        captures.Add(new Capture(Guid.NewGuid(), span.Occurred, [span]));
-                    }
+                var observations = trace.OrderBy(observation => observation.Occurred).ToList();
 
+                foreach (var observation in observations)
+                {
+                    claimed.Add(observation);
+                }
+
+                // Without a trace id there is nothing tying the signals together — each stands alone.
+                if (trace.Key.Length == 0)
+                {
+                    captures.AddRange(observations.Select(observation => NewCapture(observation.Occurred, [observation])));
                     continue;
                 }
 
-                var spans = trace.OrderBy(observation => observation.Occurred).ToList();
-                foreach (var span in spans)
-                {
-                    claimed.Add(span);
-                }
-
-                captures.Add(new Capture(Guid.NewGuid(), spans[0].Occurred, spans));
+                captures.Add(NewCapture(observations[0].Occurred, observations));
             }
 
-            foreach (var transaction in SettledStandaloneTransactions(settledCutoff, claimed))
+            // Database transactions and metrics carry no trace, so each settles into its own capture.
+            foreach (var observation in SettledStandalone(settledCutoff, claimed, payload => !CarriesTrace(payload)))
             {
-                claimed.Add(transaction);
-                captures.Add(new Capture(Guid.NewGuid(), transaction.Occurred, [transaction]));
+                claimed.Add(observation);
+                captures.Add(NewCapture(observation.Occurred, [observation]));
             }
 
             _pending.RemoveAll(claimed.Contains);
@@ -89,8 +88,19 @@ public class TimeWindowCorrelator(IOptions<PrologueOptions> options) : ICorrelat
     {
         HttpCommandObserved command => command.TraceId,
         TelemetryObserved telemetry => telemetry.TraceId,
+        LogObserved log => log.TraceId,
         _ => string.Empty,
     };
+
+    // Evidence is anything a command may have produced, as opposed to the command itself.
+    static bool IsEvidence(ObservationPayload payload) =>
+        payload is DatabaseTransactionObserved or TelemetryObserved or MetricObserved or LogObserved;
+
+    // Payloads carrying a trace id can be correlated by trace rather than by time alone.
+    static bool CarriesTrace(ObservationPayload payload) => payload is TelemetryObserved or LogObserved;
+
+    Capture NewCapture(DateTimeOffset occurred, IReadOnlyList<Observation> entries) =>
+        new(Guid.NewGuid(), occurred, entries, options.Value.PrologueId);
 
     List<Observation> SettledCommands(DateTimeOffset settledCutoff) =>
         [.. _pending
@@ -100,27 +110,21 @@ public class TimeWindowCorrelator(IOptions<PrologueOptions> options) : ICorrelat
     List<Observation> RelatedEvidence(Observation command, TimeSpan window, HashSet<Observation> claimed)
     {
         var commandTraceId = TraceIdOf(command);
+
         return [.. _pending
             .Where(observation =>
-                observation.Payload is DatabaseTransactionObserved or TelemetryObserved &&
+                IsEvidence(observation.Payload) &&
                 !claimed.Contains(observation) &&
                 ((observation.Occurred >= command.Occurred && observation.Occurred <= command.Occurred + window) ||
-                 (commandTraceId.Length > 0 && observation.Payload is TelemetryObserved telemetry && telemetry.TraceId == commandTraceId)))
+                 (commandTraceId.Length > 0 && CarriesTrace(observation.Payload) && TraceIdOf(observation) == commandTraceId)))
             .OrderBy(observation => observation.Occurred)];
     }
 
-    List<Observation> SettledStandaloneTelemetry(DateTimeOffset settledCutoff, HashSet<Observation> claimed) =>
+    List<Observation> SettledStandalone(DateTimeOffset settledCutoff, HashSet<Observation> claimed, Func<ObservationPayload, bool> matches) =>
         [.. _pending
             .Where(observation =>
-                observation.Payload is TelemetryObserved &&
-                !claimed.Contains(observation) &&
-                observation.Occurred <= settledCutoff)
-            .OrderBy(observation => observation.Occurred)];
-
-    List<Observation> SettledStandaloneTransactions(DateTimeOffset settledCutoff, HashSet<Observation> claimed) =>
-        [.. _pending
-            .Where(observation =>
-                observation.Payload is DatabaseTransactionObserved &&
+                IsEvidence(observation.Payload) &&
+                matches(observation.Payload) &&
                 !claimed.Contains(observation) &&
                 observation.Occurred <= settledCutoff)
             .OrderBy(observation => observation.Occurred)];

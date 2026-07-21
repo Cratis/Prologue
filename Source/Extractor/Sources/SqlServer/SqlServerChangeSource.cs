@@ -13,10 +13,12 @@ namespace Cratis.Prologue.Extractor.Sources.SqlServer;
 /// </summary>
 /// <param name="options">The configuration for this SQL Server source.</param>
 /// <param name="channel">The channel observations are published to.</param>
+/// <param name="preparer">Turns Change Data Capture on so the system being captured does not have to.</param>
 /// <param name="logger">The logger.</param>
 public class SqlServerChangeSource(
     SqlServerOptions options,
     IObservationChannel channel,
+    SqlServerChangeCapturePreparer preparer,
     ILogger<SqlServerChangeSource> logger) : BackgroundService
 {
     readonly SqlServerCdcReader _reader = new();
@@ -61,8 +63,20 @@ public class SqlServerChangeSource(
         await using var connection = new SqlConnection(options.ConnectionString);
         await connection.OpenAsync(stoppingToken);
 
+        await preparer.Prepare(connection, stoppingToken);
+
         var instances = await _reader.LoadInstances(connection, stoppingToken);
-        SqlServerChangeSourceLog.Watching(logger, options.Name, instances.Count, connection.Database);
+
+        if (instances.Count == 0)
+        {
+            // Nothing to watch means nothing will ever be captured, and a silent idle loop is the worst way to
+            // find that out.
+            SqlServerChangeSourceLog.NothingToWatch(logger, options.Name, connection.Database);
+        }
+        else
+        {
+            SqlServerChangeSourceLog.Watching(logger, options.Name, instances.Count, connection.Database);
+        }
 
         var lastLsn = await _reader.GetMaxLsn(connection, stoppingToken);
 

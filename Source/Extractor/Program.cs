@@ -20,10 +20,9 @@ var builder = WebApplication.CreateBuilder(args);
 
 // Capture configuration comes from a dedicated cratis-prologue.json file (path overridable through the
 // PROLOGUE_CONFIG environment variable) — not appsettings.json. appsettings.json only carries hosting concerns.
-builder.Configuration.AddJsonFile(
-    PrologueConfigurationFile.ResolvePath(builder.Environment.ContentRootPath),
-    optional: true,
-    reloadOnChange: true);
+// The file is the baseline; the environment overrides it, which is how a container or an Aspire composition
+// configures a deployed extractor.
+builder.Configuration.AddPrologueConfiguration(builder.Environment.ContentRootPath, reloadOnChange: true);
 
 builder.Services.Configure<PrologueOptions>(builder.Configuration.GetSection(PrologueOptions.SectionName));
 
@@ -55,12 +54,17 @@ else
 builder.Services.AddReverseProxy().LoadFromConfig(builder.Configuration.GetSection("ReverseProxy"));
 builder.Services.AddSingleton<ITransformProvider, CommandCaptureTransform>();
 
-// Database change sources — one hosted service per configured database
+// Database change sources — one hosted service per configured database. Each source prepares its own database
+// for capture (enabling CDC, checking logical replication) so the system being captured never has to know
+// Prologue is watching it.
 foreach (var sqlServer in prologue.SqlServer)
 {
     builder.Services.AddSingleton<IHostedService>(serviceProvider => new SqlServerChangeSource(
         sqlServer,
         serviceProvider.GetRequiredService<IObservationChannel>(),
+        new SqlServerChangeCapturePreparer(
+            sqlServer,
+            serviceProvider.GetRequiredService<ILogger<SqlServerChangeCapturePreparer>>()),
         serviceProvider.GetRequiredService<ILogger<SqlServerChangeSource>>()));
 }
 
@@ -69,16 +73,25 @@ foreach (var postgres in prologue.Postgres)
     builder.Services.AddSingleton<IHostedService>(serviceProvider => new PostgresChangeSource(
         postgres,
         serviceProvider.GetRequiredService<IObservationChannel>(),
+        new PostgresReplicationPreparer(
+            postgres,
+            serviceProvider.GetRequiredService<ILogger<PostgresReplicationPreparer>>()),
         serviceProvider.GetRequiredService<ILogger<PostgresChangeSource>>()));
 }
 
-// OpenTelemetry source — the engine proxies OTLP (HTTP + gRPC), capturing span metadata and forwarding to the
-// upstream collector. Traces carry intent (commands) and the events they produce, correlated by trace id.
+// OpenTelemetry source — the engine proxies OTLP (HTTP + gRPC) for all three signals, capturing metadata and
+// forwarding to the upstream collector. Traces carry intent (commands) and the events they produce, correlated by
+// trace id; logs attach to that same trace; metrics describe what the system measures about itself.
 if (prologue.OpenTelemetry.Enabled)
 {
     builder.Services.AddGrpc();
     builder.Services.AddSingleton(new SpanObservationFactory(prologue.OpenTelemetry));
+    builder.Services.AddSingleton(new MetricObservationFactory(prologue.OpenTelemetry));
+    builder.Services.AddSingleton(new LogObservationFactory(prologue.OpenTelemetry));
+    builder.Services.AddSingleton<OtlpUpstreamChannel>();
     builder.Services.AddSingleton<GrpcTraceForwarder>();
+    builder.Services.AddSingleton<GrpcMetricsForwarder>();
+    builder.Services.AddSingleton<GrpcLogsForwarder>();
     builder.Services.AddSingleton<OtlpHttpProxy>();
     builder.Services.AddHttpClient(OtlpHttpProxy.UpstreamClientName);
 }
@@ -90,9 +103,11 @@ app.MapReverseProxy();
 if (prologue.OpenTelemetry.Enabled)
 {
     app.MapGrpcService<OtlpTraceGrpcService>();
-    app.MapPost("/v1/traces", (HttpContext context, OtlpHttpProxy proxy) => proxy.HandleTraces(context));
-    app.MapPost("/v1/metrics", (HttpContext context, OtlpHttpProxy proxy) => proxy.HandleMetrics(context));
-    app.MapPost("/v1/logs", (HttpContext context, OtlpHttpProxy proxy) => proxy.HandleLogs(context));
+    app.MapGrpcService<OtlpMetricsGrpcService>();
+    app.MapGrpcService<OtlpLogsGrpcService>();
+    app.MapPost(OtlpHttpProxy.TracesPath, (HttpContext context, OtlpHttpProxy proxy) => proxy.HandleTraces(context));
+    app.MapPost(OtlpHttpProxy.MetricsPath, (HttpContext context, OtlpHttpProxy proxy) => proxy.HandleMetrics(context));
+    app.MapPost(OtlpHttpProxy.LogsPath, (HttpContext context, OtlpHttpProxy proxy) => proxy.HandleLogs(context));
 }
 
 await app.RunAsync();
