@@ -14,6 +14,10 @@ on:
       - "**"
     paths:
       - "Source/**"
+      - "Samples/**"
+      - "Directory.Build.props"
+      - "Directory.Packages.props"
+      - ".github/workflows/dotnet-build.yml"
 
 jobs:
   build:
@@ -28,5 +32,13 @@ jobs:
         with:
           dotnet-version: ${{ env.DOTNET_VERSION }}
 
-      - name: Build & run tests
-        run: dotnet test --configuration Release
+      # Release is the warnings-as-errors gate. It also strips the inline specs (see
+      # Source/Directory.Build.targets), so it builds only — the specs are run below.
+      - name: Build (Release)
+        run: dotnet build --configuration Release
+
+      # The inline specs only exist in Debug, where each project doubles as its test project.
+      # The Library sample's integration tests need Docker and browsers, so they are excluded here
+      # and run locally; see Samples/Library/README.md.
+      - name: Run specs (Debug)
+        run: dotnet test --configuration Debug --filter "Category!=Integration"
