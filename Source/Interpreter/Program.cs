@@ -30,10 +30,7 @@ var builder = Host.CreateApplicationBuilder(args);
 
 // Configuration comes from a dedicated cratis-prologue.json file (path overridable through the PROLOGUE_CONFIG
 // environment variable) — not appsettings.json. The interpreter binds the Llm section for optional refinement.
-builder.Configuration.AddJsonFile(
-    PrologueConfigurationFile.ResolvePath(Directory.GetCurrentDirectory()),
-    optional: true,
-    reloadOnChange: false);
+builder.Configuration.AddPrologueConfiguration(Directory.GetCurrentDirectory());
 
 builder.Services.AddSingleton<IBuildHeuristicModel, HeuristicModelBuilder>();
 builder.Services.AddSingleton<IExtractEventModel, EventModelExtractor>();
