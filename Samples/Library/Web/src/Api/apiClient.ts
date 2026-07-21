@@ -4,9 +4,14 @@
 import type { ProblemDetails } from './ProblemDetails';
 import { RequestFailed } from './RequestFailed';
 
-// The base URL points at the Prologue Extractor's reverse proxy, not at the API directly. Every XHR the
-// SPA makes has to traverse the proxy so the Extractor captures it as an HTTP command.
-const baseUrl = import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:5080';
+// Requests are same-origin and relative. Vite forwards /api to the Prologue Extractor's reverse proxy (see
+// vite.config.ts), so every call still traverses the proxy and is still captured as an HTTP command — but the
+// browser never makes a cross-origin request, and so never sends a preflight.
+//
+// Calling the proxy directly from the browser does not work: a POST carrying JSON triggers an OPTIONS preflight,
+// the proxy answers it with 404 rather than passing it to the API, and every write is blocked while reads carry
+// on working. Going through Vite removes that whole class of problem rather than negotiating with it.
+const baseUrl = '';
 
 const noContent = 204;
 
