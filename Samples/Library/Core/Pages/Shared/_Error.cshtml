@@ -1,0 +1,8 @@
+@model ApiProblem
+@if (Model is not null)
+{
+    <div class="message message-error" data-testid="error">
+        <strong>@Model.Title</strong>
+        <span>@Model.Detail</span>
+    </div>
+}

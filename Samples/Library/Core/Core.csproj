@@ -1,0 +1,44 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+    <PropertyGroup>
+        <AssemblyName>Library.Core</AssemblyName>
+        <RootNamespace>Library.Core</RootNamespace>
+        <UserSecretsId>library-core-sample</UserSecretsId>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" />
+        <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" />
+        <PackageReference Include="EFCore.NamingConventions" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="../ServiceDefaults/ServiceDefaults.csproj" />
+    </ItemGroup>
+
+    <!--
+        The single stylesheet both frontends share. Core keeps no copy of its own: the file is brought in from
+        ../Shared at build time so the Razor pages and the React app cannot drift apart. See
+        Shared/FRONTEND-CONTRACT.md.
+
+        A plain Content item with Link="wwwroot/..." is not enough. Static web assets discovered from Content are
+        always given the project's own wwwroot as their content root, so the development manifest would point at
+        a file that is not there and the stylesheet would 404 under `dotnet run`. Copying it into wwwroot puts it
+        where the manifest already expects it, and the stock pipeline then handles build, run, and publish alike.
+        The whole of wwwroot is a build artifact here — it is git-ignored, and the copy must never be edited.
+    -->
+    <ItemGroup>
+        <Content Remove="wwwroot/css/library.css" />
+        <Content Include="wwwroot/css/library.css" CopyToOutputDirectory="PreserveNewest" />
+    </ItemGroup>
+
+    <Target Name="CopySharedStylesheet" BeforeTargets="ResolveProjectStaticWebAssets;AssignTargetPaths">
+        <Copy SourceFiles="$(MSBuildThisFileDirectory)../Shared/library.css"
+              DestinationFiles="$(MSBuildThisFileDirectory)wwwroot/css/library.css"
+              SkipUnchangedFiles="true" />
+        <ItemGroup>
+            <FileWrites Include="$(MSBuildThisFileDirectory)wwwroot/css/library.css" />
+        </ItemGroup>
+    </Target>
+
+</Project>

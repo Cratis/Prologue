@@ -1,0 +1,89 @@
+@page "/catalog"
+@model CatalogModel
+@{
+    ViewData["Title"] = "Catalog";
+}
+
+<h1 class="page-title" data-testid="page-title">Catalog</h1>
+<p class="page-subtitle">The titles the library has, and who wrote them.</p>
+
+<partial name="_Error" model="Model.Error" />
+
+<section class="card">
+    <h2 class="card-title">Register book</h2>
+    <form class="form-row" data-testid="book-form" method="post" asp-page-handler="Register">
+        <label class="field">
+            <span>ISBN</span>
+            <input class="input" data-testid="book-isbn" name="Isbn" autocomplete="off" />
+        </label>
+        <label class="field">
+            <span>Title</span>
+            <input class="input" data-testid="book-title" name="Title" autocomplete="off" />
+        </label>
+        <label class="field">
+            <span>Author</span>
+            <select class="select" data-testid="book-author" name="AuthorId">
+                @foreach (var author in Model.Authors)
+                {
+                    <option value="@author.AuthorId">@author.FirstName @author.LastName</option>
+                }
+            </select>
+        </label>
+        <button class="button" data-testid="book-submit" type="submit">Register</button>
+    </form>
+</section>
+
+<section class="card">
+    <h2 class="card-title">Tag a book</h2>
+    <form class="form-row" data-testid="tag-form" method="post" asp-page-handler="Tag">
+        <label class="field">
+            <span>Book</span>
+            <select class="select" data-testid="tag-isbn" name="TagIsbn">
+                @foreach (var book in Model.Books)
+                {
+                    <option value="@book.Isbn">@book.Title</option>
+                }
+            </select>
+        </label>
+        <label class="field">
+            <span>Tag</span>
+            <input class="input" data-testid="tag-value" name="TagValue" autocomplete="off" />
+        </label>
+        <button class="button" data-testid="tag-submit" type="submit">Tag</button>
+    </form>
+</section>
+
+<section class="card">
+    <div class="table-scroll">
+        <table class="table" data-testid="books-table">
+            <thead>
+                <tr>
+                    <th>ISBN</th>
+                    <th>Title</th>
+                    <th>Author</th>
+                    <th>Tags</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var book in Model.Books)
+                {
+                    <tr data-testid="book-row" data-id="@book.BookId" data-isbn="@book.Isbn">
+                        <td>@book.Isbn</td>
+                        <td>@book.Title</td>
+                        <td>@book.AuthorName</td>
+                        <td>
+                            @foreach (var tag in book.Tags)
+                            {
+                                <span class="tag">@tag</span>
+                            }
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+    @if (Model.Books.Count == 0)
+    {
+        <div class="empty">No titles in the catalog yet.</div>
+    }
+</section>

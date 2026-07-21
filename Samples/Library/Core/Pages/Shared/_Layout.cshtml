@@ -1,0 +1,36 @@
+@{
+    var currentPage = ViewContext.RouteData.Values["page"] as string ?? string.Empty;
+
+    string NavigationClass(string page) =>
+        string.Equals(page, currentPage, StringComparison.OrdinalIgnoreCase) ? "nav-link active" : "nav-link";
+}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Library — @ViewData["Title"]</title>
+    <link rel="stylesheet" href="~/css/library.css" />
+    @await RenderSectionAsync("Head", required: false)
+</head>
+<body>
+    <div class="app">
+        <header class="app-header">
+            <div class="brand">Library</div>
+            <nav class="nav">
+                <a class="@NavigationClass("/Authors")" data-testid="nav-authors" asp-page="/Authors">Authors</a>
+                <a class="@NavigationClass("/Members")" data-testid="nav-members" asp-page="/Members">Members</a>
+                <a class="@NavigationClass("/Catalog")" data-testid="nav-catalog" asp-page="/Catalog">Catalog</a>
+                <a class="@NavigationClass("/Inventory")" data-testid="nav-inventory" asp-page="/Inventory">Inventory</a>
+                <a class="@NavigationClass("/Reservations")" data-testid="nav-reservations" asp-page="/Reservations">Reservations</a>
+                <a class="@NavigationClass("/Loans")" data-testid="nav-loans" asp-page="/Loans">Loans</a>
+                <a class="@NavigationClass("/Simulation")" data-testid="nav-simulation" asp-page="/Simulation">Simulation</a>
+            </nav>
+            <div class="badge" data-testid="frontend-kind">Razor</div>
+        </header>
+        <main class="page">
+            @RenderBody()
+        </main>
+    </div>
+</body>
+</html>

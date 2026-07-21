@@ -1,0 +1,82 @@
+@page "/inventory"
+@model InventoryModel
+@{
+    ViewData["Title"] = "Inventory";
+}
+
+<h1 class="page-title" data-testid="page-title">Inventory</h1>
+<p class="page-subtitle">How many copies of each title the library holds, and how many are on the shelf.</p>
+
+<partial name="_Error" model="Model.Error" />
+
+<section class="card">
+    <h2 class="card-title">Register copies</h2>
+    <form class="form-row" data-testid="inventory-form" method="post" asp-page-handler="Register">
+        <label class="field">
+            <span>Title</span>
+            <select class="select" data-testid="inventory-isbn" name="Isbn">
+                @foreach (var book in Model.Books)
+                {
+                    <option value="@book.Isbn">@book.Title</option>
+                }
+            </select>
+        </label>
+        <label class="field">
+            <span>Copies</span>
+            <input class="input" data-testid="inventory-count" name="Count" type="number" min="1" value="1" />
+        </label>
+        <button class="button" data-testid="inventory-submit" type="submit">Register</button>
+    </form>
+</section>
+
+<section class="card">
+    <h2 class="card-title">Report copies lost</h2>
+    <form class="form-row" data-testid="lost-form" method="post" asp-page-handler="Lost">
+        <label class="field">
+            <span>Title</span>
+            <select class="select" data-testid="lost-isbn" name="LostIsbn">
+                @foreach (var item in Model.Items)
+                {
+                    <option value="@item.Isbn">@item.Title</option>
+                }
+            </select>
+        </label>
+        <label class="field">
+            <span>Copies</span>
+            <input class="input" data-testid="lost-count" name="LostCount" type="number" min="1" value="1" />
+        </label>
+        <button class="button" data-testid="lost-submit" type="submit">Report lost</button>
+    </form>
+</section>
+
+<section class="card">
+    <div class="table-scroll">
+        <table class="table" data-testid="inventory-table">
+            <thead>
+                <tr>
+                    <th>ISBN</th>
+                    <th>Title</th>
+                    <th>Author</th>
+                    <th>Owned</th>
+                    <th>Available</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var item in Model.Items)
+                {
+                    <tr data-testid="inventory-row" data-isbn="@item.Isbn">
+                        <td>@item.Isbn</td>
+                        <td>@item.Title</td>
+                        <td>@item.AuthorName</td>
+                        <td class="numeric">@item.TotalCount</td>
+                        <td class="numeric">@item.AvailableCount</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+    @if (Model.Items.Count == 0)
+    {
+        <div class="empty">No copies held yet.</div>
+    }
+</section>

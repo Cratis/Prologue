@@ -1,0 +1,65 @@
+@page "/reservations"
+@model ReservationsModel
+@{
+    ViewData["Title"] = "Reservations";
+}
+
+<h1 class="page-title" data-testid="page-title">Reservations</h1>
+<p class="page-subtitle">Who has claimed a copy. A title whose copies are all out cannot be reserved.</p>
+
+<partial name="_Error" model="Model.Error" />
+
+<section class="card">
+    <h2 class="card-title">Reserve a copy</h2>
+    <form class="form-row" data-testid="reservation-form" method="post" asp-page-handler="Reserve">
+        <label class="field">
+            <span>Title</span>
+            <select class="select" data-testid="reservation-isbn" name="Isbn">
+                @foreach (var book in Model.Books)
+                {
+                    <option value="@book.Isbn">@book.Title</option>
+                }
+            </select>
+        </label>
+        <label class="field">
+            <span>Member</span>
+            <select class="select" data-testid="reservation-member" name="MemberId">
+                @foreach (var member in Model.Members)
+                {
+                    <option value="@member.MemberId">@member.FirstName @member.LastName</option>
+                }
+            </select>
+        </label>
+        <button class="button" data-testid="reservation-submit" type="submit">Reserve</button>
+    </form>
+</section>
+
+<section class="card">
+    <div class="table-scroll">
+        <table class="table" data-testid="reservations-table">
+            <thead>
+                <tr>
+                    <th>ISBN</th>
+                    <th>Title</th>
+                    <th>Member</th>
+                    <th>Reserved</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var reservation in Model.Reservations)
+                {
+                    <tr data-testid="reservation-row" data-id="@reservation.ReservationId">
+                        <td>@reservation.Isbn</td>
+                        <td>@reservation.Title</td>
+                        <td>@reservation.MemberName</td>
+                        <td class="numeric">@reservation.ReservedOn.ToString("u")</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+    @if (Model.Reservations.Count == 0)
+    {
+        <div class="empty">No reservations yet.</div>
+    }
+</section>

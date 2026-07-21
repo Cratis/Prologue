@@ -1,0 +1,13 @@
+<Project>
+    <Import Project="$(MSBuildThisFileDirectory)../Directory.Build.props" />
+
+    <!--
+        The samples are demonstration systems, not shipped artifacts — nothing here is packed or published to NuGet.
+        Unlike Source/, the sample projects do not carry inline specs; the Library sample has a dedicated test project.
+    -->
+    <PropertyGroup>
+        <IsPackable>false</IsPackable>
+        <WarnOnPackingNonPackableProject>false</WarnOnPackingNonPackableProject>
+        <GenerateDocumentationFile>false</GenerateDocumentationFile>
+    </PropertyGroup>
+</Project>

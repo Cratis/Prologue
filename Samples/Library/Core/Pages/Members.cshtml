@@ -1,0 +1,51 @@
+@page "/members"
+@model MembersModel
+@{
+    ViewData["Title"] = "Members";
+}
+
+<h1 class="page-title" data-testid="page-title">Members</h1>
+<p class="page-subtitle">The people registered with the library.</p>
+
+<partial name="_Error" model="Model.Error" />
+
+<section class="card">
+    <h2 class="card-title">Register member</h2>
+    <form class="form-row" data-testid="member-form" method="post" asp-page-handler="Register">
+        <label class="field">
+            <span>First name</span>
+            <input class="input" data-testid="member-first-name" name="FirstName" autocomplete="off" />
+        </label>
+        <label class="field">
+            <span>Last name</span>
+            <input class="input" data-testid="member-last-name" name="LastName" autocomplete="off" />
+        </label>
+        <button class="button" data-testid="member-submit" type="submit">Register</button>
+    </form>
+</section>
+
+<section class="card">
+    <div class="table-scroll">
+        <table class="table" data-testid="members-table">
+            <thead>
+                <tr>
+                    <th>First name</th>
+                    <th>Last name</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var member in Model.Members)
+                {
+                    <tr data-testid="member-row" data-id="@member.MemberId">
+                        <td>@member.FirstName</td>
+                        <td>@member.LastName</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+    @if (Model.Members.Count == 0)
+    {
+        <div class="empty">No members registered yet.</div>
+    }
+</section>

@@ -1,0 +1,60 @@
+@page "/simulation"
+@model SimulationModel
+@{
+    ViewData["Title"] = "Simulation";
+}
+
+@section Head {
+    @if (Model.Status.IsRunning)
+    {
+        <meta http-equiv="refresh" content="2" />
+    }
+}
+
+<h1 class="page-title" data-testid="page-title">Simulation</h1>
+<p class="page-subtitle">Put the system under load so there is something for Prologue to observe.</p>
+
+<partial name="_Error" model="Model.Error" />
+
+<section class="card">
+    <h2 class="card-title">Run</h2>
+    <form class="form-row" data-testid="simulation-form" method="post" asp-page-handler="Start">
+        <label class="field">
+            <span>Transactions</span>
+            <input class="input" data-testid="simulation-count" name="TransactionCount" type="number" min="1" value="@Model.TransactionCount" />
+        </label>
+        <button class="button" data-testid="simulation-start" type="submit">Start</button>
+    </form>
+    <form method="post" asp-page-handler="Stop">
+        <button class="button button-secondary" data-testid="simulation-stop" type="submit">Stop</button>
+    </form>
+</section>
+
+<section class="card">
+    <h2 class="card-title">Status</h2>
+    <div class="stats">
+        <div>
+            <span class="stat-label">State</span>
+            <span class="stat-value" data-testid="simulation-status">@Model.StatusText</span>
+        </div>
+        <div>
+            <span class="stat-label">Requested</span>
+            <span class="stat-value">@Model.Status.Requested</span>
+        </div>
+        <div>
+            <span class="stat-label">Succeeded</span>
+            <span class="stat-value" data-testid="simulation-succeeded">@Model.Status.Succeeded</span>
+        </div>
+        <div>
+            <span class="stat-label">Rejected</span>
+            <span class="stat-value" data-testid="simulation-rejected">@Model.Status.Rejected</span>
+        </div>
+        <div>
+            <span class="stat-label">Failed</span>
+            <span class="stat-value" data-testid="simulation-failed">@Model.Status.Failed</span>
+        </div>
+    </div>
+    <div class="progress">
+        <div class="progress-bar" data-testid="simulation-progress" style="width: @(Model.ProgressPercentage)%"></div>
+    </div>
+</section>

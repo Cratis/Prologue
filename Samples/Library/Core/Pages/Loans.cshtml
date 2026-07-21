@@ -1,0 +1,77 @@
+@page "/loans"
+@model LoansModel
+@{
+    ViewData["Title"] = "Loans";
+}
+
+<h1 class="page-title" data-testid="page-title">Loans</h1>
+<p class="page-subtitle">Which copies are out, with whom, and since when.</p>
+
+<partial name="_Error" model="Model.Error" />
+
+<section class="card">
+    <h2 class="card-title">Lend a copy</h2>
+    <form class="form-row" data-testid="loan-form" method="post" asp-page-handler="Lend">
+        <label class="field">
+            <span>Title</span>
+            <select class="select" data-testid="loan-isbn" name="Isbn">
+                @foreach (var book in Model.Books)
+                {
+                    <option value="@book.Isbn">@book.Title</option>
+                }
+            </select>
+        </label>
+        <label class="field">
+            <span>Member</span>
+            <select class="select" data-testid="loan-member" name="MemberId">
+                @foreach (var member in Model.Members)
+                {
+                    <option value="@member.MemberId">@member.FirstName @member.LastName</option>
+                }
+            </select>
+        </label>
+        <button class="button" data-testid="loan-submit" type="submit">Lend</button>
+    </form>
+</section>
+
+<section class="card">
+    <div class="table-scroll">
+        <table class="table" data-testid="loans-table">
+            <thead>
+                <tr>
+                    <th>ISBN</th>
+                    <th>Title</th>
+                    <th>Member</th>
+                    <th>Lent</th>
+                    <th>Returned</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var loan in Model.Loans)
+                {
+                    <tr data-testid="loan-row" data-id="@loan.LoanId">
+                        <td>@loan.Isbn</td>
+                        <td>@loan.Title</td>
+                        <td>@loan.MemberName</td>
+                        <td class="numeric">@loan.LentOn.ToString("u")</td>
+                        <td class="numeric">@(loan.ReturnedOn?.ToString("u") ?? string.Empty)</td>
+                        <td>
+                            @if (loan.ReturnedOn is null)
+                            {
+                                <form method="post" asp-page-handler="Return">
+                                    <input type="hidden" name="LoanId" value="@loan.LoanId" />
+                                    <button class="button button-secondary" data-testid="loan-return" type="submit">Return</button>
+                                </form>
+                            }
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+    @if (Model.Loans.Count == 0)
+    {
+        <div class="empty">Nothing is out on loan.</div>
+    }
+</section>
