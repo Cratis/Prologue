@@ -1,0 +1,31 @@
+<Project Sdk="Aspire.AppHost.Sdk/13.2.4">
+
+    <PropertyGroup>
+        <OutputType>Exe</OutputType>
+        <AssemblyName>Library.Composition</AssemblyName>
+        <RootNamespace>Library.Composition</RootNamespace>
+        <UserSecretsId>library-composition-sample</UserSecretsId>
+
+        <!-- The AppHost is an orchestrator, not a library; its resource wiring is not documented API. -->
+        <NoWarn>$(NoWarn);CS1591</NoWarn>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <PackageReference Include="Aspire.Hosting.PostgreSQL" />
+        <PackageReference Include="Aspire.Hosting.SqlServer" />
+        <PackageReference Include="Aspire.Hosting.MongoDB" />
+        <PackageReference Include="Aspire.Hosting.JavaScript" />
+
+        <!-- Lift Aspire's vulnerable transitives to patched versions; see Directory.Packages.props. -->
+        <PackageReference Include="MessagePack" />
+        <PackageReference Include="Snappier" />
+        <PackageReference Include="SharpCompress" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="../Core/Core.csproj" />
+        <ProjectReference Include="../../../Source/Extractor/Extractor.csproj" />
+        <ProjectReference Include="../../../Source/Receiver/Receiver.csproj" />
+    </ItemGroup>
+
+</Project>
