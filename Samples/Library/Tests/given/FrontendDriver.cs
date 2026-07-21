@@ -89,7 +89,14 @@ public sealed partial class FrontendDriver : IAsyncDisposable
         var picker = _page.GetByTestId(testId);
 
         // The options arrive from the API, so the one being picked may not be there the instant the page renders.
-        await picker.Locator($"option[value='{value}']").WaitForAsync(Waiting());
+        // Wait for it to be *attached* rather than visible: an <option> inside a <select> is never visible to
+        // Playwright, so waiting on visibility would time out even once the option is sitting right there.
+        await picker.Locator($"option[value='{value}']").WaitForAsync(new LocatorWaitForOptions
+        {
+            State = WaitForSelectorState.Attached,
+            Timeout = (float)_patience.TotalMilliseconds
+        });
+
         await picker.SelectOptionAsync(new SelectOptionValue { Value = value });
     }
 
@@ -98,7 +105,11 @@ public sealed partial class FrontendDriver : IAsyncDisposable
     /// </summary>
     /// <param name="testId">The <c>data-testid</c> of the button.</param>
     /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
-    public Task Press(string testId) => _page.GetByTestId(testId).ClickAsync();
+    public async Task Press(string testId)
+    {
+        await _page.GetByTestId(testId).ClickAsync();
+        await Settled();
+    }
 
     /// <summary>
     /// Reads the rejection shown on the page, waiting for it to appear.
@@ -157,8 +168,11 @@ public sealed partial class FrontendDriver : IAsyncDisposable
     /// <param name="text">The text the row is recognized by.</param>
     /// <param name="button">The <c>data-testid</c> of the button in the row.</param>
     /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
-    public Task PressInRow(string table, string row, string text, string button) =>
-        Row(table, row, text).GetByTestId(button).ClickAsync();
+    public async Task PressInRow(string table, string row, string text, string button)
+    {
+        await Row(table, row, text).GetByTestId(button).ClickAsync();
+        await Settled();
+    }
 
     /// <summary>
     /// Determines whether the row containing the given text offers a button, waiting for the page to settle first.
@@ -189,11 +203,76 @@ public sealed partial class FrontendDriver : IAsyncDisposable
             await locator.WaitForAsync(Waiting(patience));
             return true;
         }
-        catch (PlaywrightException error) when (error.Message.Contains("Timeout", StringComparison.Ordinal))
+        catch (Exception error) when (IsTimeout(error))
         {
             // Whether it turned up is the question being asked, so not turning up is an answer rather than a fault.
             // Anything Playwright raises for another reason is a real problem and keeps travelling.
             return false;
+        }
+    }
+
+    /// <summary>
+    /// Determines whether waiting simply ran out of time, as opposed to failing for a reason worth hearing about.
+    /// </summary>
+    /// <remarks>
+    /// Playwright surfaces a timed-out wait as <see cref="System.TimeoutException"/>, not as a
+    /// <see cref="PlaywrightException"/> — so matching only on the latter lets every "and nothing appeared?"
+    /// question throw instead of answering false, which is precisely the case those questions exist to cover.
+    /// </remarks>
+    /// <param name="error">The exception the wait raised.</param>
+    /// <returns>True when the wait timed out.</returns>
+    static bool IsTimeout(Exception error) =>
+        error is TimeoutException ||
+        (error is PlaywrightException && error.Message.Contains("Timeout", StringComparison.Ordinal));
+
+    /// <summary>
+    /// Waits for the page to stop talking to the server, so an action's effect is on screen before anything is
+    /// asked about it.
+    /// </summary>
+    /// <remarks>
+    /// This is where the two rendering models are reconciled. The server-rendered frontend redirects after a post,
+    /// so by the time it renders it is already current. The single-page one returns from the click immediately and
+    /// re-fetches afterwards, so reading the page straight away gives the previous answer — which shows up as a
+    /// spec that passes against one frontend and fails against the other for no reason the spec can see. Waiting
+    /// here keeps that difference out of every spec rather than sprinkling it through them.
+    /// </remarks>
+    /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
+    async Task Settled()
+    {
+        try
+        {
+            await _page.WaitForLoadStateAsync(LoadState.NetworkIdle, new PageWaitForLoadStateOptions
+            {
+                Timeout = (float)_patience.TotalMilliseconds
+            });
+        }
+        catch (Exception error) when (IsTimeout(error))
+        {
+            // Something is still chattering — a dev-server socket, a poll. Whatever comes next waits on its own
+            // terms, so this is a hint rather than a gate.
+        }
+    }
+
+    /// <summary>
+    /// Waits for something to stop being there — the counterpart to <see cref="Appears(ILocator)"/>, for when an
+    /// action's effect is that an element goes away.
+    /// </summary>
+    /// <param name="locator">The element expected to disappear.</param>
+    /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
+    static async Task Settles(ILocator locator)
+    {
+        try
+        {
+            await locator.WaitForAsync(new LocatorWaitForOptions
+            {
+                State = WaitForSelectorState.Detached,
+                Timeout = (float)_patience.TotalMilliseconds
+            });
+        }
+        catch (Exception error) when (IsTimeout(error))
+        {
+            // Still there when patience ran out. Say nothing — whatever asked for this is about to assert on the
+            // state itself, and it can report the disagreement far better than a bare timeout would.
         }
     }
 

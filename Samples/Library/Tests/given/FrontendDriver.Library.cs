@@ -153,6 +153,12 @@ public sealed partial class FrontendDriver
     {
         await GoTo(PagePaths.Loans);
         await PressInRow(TestIds.LoansTable, TestIds.LoanRow, titleOrIsbn, TestIds.LoanReturn);
+
+        // Wait until the row stops offering to return the copy, which is the page saying it has taken the return
+        // in. The server-rendered frontend redirects and so is always current by the time it renders, but the
+        // single-page one re-fetches after the fact — asking whether the loan is still open the instant the click
+        // returns would read the previous answer. Waiting here keeps that difference out of the specs.
+        await Settles(Row(TestIds.LoansTable, TestIds.LoanRow, titleOrIsbn).GetByTestId(TestIds.LoanReturn));
     }
 
     /// <summary>
