@@ -14,6 +14,8 @@ namespace Cratis.Prologue.Contracts;
 [JsonDerivedType(typeof(DatabaseTransactionObserved), DatabaseTransactionDiscriminator)]
 [JsonDerivedType(typeof(HttpCommandObserved), HttpCommandDiscriminator)]
 [JsonDerivedType(typeof(TelemetryObserved), TelemetryDiscriminator)]
+[JsonDerivedType(typeof(MetricObserved), MetricDiscriminator)]
+[JsonDerivedType(typeof(LogObserved), LogDiscriminator)]
 public abstract record ObservationPayload
 {
     /// <summary>
@@ -30,4 +32,14 @@ public abstract record ObservationPayload
     /// The discriminator identifying a <see cref="TelemetryObserved"/> payload.
     /// </summary>
     public const string TelemetryDiscriminator = "telemetry";
+
+    /// <summary>
+    /// The discriminator identifying a <see cref="MetricObserved"/> payload.
+    /// </summary>
+    public const string MetricDiscriminator = "metric";
+
+    /// <summary>
+    /// The discriminator identifying a <see cref="LogObserved"/> payload.
+    /// </summary>
+    public const string LogDiscriminator = "log";
 }

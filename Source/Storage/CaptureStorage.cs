@@ -55,6 +55,16 @@ public static class CaptureStorage
                 map.AutoMap();
                 map.SetDiscriminator(ObservationPayload.TelemetryDiscriminator);
             });
+            BsonClassMap.RegisterClassMap<MetricObserved>(map =>
+            {
+                map.AutoMap();
+                map.SetDiscriminator(ObservationPayload.MetricDiscriminator);
+            });
+            BsonClassMap.RegisterClassMap<LogObserved>(map =>
+            {
+                map.AutoMap();
+                map.SetDiscriminator(ObservationPayload.LogDiscriminator);
+            });
         }
     }
 
