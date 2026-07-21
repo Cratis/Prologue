@@ -1,0 +1,25 @@
+{
+    "name": "library-web",
+    "private": true,
+    "version": "1.0.0",
+    "type": "module",
+    "scripts": {
+        "dev": "vite",
+        "build": "tsc -b && vite build",
+        "preview": "vite preview",
+        "compile": "tsc --noEmit"
+    },
+    "dependencies": {
+        "react": "19.2.7",
+        "react-dom": "19.2.7",
+        "react-router-dom": "7.18.1"
+    },
+    "devDependencies": {
+        "@types/node": "24.13.3",
+        "@types/react": "19.2.17",
+        "@types/react-dom": "19.2.3",
+        "@vitejs/plugin-react": "5.2.0",
+        "typescript": "5.9.3",
+        "vite": "7.3.6"
+    }
+}
