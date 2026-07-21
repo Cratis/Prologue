@@ -14,6 +14,13 @@ public class PrologueOptions
     public const string SectionName = "Prologue";
 
     /// <summary>
+    /// Gets or sets the Prologue the captures belong to. When set, captures are stamped with it and posted to the
+    /// Receiver's Prologue-scoped endpoint, so they can later be interpreted on their own. Left unset
+    /// (<see cref="Guid.Empty"/>), captures are not associated with any Prologue.
+    /// </summary>
+    public Guid PrologueId { get; set; }
+
+    /// <summary>
     /// Gets or sets the output configuration — where captured data is written (Prologue Receiver or rolling JSON files).
     /// </summary>
     public OutputOptions Output { get; set; } = new();
