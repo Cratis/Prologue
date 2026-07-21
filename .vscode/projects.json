@@ -1,6 +1,27 @@
 [
     {
-        "name": "Core",
-        "path": "${workspaceFolder}/Source/Core",
-        "outputPath": "${workspaceFolder}/Source/Core/bin/Debug/net10.0/Studio.dll"
-    }]
+        "name": "Extractor",
+        "path": "${workspaceFolder}/Source/Extractor",
+        "outputPath": "${workspaceFolder}/Source/Extractor/bin/Debug/net10.0/Cratis.Prologue.Extractor.dll"
+    },
+    {
+        "name": "Receiver",
+        "path": "${workspaceFolder}/Source/Receiver",
+        "outputPath": "${workspaceFolder}/Source/Receiver/bin/Debug/net10.0/Cratis.Prologue.Receiver.dll"
+    },
+    {
+        "name": "Interpreter",
+        "path": "${workspaceFolder}/Source/Interpreter",
+        "outputPath": "${workspaceFolder}/Source/Interpreter/bin/Debug/net10.0/Cratis.Prologue.Interpreter.dll"
+    },
+    {
+        "name": "Library Sample - Composition",
+        "path": "${workspaceFolder}/Samples/Library/Composition",
+        "outputPath": "${workspaceFolder}/Samples/Library/Composition/bin/Debug/net10.0/Library.Composition.dll"
+    },
+    {
+        "name": "Library Sample - Core",
+        "path": "${workspaceFolder}/Samples/Library/Core",
+        "outputPath": "${workspaceFolder}/Samples/Library/Core/bin/Debug/net10.0/Library.Core.dll"
+    }
+]
