@@ -13,10 +13,10 @@ public class when_applying_a_rename_map : Specification
 
     void Establish()
     {
-        var command = new ExtractedCommand("CreateAuthor", [new ExtractedProperty("AuthorId", "Guid")]);
+        var command = new ExtractedCommand("CreateAuthor", [new ExtractedProperty("AuthorId", "Guid")], []);
         var @event = new ExtractedEvent("AuthorCreated", [new ExtractedProperty("AuthorId", "Guid")]);
         var projection = new ExtractedProjection("AuthorProjection", ["AuthorCreated"]);
-        var slice = new ExtractedSlice("Create", ExtractedSliceType.StateChange, [command], [@event], [], [projection]);
+        var slice = new ExtractedSlice("Create", ExtractedSliceType.StateChange, [command], [@event], [], [projection], []);
         var feature = new ExtractedFeature("Authors", [], [slice]);
         var source = new ExtractionResult(Guid.NewGuid(), [new ExtractedModule("Authors", [feature])]);
 

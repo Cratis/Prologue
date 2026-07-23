@@ -12,10 +12,10 @@ public class when_collecting_names : Specification
 
     void Because()
     {
-        var command = new ExtractedCommand("CreateAuthor", [new ExtractedProperty("AuthorId", "Guid")]);
+        var command = new ExtractedCommand("CreateAuthor", [new ExtractedProperty("AuthorId", "Guid")], []);
         var @event = new ExtractedEvent("AuthorCreated", [new ExtractedProperty("Name", "string")]);
         var readModel = new ExtractedReadModel("Author", [new ExtractedProperty("Name", "string")]);
-        var slice = new ExtractedSlice("Create", ExtractedSliceType.StateChange, [command], [@event], [readModel], []);
+        var slice = new ExtractedSlice("Create", ExtractedSliceType.StateChange, [command], [@event], [readModel], [], []);
         var feature = new ExtractedFeature("Registration", [], [slice]);
         var result = new ExtractionResult(Guid.NewGuid(), [new ExtractedModule("Authors", [feature])]);
 

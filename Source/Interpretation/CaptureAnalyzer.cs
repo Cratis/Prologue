@@ -60,7 +60,7 @@ public static class CaptureAnalyzer
         var commandName = OperationName(spans)
             ?? (action.Length > 0 ? $"{action}{resource}" : Naming.CommandName(http.Method, resource));
         var properties = PropertyInference.ForCommand(transactions, spans);
-        var command = new ExtractedCommand(commandName, properties);
+        var command = new ExtractedCommand(commandName, properties, []);
         var sliceName = action.Length > 0 ? action : SliceName(http.Method);
 
         yield return new SliceDraft(module, feature, sliceName, ExtractedSliceType.StateChange, [command], events, [], []);

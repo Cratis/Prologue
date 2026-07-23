@@ -9,4 +9,8 @@ namespace Cratis.Prologue.Interpreter.Contracts;
 /// </summary>
 /// <param name="Name">The imperative name of the command (for example <c>RegisterAuthor</c>).</param>
 /// <param name="Properties">The inferred input properties of the command.</param>
-public record ExtractedCommand(string Name, IReadOnlyList<ExtractedProperty> Properties);
+/// <param name="Validations">The validation rules inferred for the command's properties, derived from observed database schema constraints.</param>
+public record ExtractedCommand(
+    string Name,
+    IReadOnlyList<ExtractedProperty> Properties,
+    IReadOnlyList<ExtractedValidationRule> Validations);

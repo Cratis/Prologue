@@ -14,10 +14,14 @@ namespace Cratis.Prologue.Interpreter.Contracts;
 /// <param name="Events">The events the slice produces or reacts to.</param>
 /// <param name="ReadModels">The read model the slice builds; empty for slices that build none.</param>
 /// <param name="Projections">The projection the slice defines; empty for slices that define none.</param>
+/// <param name="Constraints">The uniqueness constraints on the events the slice produces, derived from observed database unique constraints.</param>
+/// <param name="Description">The description of the behavior the slice captures; empty when not derived.</param>
 public record ExtractedSlice(
     string Name,
     ExtractedSliceType Type,
     IReadOnlyList<ExtractedCommand> Commands,
     IReadOnlyList<ExtractedEvent> Events,
     IReadOnlyList<ExtractedReadModel> ReadModels,
-    IReadOnlyList<ExtractedProjection> Projections);
+    IReadOnlyList<ExtractedProjection> Projections,
+    IReadOnlyList<ExtractedConstraint> Constraints,
+    string Description = "");

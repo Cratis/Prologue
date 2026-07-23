@@ -9,4 +9,6 @@ namespace Cratis.Prologue.Interpreter.Contracts;
 /// </summary>
 /// <param name="Name">The name of the property.</param>
 /// <param name="Type">The inferred type of the property (for example <see langword="string"/>, <see langword="int"/>, or <see cref="Guid"/>).</param>
-public record ExtractedProperty(string Name, string Type);
+/// <param name="IsRequired">Whether the property must have a value, derived from the observed column's nullability.</param>
+/// <param name="MaxLength">The maximum length of the property's value, derived from the observed column's declared maximum; 0 when unbounded.</param>
+public record ExtractedProperty(string Name, string Type, bool IsRequired = false, int MaxLength = 0);

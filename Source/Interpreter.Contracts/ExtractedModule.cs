@@ -8,4 +8,5 @@ namespace Cratis.Prologue.Interpreter.Contracts;
 /// </summary>
 /// <param name="Name">The name of the module.</param>
 /// <param name="Features">The features within the module.</param>
-public record ExtractedModule(string Name, IReadOnlyList<ExtractedFeature> Features);
+/// <param name="Description">The description of the domain area the module covers; empty when not derived.</param>
+public record ExtractedModule(string Name, IReadOnlyList<ExtractedFeature> Features, string Description = "");

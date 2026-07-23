@@ -9,7 +9,9 @@ namespace Cratis.Prologue.Interpreter.Contracts;
 /// <param name="Name">The name of the feature.</param>
 /// <param name="SubFeatures">The sub-features nested within the feature.</param>
 /// <param name="Slices">The slices within the feature.</param>
+/// <param name="Description">The description of what the feature groups; empty when not derived.</param>
 public record ExtractedFeature(
     string Name,
     IReadOnlyList<ExtractedFeature> SubFeatures,
-    IReadOnlyList<ExtractedSlice> Slices);
+    IReadOnlyList<ExtractedSlice> Slices,
+    string Description = "");

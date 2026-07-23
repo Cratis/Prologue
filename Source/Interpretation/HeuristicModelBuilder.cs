@@ -41,7 +41,8 @@ public class HeuristicModelBuilder : IBuildHeuristicModel
                 Merge(sliceGroup.SelectMany(draft => draft.Commands), command => command.Name),
                 Merge(sliceGroup.SelectMany(draft => draft.Events), @event => @event.Name),
                 Merge(sliceGroup.SelectMany(draft => draft.ReadModels), readModel => readModel.Name),
-                MergeProjections(sliceGroup.SelectMany(draft => draft.Projections))))
+                MergeProjections(sliceGroup.SelectMany(draft => draft.Projections)),
+                []))
     ];
 
     static IReadOnlyList<T> Merge<T>(IEnumerable<T> items, Func<T, string> keySelector) =>
