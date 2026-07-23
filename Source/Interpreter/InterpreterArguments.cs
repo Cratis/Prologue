@@ -7,16 +7,29 @@ using Cratis.Prologue.Screenplay;
 namespace Cratis.Prologue.Interpreter;
 
 /// <summary>
-/// Represents the command-line arguments for the interpreter job — where the capture files are mounted, where the
-/// extraction result goes, where the generated Screenplay goes and which Prologue the captures belong to. Every
-/// value can also be supplied through an environment variable, which is how the containerized job is typically
-/// configured.
+/// Represents the command-line arguments for the interpreter — where the capture files are mounted, where the
+/// extraction result goes, where the generated Screenplay goes and which Prologue the captures belong to, plus
+/// whether the interpreter runs as a long-lived session service instead of a batch job and how that service
+/// behaves. Every value can also be supplied through an environment variable, which is how the containerized
+/// interpreter is typically configured.
 /// </summary>
 /// <param name="CapturesFolder">The folder holding the capture files from the Extractor.</param>
 /// <param name="OutputFile">The file the extraction result is written to.</param>
 /// <param name="PrologueId">The Prologue the captures belong to.</param>
 /// <param name="PlayOutput">The file the generated Screenplay is written to; empty to derive it from the output folder and the system name.</param>
-public record InterpreterArguments(string CapturesFolder, string OutputFile, Guid PrologueId, string PlayOutput = "")
+/// <param name="Serve">Whether to run as a service hosting resumable sessions over HTTP instead of as a batch job.</param>
+/// <param name="ServicePort">The port the service's HTTP API listens on.</param>
+/// <param name="GracePeriodSeconds">How many seconds the service waits for answers while a session is parked awaiting them before exiting cleanly.</param>
+/// <param name="IdleTimeoutSeconds">How many seconds without session activity the service lingers before exiting cleanly.</param>
+public record InterpreterArguments(
+    string CapturesFolder,
+    string OutputFile,
+    Guid PrologueId,
+    string PlayOutput = "",
+    bool Serve = false,
+    int ServicePort = InterpreterArguments.DefaultServicePort,
+    int GracePeriodSeconds = InterpreterArguments.DefaultGracePeriodSeconds,
+    int IdleTimeoutSeconds = InterpreterArguments.DefaultIdleTimeoutSeconds)
 {
     /// <summary>
     /// The default folder capture files are read from when nothing is specified.
@@ -27,6 +40,31 @@ public record InterpreterArguments(string CapturesFolder, string OutputFile, Gui
     /// The default file the extraction result is written to when nothing is specified.
     /// </summary>
     public const string DefaultOutputFile = $"/output/{ExtractionResultFile.FileName}";
+
+    /// <summary>
+    /// The default port the service's HTTP API listens on when nothing is specified.
+    /// </summary>
+    public const int DefaultServicePort = 5004;
+
+    /// <summary>
+    /// The default number of seconds the service waits for answers before exiting cleanly.
+    /// </summary>
+    public const int DefaultGracePeriodSeconds = 300;
+
+    /// <summary>
+    /// The default number of seconds without session activity before the service exits cleanly.
+    /// </summary>
+    public const int DefaultIdleTimeoutSeconds = 600;
+
+    /// <summary>
+    /// Gets how long the service waits for answers while a session is parked awaiting them before exiting cleanly.
+    /// </summary>
+    public TimeSpan GracePeriod => TimeSpan.FromSeconds(GracePeriodSeconds);
+
+    /// <summary>
+    /// Gets how long the service lingers without session activity before exiting cleanly.
+    /// </summary>
+    public TimeSpan IdleTimeout => TimeSpan.FromSeconds(IdleTimeoutSeconds);
 
     /// <summary>
     /// Resolves the file the generated Screenplay is written to — the explicit <see cref="PlayOutput"/> when one
@@ -42,7 +80,9 @@ public record InterpreterArguments(string CapturesFolder, string OutputFile, Gui
 
     /// <summary>
     /// Parses the command-line arguments, falling back to the <c>PROLOGUE_CAPTURES</c>, <c>PROLOGUE_OUTPUT</c>,
-    /// <c>PROLOGUE_PLAY_OUTPUT</c> and <c>PROLOGUE_ID</c> environment variables and then the defaults.
+    /// <c>PROLOGUE_PLAY_OUTPUT</c> and <c>PROLOGUE_ID</c> environment variables and then the defaults. Service
+    /// mode is selected with <c>--serve</c> or <c>PROLOGUE_MODE=service</c>, and its behavior is tuned through
+    /// <c>PROLOGUE_SERVICE_PORT</c>, <c>PROLOGUE_GRACE_PERIOD</c> and <c>PROLOGUE_IDLE_TIMEOUT</c> (seconds).
     /// </summary>
     /// <param name="args">The raw command-line arguments.</param>
     /// <returns>The parsed arguments, or <see langword="null"/> when the arguments are malformed.</returns>
@@ -52,6 +92,10 @@ public record InterpreterArguments(string CapturesFolder, string OutputFile, Gui
         var output = Environment.GetEnvironmentVariable("PROLOGUE_OUTPUT") is { Length: > 0 } outputFromEnvironment ? outputFromEnvironment : DefaultOutputFile;
         var playOutput = Environment.GetEnvironmentVariable("PROLOGUE_PLAY_OUTPUT") is { Length: > 0 } playOutputFromEnvironment ? playOutputFromEnvironment : string.Empty;
         var prologueId = Guid.TryParse(Environment.GetEnvironmentVariable("PROLOGUE_ID"), out var idFromEnvironment) ? idFromEnvironment : Guid.Empty;
+        var serve = string.Equals(Environment.GetEnvironmentVariable("PROLOGUE_MODE"), "service", StringComparison.OrdinalIgnoreCase);
+        var servicePort = PositiveNumberFromEnvironment("PROLOGUE_SERVICE_PORT", DefaultServicePort);
+        var gracePeriod = PositiveNumberFromEnvironment("PROLOGUE_GRACE_PERIOD", DefaultGracePeriodSeconds);
+        var idleTimeout = PositiveNumberFromEnvironment("PROLOGUE_IDLE_TIMEOUT", DefaultIdleTimeoutSeconds);
 
         for (var index = 0; index < args.Length; index++)
         {
@@ -70,11 +114,17 @@ public record InterpreterArguments(string CapturesFolder, string OutputFile, Gui
                     prologueId = parsed;
                     index++;
                     break;
+                case "--serve":
+                    serve = true;
+                    break;
                 default:
                     return null;
             }
         }
 
-        return new InterpreterArguments(captures, output, prologueId, playOutput);
+        return new InterpreterArguments(captures, output, prologueId, playOutput, serve, servicePort, gracePeriod, idleTimeout);
     }
+
+    static int PositiveNumberFromEnvironment(string variable, int fallback) =>
+        int.TryParse(Environment.GetEnvironmentVariable(variable), out var value) && value > 0 ? value : fallback;
 }
