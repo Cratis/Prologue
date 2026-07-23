@@ -8,14 +8,17 @@ namespace Cratis.Prologue.Interpretation;
 
 /// <summary>
 /// Represents an <see cref="IBuildHeuristicModel"/> that analyzes every capture into provisional slices and
-/// aggregates the drafts that describe the same behavior into a single module → feature → slice tree.
+/// aggregates the drafts that describe the same behavior into a single module → feature → slice tree. Any
+/// <see cref="DatabaseSchemaObserved"/> observations among the captures are indexed first so the analysis can
+/// join the observed schema to the transactions it governs.
 /// </summary>
 public class HeuristicModelBuilder : IBuildHeuristicModel
 {
     /// <inheritdoc/>
     public ExtractionResult Build(Guid prologueId, IReadOnlyList<Capture> captures)
     {
-        var drafts = captures.SelectMany(CaptureAnalyzer.Analyze).ToList();
+        var schema = SchemaIndex.From(captures);
+        var drafts = captures.SelectMany(capture => CaptureAnalyzer.Analyze(capture, schema)).ToList();
         var modules = drafts
             .GroupBy(draft => draft.Module)
             .Select(moduleGroup => new ExtractedModule(moduleGroup.Key, BuildFeatures(moduleGroup)))
@@ -42,7 +45,7 @@ public class HeuristicModelBuilder : IBuildHeuristicModel
                 Merge(sliceGroup.SelectMany(draft => draft.Events), @event => @event.Name),
                 Merge(sliceGroup.SelectMany(draft => draft.ReadModels), readModel => readModel.Name),
                 MergeProjections(sliceGroup.SelectMany(draft => draft.Projections)),
-                []))
+                Merge(sliceGroup.SelectMany(draft => draft.Constraints), constraint => constraint.Name)))
     ];
 
     static IReadOnlyList<T> Merge<T>(IEnumerable<T> items, Func<T, string> keySelector) =>

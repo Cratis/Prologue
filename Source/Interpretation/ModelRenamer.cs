@@ -13,8 +13,8 @@ namespace Cratis.Prologue.Interpretation;
 public static class ModelRenamer
 {
     /// <summary>
-    /// Rewrites the names in a provisional event model using the given refinement map. Projection source-event
-    /// references are rewritten too, so a projection keeps pointing at its (renamed) events.
+    /// Rewrites the names in a provisional event model using the given refinement map. Projection source-event and
+    /// constraint event references are rewritten too, so they keep pointing at their (renamed) events.
     /// </summary>
     /// <param name="result">The provisional event model to rewrite.</param>
     /// <param name="renames">The map from provisional name to refined name.</param>
@@ -31,7 +31,8 @@ public static class ModelRenamer
             Commands = [.. slice.Commands.Select(command => command with { Name = Rename(command.Name), Properties = [.. command.Properties.Select(RenameProperty)] })],
             Events = [.. slice.Events.Select(@event => @event with { Name = Rename(@event.Name), Properties = [.. @event.Properties.Select(RenameProperty)] })],
             ReadModels = [.. slice.ReadModels.Select(readModel => readModel with { Name = Rename(readModel.Name), Properties = [.. readModel.Properties.Select(RenameProperty)] })],
-            Projections = [.. slice.Projections.Select(projection => projection with { Name = Rename(projection.Name), SourceEvents = [.. projection.SourceEvents.Select(Rename)] })]
+            Projections = [.. slice.Projections.Select(projection => projection with { Name = Rename(projection.Name), SourceEvents = [.. projection.SourceEvents.Select(Rename)] })],
+            Constraints = [.. slice.Constraints.Select(constraint => constraint with { OnEvent = Rename(constraint.OnEvent) })]
         };
 
         ExtractedFeature RenameFeature(ExtractedFeature feature) => feature with

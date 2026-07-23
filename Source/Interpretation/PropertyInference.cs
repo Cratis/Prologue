@@ -8,8 +8,9 @@ namespace Cratis.Prologue.Interpretation;
 
 /// <summary>
 /// Infers the properties of commands, events, and read models from the columns observed changing in database
-/// transactions and the allowlisted attribute keys observed on telemetry spans. No data values are ever seen — only
-/// column and attribute names — so types are inferred purely from naming conventions.
+/// transactions and the allowlisted attribute keys observed on telemetry spans. No data values are ever seen —
+/// only column and attribute names, plus the observed schema when one was captured: a schema column decides a
+/// property's type, requiredness, and maximum length, and name conventions fill in when no schema covers it.
 /// </summary>
 public static class PropertyInference
 {
@@ -19,13 +20,17 @@ public static class PropertyInference
     /// </summary>
     /// <param name="transactions">The database transactions correlated with the command.</param>
     /// <param name="spans">The telemetry spans correlated with the command.</param>
+    /// <param name="schema">The observed schema to source types and constraints from.</param>
     /// <returns>The inferred command properties.</returns>
     public static IReadOnlyList<ExtractedProperty> ForCommand(
         IReadOnlyList<DatabaseTransactionObserved> transactions,
-        IReadOnlyList<TelemetryObserved> spans)
+        IReadOnlyList<TelemetryObserved> spans,
+        SchemaIndex schema)
     {
-        var columns = transactions.SelectMany(transaction => transaction.Tables).SelectMany(table => table.Columns);
-        var attributes = spans.SelectMany(span => span.AttributeKeys);
+        var columns = ColumnsOf(transactions, schema, _ => true);
+        var attributes = spans
+            .SelectMany(span => span.AttributeKeys)
+            .Select(key => (Name: key, Column: default(SchemaColumn)));
         return Distinct(columns.Concat(attributes));
     }
 
@@ -35,23 +40,50 @@ public static class PropertyInference
     /// </summary>
     /// <param name="transactions">The database transactions the entity's read model is built from.</param>
     /// <param name="entity">The singular, PascalCase entity name.</param>
+    /// <param name="schema">The observed schema to source types and constraints from.</param>
     /// <returns>The inferred read-model properties.</returns>
     public static IReadOnlyList<ExtractedProperty> ForEntity(
         IReadOnlyList<DatabaseTransactionObserved> transactions,
-        string entity)
+        string entity,
+        SchemaIndex schema) =>
+        Distinct(ColumnsOf(transactions, schema, table => Naming.Singularize(Naming.Pascalize(table.Table)) == entity));
+
+    /// <summary>
+    /// Builds a property from a raw column or attribute name and the schema column covering it, when one was
+    /// observed. The schema decides the type, requiredness, and maximum length; name conventions fill in without one.
+    /// </summary>
+    /// <param name="name">The raw column or attribute name.</param>
+    /// <param name="column">The schema column covering the name; <see langword="null"/> when none was observed.</param>
+    /// <returns>The <see cref="ExtractedProperty"/>.</returns>
+    public static ExtractedProperty Property(string name, SchemaColumn? column)
     {
-        var columns = transactions
-            .SelectMany(transaction => transaction.Tables)
-            .Where(table => Naming.Singularize(Naming.Pascalize(table.Table)) == entity)
-            .SelectMany(table => table.Columns);
-        return Distinct(columns);
+        var pascalized = Naming.Pascalize(name);
+        var type = (column is not null ? SchemaTypeMapping.TypeFor(column.DataType) : null) ?? Naming.InferType(pascalized);
+        return new ExtractedProperty(
+            pascalized,
+            type,
+            column is { IsNullable: false },
+            column is not null && type == "string" ? column.MaxLength : 0);
     }
 
-    static IReadOnlyList<ExtractedProperty> Distinct(IEnumerable<string> names) =>
+    static IEnumerable<(string Name, SchemaColumn? Column)> ColumnsOf(
+        IReadOnlyList<DatabaseTransactionObserved> transactions,
+        SchemaIndex schema,
+        Func<TableChange, bool> tables) =>
+        transactions
+            .SelectMany(transaction => transaction.Tables.Where(tables).Select(table => (transaction.Database, Table: table)))
+            .SelectMany(scoped =>
+            {
+                var schemaTable = schema.Find(scoped.Database, scoped.Table.Schema, scoped.Table.Table);
+                return scoped.Table.Columns.Select(column => (Name: column, Column: schemaTable?.Column(column)));
+            });
+
+    static IReadOnlyList<ExtractedProperty> Distinct(IEnumerable<(string Name, SchemaColumn? Column)> candidates) =>
     [
-        .. names
-            .Select(Naming.Pascalize)
-            .Distinct()
-            .Select(name => new ExtractedProperty(name, Naming.InferType(name)))
+        .. candidates
+            .GroupBy(candidate => Naming.Pascalize(candidate.Name))
+            .Select(group => Property(
+                group.Key,
+                group.Select(candidate => candidate.Column).FirstOrDefault(column => column is not null)))
     ];
 }

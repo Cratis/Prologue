@@ -16,7 +16,8 @@ public class when_applying_a_rename_map : Specification
         var command = new ExtractedCommand("CreateAuthor", [new ExtractedProperty("AuthorId", "Guid")], []);
         var @event = new ExtractedEvent("AuthorCreated", [new ExtractedProperty("AuthorId", "Guid")]);
         var projection = new ExtractedProjection("AuthorProjection", ["AuthorCreated"]);
-        var slice = new ExtractedSlice("Create", ExtractedSliceType.StateChange, [command], [@event], [], [projection], []);
+        var constraint = new ExtractedConstraint("UniqueEmail", "email", "AuthorCreated");
+        var slice = new ExtractedSlice("Create", ExtractedSliceType.StateChange, [command], [@event], [], [projection], [constraint]);
         var feature = new ExtractedFeature("Authors", [], [slice]);
         var source = new ExtractionResult(Guid.NewGuid(), [new ExtractedModule("Authors", [feature])]);
 
@@ -36,6 +37,7 @@ public class when_applying_a_rename_map : Specification
     [Fact] void should_rename_the_command() => _slice.Commands.Single().Name.ShouldEqual("RegisterAuthor");
     [Fact] void should_rename_the_event() => _slice.Events.Single().Name.ShouldEqual("AuthorRegistered");
     [Fact] void should_rewrite_the_projection_source_event() => _slice.Projections.Single().SourceEvents.ShouldContain("AuthorRegistered");
+    [Fact] void should_rewrite_the_constraint_event_reference() => _slice.Constraints.Single().OnEvent.ShouldEqual("AuthorRegistered");
     [Fact] void should_keep_names_absent_from_the_map() => _slice.Commands.Single().Properties.Single().Name.ShouldEqual("AuthorId");
 }
 #endif

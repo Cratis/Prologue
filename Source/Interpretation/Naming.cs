@@ -25,6 +25,18 @@ public static class Naming
     }
 
     /// <summary>
+    /// Turns a raw token (a path segment, table, or column) into a camelCase identifier — the casing used when a
+    /// constraint references a property.
+    /// </summary>
+    /// <param name="value">The value to convert.</param>
+    /// <returns>The camelCase form.</returns>
+    public static string Camelize(string value)
+    {
+        var pascalized = Pascalize(value);
+        return char.ToLowerInvariant(pascalized[0]) + pascalized[1..];
+    }
+
+    /// <summary>
     /// Produces a naive singular form of a plural token (for turning table names into entity names).
     /// </summary>
     /// <param name="value">The value to singularize.</param>

@@ -18,26 +18,27 @@ public static class CaptureAnalyzer
     /// Derives the provisional slices evidenced by a capture.
     /// </summary>
     /// <param name="capture">The correlated capture to analyze.</param>
+    /// <param name="schema">The observed schema to source types and constraints from.</param>
     /// <returns>The provisional slices the capture evidences.</returns>
-    public static IEnumerable<SliceDraft> Analyze(Capture capture)
+    public static IEnumerable<SliceDraft> Analyze(Capture capture, SchemaIndex schema)
     {
         var payloads = capture.Entries.Select(entry => entry.Payload).ToList();
         var http = payloads.OfType<HttpCommandObserved>().FirstOrDefault();
         var transactions = payloads.OfType<DatabaseTransactionObserved>().ToList();
         var spans = payloads.OfType<TelemetryObserved>().ToList();
 
-        var events = BuildEvents(transactions);
+        var events = BuildEvents(transactions, schema);
 
         if (http is not null)
         {
-            foreach (var draft in FromCommand(http, spans, events, transactions))
+            foreach (var draft in FromCommand(http, spans, events, transactions, schema))
             {
                 yield return draft;
             }
         }
         else if (transactions.Count > 0)
         {
-            foreach (var draft in FromTransactionsOnly(transactions, events))
+            foreach (var draft in FromTransactionsOnly(transactions, events, schema))
             {
                 yield return draft;
             }
@@ -52,20 +53,30 @@ public static class CaptureAnalyzer
         HttpCommandObserved http,
         List<TelemetryObserved> spans,
         IReadOnlyList<ExtractedEvent> events,
-        List<DatabaseTransactionObserved> transactions)
+        List<DatabaseTransactionObserved> transactions,
+        SchemaIndex schema)
     {
         var route = ServerRoute(spans) ?? http.Path;
         var (module, feature, resource, action) = Location.FromPath(route);
 
         var commandName = OperationName(spans)
             ?? (action.Length > 0 ? $"{action}{resource}" : Naming.CommandName(http.Method, resource));
-        var properties = PropertyInference.ForCommand(transactions, spans);
-        var command = new ExtractedCommand(commandName, properties, []);
+        var properties = PropertyInference.ForCommand(transactions, spans, schema);
+        var command = new ExtractedCommand(commandName, properties, ValidationInference.ForCommand(transactions, schema));
         var sliceName = action.Length > 0 ? action : SliceName(http.Method);
 
-        yield return new SliceDraft(module, feature, sliceName, ExtractedSliceType.StateChange, [command], events, [], []);
+        yield return new SliceDraft(
+            module,
+            feature,
+            sliceName,
+            ExtractedSliceType.StateChange,
+            [command],
+            events,
+            [],
+            [],
+            ConstraintInference.ForSlice(transactions, schema));
 
-        foreach (var view in ViewsFor(module, feature, transactions, events))
+        foreach (var view in ViewsFor(module, feature, transactions, events, schema))
         {
             yield return view;
         }
@@ -96,44 +107,47 @@ public static class CaptureAnalyzer
 
     static IEnumerable<SliceDraft> FromTransactionsOnly(
         List<DatabaseTransactionObserved> transactions,
-        IReadOnlyList<ExtractedEvent> events)
+        IReadOnlyList<ExtractedEvent> events,
+        SchemaIndex schema)
     {
         var module = Naming.Pascalize(transactions[0].Database);
-        return ViewsFor(module, module, transactions, events);
+        return ViewsFor(module, module, transactions, events, schema);
     }
 
     static SliceDraft FromSpanOnly(TelemetryObserved span)
     {
         var module = Naming.Pascalize(span.ServiceName);
         var name = Naming.Pascalize(span.Name);
-        return new SliceDraft(module, module, name, ExtractedSliceType.Automation, [], [], [], []);
+        return new SliceDraft(module, module, name, ExtractedSliceType.Automation, [], [], [], [], []);
     }
 
     static IEnumerable<SliceDraft> ViewsFor(
         string module,
         string feature,
         List<DatabaseTransactionObserved> transactions,
-        IReadOnlyList<ExtractedEvent> events)
+        IReadOnlyList<ExtractedEvent> events,
+        SchemaIndex schema)
     {
         foreach (var entity in EntitiesIn(transactions))
         {
-            var properties = PropertyInference.ForEntity(transactions, entity);
+            var properties = PropertyInference.ForEntity(transactions, entity, schema);
             var readModel = new ExtractedReadModel(entity, properties);
             var projection = new ExtractedProjection($"{entity}Projection", [.. events.Select(@event => @event.Name)]);
-            yield return new SliceDraft(module, feature, $"All{entity}s", ExtractedSliceType.StateView, [], [], [readModel], [projection]);
+            yield return new SliceDraft(module, feature, $"All{entity}s", ExtractedSliceType.StateView, [], [], [readModel], [projection], []);
         }
     }
 
-    static IReadOnlyList<ExtractedEvent> BuildEvents(IReadOnlyList<DatabaseTransactionObserved> transactions) =>
+    static IReadOnlyList<ExtractedEvent> BuildEvents(IReadOnlyList<DatabaseTransactionObserved> transactions, SchemaIndex schema) =>
     [
         .. transactions
-            .SelectMany(transaction => transaction.Tables)
-            .Select(table =>
+            .SelectMany(transaction => transaction.Tables.Select(table => (transaction.Database, Table: table)))
+            .Select(scoped =>
             {
-                var entity = Naming.Singularize(Naming.Pascalize(table.Table));
+                var schemaTable = schema.Find(scoped.Database, scoped.Table.Schema, scoped.Table.Table);
+                var entity = Naming.Singularize(Naming.Pascalize(scoped.Table.Table));
                 return new ExtractedEvent(
-                    Naming.EventName(entity, table.Operation),
-                    [.. table.Columns.Select(column => new ExtractedProperty(Naming.Pascalize(column), Naming.InferType(column)))]);
+                    Naming.EventName(entity, scoped.Table.Operation),
+                    [.. scoped.Table.Columns.Select(column => PropertyInference.Property(column, schemaTable?.Column(column)))]);
             })
     ];
 

@@ -9,6 +9,8 @@ namespace Cratis.Prologue.Interpretation.for_Naming;
 public class when_building_names : Specification
 {
     [Fact] void should_pascalize_a_snake_case_column() => Naming.Pascalize("author_id").ShouldEqual("AuthorId");
+    [Fact] void should_camelize_a_snake_case_column() => Naming.Camelize("author_email").ShouldEqual("authorEmail");
+    [Fact] void should_camelize_a_pascal_case_column() => Naming.Camelize("Email").ShouldEqual("email");
     [Fact] void should_singularize_a_plural_table() => Naming.Singularize("Authors").ShouldEqual("Author");
     [Fact] void should_singularize_an_ies_plural() => Naming.Singularize("Categories").ShouldEqual("Category");
     [Fact] void should_name_an_insert_event_as_created() => Naming.EventName("Author", ChangeOperation.Insert).ShouldEqual("AuthorCreated");

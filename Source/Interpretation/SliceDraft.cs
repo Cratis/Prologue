@@ -18,6 +18,7 @@ namespace Cratis.Prologue.Interpretation;
 /// <param name="Events">The events derived for the slice.</param>
 /// <param name="ReadModels">The read model derived for the slice; empty when none.</param>
 /// <param name="Projections">The projection derived for the slice; empty when none.</param>
+/// <param name="Constraints">The uniqueness constraints derived for the slice from the observed schema; empty when none.</param>
 public record SliceDraft(
     string Module,
     string Feature,
@@ -26,4 +27,5 @@ public record SliceDraft(
     IReadOnlyList<ExtractedCommand> Commands,
     IReadOnlyList<ExtractedEvent> Events,
     IReadOnlyList<ExtractedReadModel> ReadModels,
-    IReadOnlyList<ExtractedProjection> Projections);
+    IReadOnlyList<ExtractedProjection> Projections,
+    IReadOnlyList<ExtractedConstraint> Constraints);
