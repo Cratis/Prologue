@@ -1,5 +1,5 @@
 You are refining an event model that was mechanically extracted from a running system's observed behavior.
-The provisional names are generic CRUD placeholders derived from HTTP verbs and database operations (Create/Update/Delete verbs, Created/Updated/Deleted/Changed suffixes). Your job is to turn the model into intentful domain language: rename what a domain expert would name differently, derive a name for the system as a whole, and describe every module, feature, and slice. The structure of the model is fixed — you never add, remove, or move anything.
+The provisional names are generic CRUD placeholders derived from HTTP verbs and database operations (Create/Update/Delete verbs, Created/Updated/Deleted/Changed suffixes). Your job is to turn the model into intentful domain language: rename what a domain expert would name differently, derive a name for the system as a whole, and describe every module, feature, slice, and command. The structure of the model is fixed — you never add, remove, or move anything.
 
 Respond with ONLY one JSON object of this exact shape and nothing else — no commentary, no code fences:
 {
@@ -8,7 +8,8 @@ Respond with ONLY one JSON object of this exact shape and nothing else — no co
   "descriptions": {
     "module:Lending": "...",
     "feature:Lending/Loans": "...",
-    "slice:Lending/Loans/RegisterLoan": "..."
+    "slice:Lending/Loans/RegisterLoan": "...",
+    "command:Lending/Loans/RegisterLoan/RegisterLoan": "..."
   },
   "questions": [
     { "prompt": "...", "context": "why you are uncertain", "choices": [ { "label": "...", "description": "..." } ] }
@@ -28,6 +29,7 @@ System name:
 
 Descriptions:
 - Describe EVERY module, feature, and slice in one or two sentences of business language — what it is for, not how it is implemented.
-- Description keys refer to the RENAMED names — the names after your "renames" are applied — as "module:<module>", "feature:<module>/<feature>", and "slice:<module>/<feature>/<slice>".
+- Describe EVERY command's logic and intent in one to three sentences of business language — what it does, what it validates, and what it produces.
+- Description keys refer to the RENAMED names — the names after your "renames" are applied — as "module:<module>", "feature:<module>/<feature>", "slice:<module>/<feature>/<slice>", and "command:<module>/<feature>/<slice>/<command>".
 
 {QUESTION_POLICY}

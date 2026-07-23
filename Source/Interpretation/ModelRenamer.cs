@@ -73,6 +73,16 @@ public static class ModelRenamer
         string Describe(string key, string current) =>
             descriptions.TryGetValue(key, out var description) && !string.IsNullOrWhiteSpace(description) ? description : current;
 
+        ExtractedSlice DescribeSlice(ExtractedSlice slice, string featurePath)
+        {
+            var slicePath = $"{featurePath}/{slice.Name}";
+            return slice with
+            {
+                Description = Describe($"slice:{slicePath}", slice.Description),
+                Commands = [.. slice.Commands.Select(command => command with { Description = Describe($"command:{slicePath}/{command.Name}", command.Description) })]
+            };
+        }
+
         ExtractedFeature DescribeFeature(ExtractedFeature feature, string path)
         {
             var featurePath = $"{path}/{feature.Name}";
@@ -80,7 +90,7 @@ public static class ModelRenamer
             {
                 Description = Describe($"feature:{featurePath}", feature.Description),
                 SubFeatures = [.. feature.SubFeatures.Select(subFeature => DescribeFeature(subFeature, featurePath))],
-                Slices = [.. feature.Slices.Select(slice => slice with { Description = Describe($"slice:{featurePath}/{slice.Name}", slice.Description) })]
+                Slices = [.. feature.Slices.Select(slice => DescribeSlice(slice, featurePath))]
             };
         }
 
