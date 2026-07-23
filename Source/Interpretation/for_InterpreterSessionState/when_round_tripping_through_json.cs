@@ -38,7 +38,7 @@ public class when_round_tripping_through_json : Specification
                                 new ExtractedSlice(
                                     "Register",
                                     ExtractedSliceType.StateChange,
-                                    [new ExtractedCommand("RegisterAuthor", [new ExtractedProperty("Name", "string", IsRequired: true, MaxLength: 200)], [new ExtractedValidationRule("Name", ExtractedValidationRuleKind.MaxLength, "200", "Name is too long")])],
+                                    [new ExtractedCommand("RegisterAuthor", [new ExtractedProperty("Name", "string", IsRequired: true, MaxLength: 200)], [new ExtractedValidationRule("Name", ExtractedValidationRuleKind.MaxLength, "200", "Name is too long")], "Registers an author by name")],
                                     [new ExtractedEvent("AuthorRegistered", [new ExtractedProperty("Name", "string")])],
                                     [],
                                     [],
@@ -79,6 +79,7 @@ public class when_round_tripping_through_json : Specification
     [Fact] void should_keep_the_model_system_name() => _deserialized.Model!.SystemName.ShouldEqual("LibrarySystem");
     [Fact] void should_keep_the_module_description() => _deserialized.Model!.Modules.Single().Description.ShouldEqual("The library domain");
     [Fact] void should_keep_the_slice_description() => Slice.Description.ShouldEqual("Registers an author in the library");
+    [Fact] void should_keep_the_command_description() => Slice.Commands.Single().Description.ShouldEqual("Registers an author by name");
     [Fact] void should_keep_the_nested_property_details() => Slice.Commands.Single().Properties.Single().MaxLength.ShouldEqual(200);
     [Fact] void should_keep_the_validation_rule_kind() => Slice.Commands.Single().Validations.Single().Kind.ShouldEqual(ExtractedValidationRuleKind.MaxLength);
     [Fact] void should_keep_the_constraint() => Slice.Constraints.Single().OnEvent.ShouldEqual("AuthorRegistered");
