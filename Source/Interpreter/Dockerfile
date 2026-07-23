@@ -22,6 +22,7 @@ COPY Source/Directory.Build.props ./Source/
 COPY Source/Contracts/Contracts.csproj ./Source/Contracts/
 COPY Source/Configuration/Configuration.csproj ./Source/Configuration/
 COPY Source/Interpreter.Contracts/Interpreter.Contracts.csproj ./Source/Interpreter.Contracts/
+COPY Source/Interpretation/Interpretation.csproj ./Source/Interpretation/
 COPY Source/Interpreter/Interpreter.csproj ./Source/Interpreter/
 
 RUN dotnet restore ./Source/Interpreter/Interpreter.csproj -p:Configuration=Release
@@ -31,6 +32,7 @@ COPY README.md ./
 COPY Source/Contracts/ ./Source/Contracts/
 COPY Source/Configuration/ ./Source/Configuration/
 COPY Source/Interpreter.Contracts/ ./Source/Interpreter.Contracts/
+COPY Source/Interpretation/ ./Source/Interpretation/
 COPY Source/Interpreter/ ./Source/Interpreter/
 
 RUN dotnet publish ./Source/Interpreter/Interpreter.csproj \

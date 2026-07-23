@@ -5,6 +5,7 @@
         <Project Path="Source/Storage/Storage.csproj" />
         <Project Path="Source/Extractor/Extractor.csproj" />
         <Project Path="Source/Interpreter.Contracts/Interpreter.Contracts.csproj" />
+        <Project Path="Source/Interpretation/Interpretation.csproj" />
         <Project Path="Source/Interpreter/Interpreter.csproj" />
         <Project Path="Source/Receiver/Receiver.csproj" />
     </Folder>

@@ -4,6 +4,7 @@
 using System.Globalization;
 using Cratis.Prologue.Configuration;
 using Cratis.Prologue.Contracts;
+using Cratis.Prologue.Interpretation;
 using Cratis.Prologue.Interpreter;
 using Cratis.Prologue.Interpreter.Contracts;
 using Microsoft.Extensions.AI;
