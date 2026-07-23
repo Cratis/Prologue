@@ -12,6 +12,7 @@ namespace Cratis.Prologue.Contracts;
 /// </summary>
 [JsonPolymorphic(TypeDiscriminatorPropertyName = "type")]
 [JsonDerivedType(typeof(DatabaseTransactionObserved), DatabaseTransactionDiscriminator)]
+[JsonDerivedType(typeof(DatabaseSchemaObserved), DatabaseSchemaDiscriminator)]
 [JsonDerivedType(typeof(HttpCommandObserved), HttpCommandDiscriminator)]
 [JsonDerivedType(typeof(TelemetryObserved), TelemetryDiscriminator)]
 [JsonDerivedType(typeof(MetricObserved), MetricDiscriminator)]
@@ -22,6 +23,11 @@ public abstract record ObservationPayload
     /// The discriminator identifying a <see cref="DatabaseTransactionObserved"/> payload.
     /// </summary>
     public const string DatabaseTransactionDiscriminator = "database-transaction";
+
+    /// <summary>
+    /// The discriminator identifying a <see cref="DatabaseSchemaObserved"/> payload.
+    /// </summary>
+    public const string DatabaseSchemaDiscriminator = "database-schema";
 
     /// <summary>
     /// The discriminator identifying a <see cref="HttpCommandObserved"/> payload.

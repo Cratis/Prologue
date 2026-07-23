@@ -45,6 +45,11 @@ public static class CaptureStorage
                 map.AutoMap();
                 map.SetDiscriminator(ObservationPayload.DatabaseTransactionDiscriminator);
             });
+            BsonClassMap.RegisterClassMap<DatabaseSchemaObserved>(map =>
+            {
+                map.AutoMap();
+                map.SetDiscriminator(ObservationPayload.DatabaseSchemaDiscriminator);
+            });
             BsonClassMap.RegisterClassMap<HttpCommandObserved>(map =>
             {
                 map.AutoMap();
