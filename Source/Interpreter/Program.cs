@@ -7,6 +7,8 @@ using Cratis.Prologue.Contracts;
 using Cratis.Prologue.Interpretation;
 using Cratis.Prologue.Interpreter;
 using Cratis.Prologue.Interpreter.Contracts;
+using Cratis.Prologue.Screenplay;
+using Cratis.Screenplay.Printing;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -20,9 +22,9 @@ CultureInfo.CurrentUICulture = CultureInfo.InvariantCulture;
 var arguments = InterpreterArguments.Parse(args);
 if (arguments is null)
 {
-    await Console.Error.WriteLineAsync("Usage: interpreter [--captures <folder>] [--output <file>] [--prologue-id <guid>]");
-    await Console.Error.WriteLineAsync($"Defaults: --captures {InterpreterArguments.DefaultCapturesFolder}, --output {InterpreterArguments.DefaultOutputFile}.");
-    await Console.Error.WriteLineAsync("Environment overrides: PROLOGUE_CAPTURES, PROLOGUE_OUTPUT, PROLOGUE_ID, PROLOGUE_CONFIG.");
+    await Console.Error.WriteLineAsync("Usage: interpreter [--captures <folder>] [--output <file>] [--play-output <file>] [--prologue-id <guid>]");
+    await Console.Error.WriteLineAsync($"Defaults: --captures {InterpreterArguments.DefaultCapturesFolder}, --output {InterpreterArguments.DefaultOutputFile}, --play-output derived from the output folder and the system name.");
+    await Console.Error.WriteLineAsync("Environment overrides: PROLOGUE_CAPTURES, PROLOGUE_OUTPUT, PROLOGUE_PLAY_OUTPUT, PROLOGUE_ID, PROLOGUE_CONFIG.");
     return 2;
 }
 
@@ -35,6 +37,8 @@ builder.Configuration.AddPrologueConfiguration(Directory.GetCurrentDirectory());
 builder.Services.AddSingleton<IBuildHeuristicModel, HeuristicModelBuilder>();
 builder.Services.AddSingleton<IChatClientFactory, ChatClientFactory>();
 builder.Services.AddSingleton<IInterpreterSessionFactory, InterpreterSessionFactory>();
+builder.Services.AddSingleton<IScreenplayPrinter, ScreenplayPrinter>();
+builder.Services.AddSingleton<IScreenplayGenerator, ScreenplayGenerator>();
 
 var llmOptions = builder.Configuration.GetSection(LlmOptions.SectionName).Get<LlmOptions>() ?? new LlmOptions();
 
@@ -67,4 +71,17 @@ if (state.Status == InterpreterStatus.Failed)
 var result = state.Model ?? ExtractionResult.Empty(arguments.PrologueId);
 await ExtractionResultFile.WriteToFile(result, arguments.OutputFile);
 await Console.Out.WriteLineAsync($"Extraction result for '{result.SystemName}' with {result.Modules.Count} module(s) written to '{arguments.OutputFile}'.");
+
+// Generate the Screenplay next to the extraction result — the .play document a developer continues authoring
+// from. The session itself never enters this stage, so the host reports it while emitting the output.
+callbacks.OnStatusChanged(InterpreterStatus.GeneratingScreenplay);
+var play = host.Services.GetRequiredService<IScreenplayGenerator>().Generate(result);
+var playFile = arguments.PlayOutputFor(result.SystemName);
+if (Path.GetDirectoryName(playFile) is { Length: > 0 } playFolder)
+{
+    Directory.CreateDirectory(playFolder);
+}
+
+await File.WriteAllTextAsync(playFile, play);
+await Console.Out.WriteLineAsync($"Screenplay written to '{playFile}'.");
 return 0;

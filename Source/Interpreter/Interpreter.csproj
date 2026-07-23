@@ -16,5 +16,6 @@
         <ProjectReference Include="../Configuration/Configuration.csproj" />
         <ProjectReference Include="../Interpretation/Interpretation.csproj" />
         <ProjectReference Include="../Interpreter.Contracts/Interpreter.Contracts.csproj" />
+        <ProjectReference Include="../Screenplay/Screenplay.csproj" />
     </ItemGroup>
 </Project>
