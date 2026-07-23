@@ -22,10 +22,18 @@ CultureInfo.CurrentUICulture = CultureInfo.InvariantCulture;
 var arguments = InterpreterArguments.Parse(args);
 if (arguments is null)
 {
-    await Console.Error.WriteLineAsync("Usage: interpreter [--captures <folder>] [--output <file>] [--play-output <file>] [--prologue-id <guid>]");
+    await Console.Error.WriteLineAsync("Usage: interpreter [--captures <folder>] [--output <file>] [--play-output <file>] [--prologue-id <guid>] [--serve]");
     await Console.Error.WriteLineAsync($"Defaults: --captures {InterpreterArguments.DefaultCapturesFolder}, --output {InterpreterArguments.DefaultOutputFile}, --play-output derived from the output folder and the system name.");
     await Console.Error.WriteLineAsync("Environment overrides: PROLOGUE_CAPTURES, PROLOGUE_OUTPUT, PROLOGUE_PLAY_OUTPUT, PROLOGUE_ID, PROLOGUE_CONFIG.");
+    await Console.Error.WriteLineAsync("Service mode: --serve or PROLOGUE_MODE=service, tuned with PROLOGUE_SERVICE_PORT, PROLOGUE_GRACE_PERIOD and PROLOGUE_IDLE_TIMEOUT (seconds).");
     return 2;
+}
+
+// Service mode hosts resumable sessions over HTTP for Studio — captures come from the capture store and the
+// session state persists to MongoDB, so the process can exit at any time and resume later.
+if (arguments.Serve)
+{
+    return await ServiceHost.Run(arguments);
 }
 
 var builder = Host.CreateApplicationBuilder(args);

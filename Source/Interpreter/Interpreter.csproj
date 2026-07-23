@@ -4,7 +4,8 @@
         <GenerateDocumentationFile>true</GenerateDocumentationFile>
         <AssemblyName>Cratis.Prologue.Interpreter</AssemblyName>
         <RootNamespace>Cratis.Prologue.Interpreter</RootNamespace>
-        <NoWarn>$(NoWarn);CS7022</NoWarn>
+        <!-- ORLEANS0010 asks for [Alias] attributes; the Orleans conventions rely on the default aliases instead. -->
+        <NoWarn>$(NoWarn);CS7022;ORLEANS0010</NoWarn>
         <WarnOnPackingNonPackableProject>false</WarnOnPackingNonPackableProject>
     </PropertyGroup>
 
