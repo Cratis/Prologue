@@ -6,12 +6,27 @@ using Cratis.Prologue.Interpreter.Contracts;
 namespace Cratis.Prologue.Interpretation;
 
 /// <summary>
-/// Applies a name-refinement map to a provisional event model, rewriting every module, feature, slice, command,
-/// event, read-model, projection, and property name while preserving the structure exactly. Names absent from the
-/// map keep their provisional value, so a partial map is always safe.
+/// Applies a language-model refinement to a provisional event model, rewriting every module, feature, slice,
+/// command, event, read-model, projection, and property name while preserving the structure exactly, and then
+/// applying the descriptions and system name the model contributed. Names absent from the rename map keep their
+/// provisional value, so a partial map is always safe.
 /// </summary>
 public static class ModelRenamer
 {
+    /// <summary>
+    /// Applies a full <see cref="ModelRefinement"/> to a provisional event model — the renames first, then the
+    /// descriptions (whose keys refer to the renamed names), then the system name. An empty system name in the
+    /// refinement leaves the model's existing system name untouched.
+    /// </summary>
+    /// <param name="result">The provisional event model to refine.</param>
+    /// <param name="refinement">The refinement the language model returned.</param>
+    /// <returns>The refined <see cref="ExtractionResult"/>.</returns>
+    public static ExtractionResult Apply(ExtractionResult result, ModelRefinement refinement)
+    {
+        var refined = ApplyDescriptions(Apply(result, refinement.Renames), refinement.Descriptions);
+        return refinement.SystemName is { Length: > 0 } systemName ? refined with { SystemName = systemName } : refined;
+    }
+
     /// <summary>
     /// Rewrites the names in a provisional event model using the given refinement map. Projection source-event and
     /// constraint event references are rewritten too, so they keep pointing at their (renamed) events.
@@ -45,6 +60,40 @@ public static class ModelRenamer
         return result with
         {
             Modules = [.. result.Modules.Select(module => module with { Name = Rename(module.Name), Features = [.. module.Features.Select(RenameFeature)] })]
+        };
+    }
+
+    static ExtractionResult ApplyDescriptions(ExtractionResult result, IReadOnlyDictionary<string, string> descriptions)
+    {
+        if (descriptions.Count == 0)
+        {
+            return result;
+        }
+
+        string Describe(string key, string current) =>
+            descriptions.TryGetValue(key, out var description) && !string.IsNullOrWhiteSpace(description) ? description : current;
+
+        ExtractedFeature DescribeFeature(ExtractedFeature feature, string path)
+        {
+            var featurePath = $"{path}/{feature.Name}";
+            return feature with
+            {
+                Description = Describe($"feature:{featurePath}", feature.Description),
+                SubFeatures = [.. feature.SubFeatures.Select(subFeature => DescribeFeature(subFeature, featurePath))],
+                Slices = [.. feature.Slices.Select(slice => slice with { Description = Describe($"slice:{featurePath}/{slice.Name}", slice.Description) })]
+            };
+        }
+
+        return result with
+        {
+            Modules =
+            [
+                .. result.Modules.Select(module => module with
+                {
+                    Description = Describe($"module:{module.Name}", module.Description),
+                    Features = [.. module.Features.Select(feature => DescribeFeature(feature, module.Name))]
+                })
+            ]
         };
     }
 }
