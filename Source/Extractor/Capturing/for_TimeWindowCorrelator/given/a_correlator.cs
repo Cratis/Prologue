@@ -27,6 +27,10 @@ public class a_correlator : Specification
         new(SourceKind.SqlServer, at, new DatabaseTransactionObserved(
             "sqlserver", "Shop", "lsn", [new TableChange("dbo", "Orders", ChangeOperation.Insert, ["Id"])]));
 
+    protected static Observation Schema(DateTimeOffset at) =>
+        new(SourceKind.SqlServer, at, new DatabaseSchemaObserved(
+            "sqlserver", "Shop", "shop-db", [new SchemaTable("dbo", "Orders", [new SchemaColumn("Id", "int", 0, false, true)], ["Id"], [], [])]));
+
     protected static Observation Span(DateTimeOffset at, string traceId, string name = "PlaceOrder") =>
         new(SourceKind.OpenTelemetry, at, new TelemetryObserved(
             traceId, "0000000000000001", string.Empty, name, "Server", "checkout", 1, 5, ["command.type"], new Dictionary<string, string>()));
