@@ -9,19 +9,23 @@ namespace Cratis.Prologue.Extractor.Sources.SqlServer;
 
 /// <summary>
 /// Watches a CDC-enabled SQL Server database by polling its change tables, grouping changes per transaction, and
-/// publishing the table/column metadata as observations.
+/// publishing the table/column metadata as observations. When capture starts, the database's schema is published
+/// once as structural evidence.
 /// </summary>
 /// <param name="options">The configuration for this SQL Server source.</param>
 /// <param name="channel">The channel observations are published to.</param>
 /// <param name="preparer">Turns Change Data Capture on so the system being captured does not have to.</param>
+/// <param name="schemaCapture">Captures the database's schema as evidence when capture starts.</param>
 /// <param name="logger">The logger.</param>
 public class SqlServerChangeSource(
     SqlServerOptions options,
     IObservationChannel channel,
     SqlServerChangeCapturePreparer preparer,
+    SqlServerSchemaCapture schemaCapture,
     ILogger<SqlServerChangeSource> logger) : BackgroundService
 {
     readonly SqlServerCdcReader _reader = new();
+    bool _schemaCaptured;
 
     /// <inheritdoc/>
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
@@ -64,6 +68,7 @@ public class SqlServerChangeSource(
         await connection.OpenAsync(stoppingToken);
 
         await preparer.Prepare(connection, stoppingToken);
+        await CaptureSchemaOnce(connection, stoppingToken);
 
         var instances = await _reader.LoadInstances(connection, stoppingToken);
 
@@ -97,6 +102,28 @@ public class SqlServerChangeSource(
             }
 
             lastLsn = maxLsn;
+        }
+    }
+
+    /// <summary>
+    /// Publishes the database's schema as an observation the first time it can be read. Watch is re-entered on
+    /// failure, so the guard keeps a reconnect from repeating evidence that was already captured.
+    /// </summary>
+    /// <param name="connection">An open connection to the database being watched.</param>
+    /// <param name="stoppingToken">A <see cref="CancellationToken"/> for the operation.</param>
+    /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
+    async Task CaptureSchemaOnce(SqlConnection connection, CancellationToken stoppingToken)
+    {
+        if (_schemaCaptured)
+        {
+            return;
+        }
+
+        var observation = await schemaCapture.Capture(connection, stoppingToken);
+        if (observation is not null)
+        {
+            await channel.Publish(observation, stoppingToken);
+            _schemaCaptured = true;
         }
     }
 }

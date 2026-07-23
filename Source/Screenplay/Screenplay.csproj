@@ -1,0 +1,17 @@
+<Project Sdk="Microsoft.NET.Sdk">
+    <PropertyGroup>
+        <AssemblyName>Cratis.Prologue.Screenplay</AssemblyName>
+        <RootNamespace>Cratis.Prologue.Screenplay</RootNamespace>
+        <GenerateDocumentationFile>true</GenerateDocumentationFile>
+        <IsPackable>true</IsPackable>
+        <Description>The Cratis Prologue Screenplay generation — turns an extraction result into a Cratis Screenplay syntax tree and prints it as a .play document.</Description>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <PackageReference Include="Cratis.Screenplay" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="../Interpreter.Contracts/Interpreter.Contracts.csproj" />
+    </ItemGroup>
+</Project>

@@ -10,8 +10,8 @@ namespace Cratis.Prologue.Extractor.Capturing;
 /// Represents an <see cref="ICorrelator"/> that correlates an HTTP command with the evidence it produced — the
 /// database transactions and OpenTelemetry signals within a configurable time window after it, plus any telemetry
 /// sharing the command's trace id. A command and its evidence become one capture. Trace-carrying telemetry with no
-/// preceding command is grouped into one capture per trace; standalone database transactions and metrics each
-/// become their own capture.
+/// preceding command is grouped into one capture per trace; standalone database transactions, metrics, and
+/// database schemas each become their own capture.
 /// </summary>
 /// <param name="options">The Prologue options carrying the correlation window and the Prologue captures belong to.</param>
 public class TimeWindowCorrelator(IOptions<PrologueOptions> options) : ICorrelator
@@ -71,7 +71,8 @@ public class TimeWindowCorrelator(IOptions<PrologueOptions> options) : ICorrelat
                 captures.Add(NewCapture(observations[0].Occurred, observations));
             }
 
-            // Database transactions and metrics carry no trace, so each settles into its own capture.
+            // Everything else carries no trace — database transactions, metrics, and observations that are not
+            // evidence of any command at all, such as a database schema — so each settles into its own capture.
             foreach (var observation in SettledStandalone(settledCutoff, claimed, payload => !CarriesTrace(payload)))
             {
                 claimed.Add(observation);
@@ -92,7 +93,9 @@ public class TimeWindowCorrelator(IOptions<PrologueOptions> options) : ICorrelat
         _ => string.Empty,
     };
 
-    // Evidence is anything a command may have produced, as opposed to the command itself.
+    // Evidence is anything a command may have produced, as opposed to the command itself. A database schema is
+    // deliberately not evidence — it describes the system, not what a command did — so it is never pulled into a
+    // command's capture and always settles standalone.
     static bool IsEvidence(ObservationPayload payload) =>
         payload is DatabaseTransactionObserved or TelemetryObserved or MetricObserved or LogObserved;
 
@@ -123,7 +126,7 @@ public class TimeWindowCorrelator(IOptions<PrologueOptions> options) : ICorrelat
     List<Observation> SettledStandalone(DateTimeOffset settledCutoff, HashSet<Observation> claimed, Func<ObservationPayload, bool> matches) =>
         [.. _pending
             .Where(observation =>
-                IsEvidence(observation.Payload) &&
+                observation.Payload is not HttpCommandObserved &&
                 matches(observation.Payload) &&
                 !claimed.Contains(observation) &&
                 observation.Occurred <= settledCutoff)

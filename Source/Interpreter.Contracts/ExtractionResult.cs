@@ -9,7 +9,8 @@ namespace Cratis.Prologue.Interpreter.Contracts;
 /// </summary>
 /// <param name="PrologueId">The Prologue the extraction was performed for.</param>
 /// <param name="Modules">The modules that make up the extracted event model.</param>
-public record ExtractionResult(Guid PrologueId, IReadOnlyList<ExtractedModule> Modules)
+/// <param name="SystemName">The name derived for the captured system as a whole; empty when not derived.</param>
+public record ExtractionResult(Guid PrologueId, IReadOnlyList<ExtractedModule> Modules, string SystemName = "")
 {
     /// <summary>
     /// Represents an empty extraction result for a Prologue that yielded no captures.

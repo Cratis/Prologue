@@ -1,0 +1,25 @@
+<Project Sdk="Microsoft.NET.Sdk">
+    <PropertyGroup>
+        <AssemblyName>Cratis.Prologue.Interpretation</AssemblyName>
+        <RootNamespace>Cratis.Prologue.Interpretation</RootNamespace>
+        <GenerateDocumentationFile>true</GenerateDocumentationFile>
+        <IsPackable>true</IsPackable>
+        <Description>The Cratis Prologue interpretation engine — deterministic heuristic extraction of an event model from captures, with optional language-model naming refinement.</Description>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <PackageReference Include="Anthropic" />
+        <PackageReference Include="Microsoft.Extensions.AI" />
+        <PackageReference Include="Microsoft.Extensions.AI.OpenAI" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="../Contracts/Contracts.csproj" />
+        <ProjectReference Include="../Configuration/Configuration.csproj" />
+        <ProjectReference Include="../Interpreter.Contracts/Interpreter.Contracts.csproj" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <EmbeddedResource Include="Prompts/**/*.txt" />
+    </ItemGroup>
+</Project>

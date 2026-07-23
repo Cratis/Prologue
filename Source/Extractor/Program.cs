@@ -56,7 +56,7 @@ builder.Services.AddSingleton<ITransformProvider, CommandCaptureTransform>();
 
 // Database change sources — one hosted service per configured database. Each source prepares its own database
 // for capture (enabling CDC, checking logical replication) so the system being captured never has to know
-// Prologue is watching it.
+// Prologue is watching it, and captures the database's schema once as structural evidence when capture starts.
 foreach (var sqlServer in prologue.SqlServer)
 {
     builder.Services.AddSingleton<IHostedService>(serviceProvider => new SqlServerChangeSource(
@@ -65,6 +65,9 @@ foreach (var sqlServer in prologue.SqlServer)
         new SqlServerChangeCapturePreparer(
             sqlServer,
             serviceProvider.GetRequiredService<ILogger<SqlServerChangeCapturePreparer>>()),
+        new SqlServerSchemaCapture(
+            sqlServer,
+            serviceProvider.GetRequiredService<ILogger<SqlServerSchemaCapture>>()),
         serviceProvider.GetRequiredService<ILogger<SqlServerChangeSource>>()));
 }
 
@@ -76,6 +79,9 @@ foreach (var postgres in prologue.Postgres)
         new PostgresReplicationPreparer(
             postgres,
             serviceProvider.GetRequiredService<ILogger<PostgresReplicationPreparer>>()),
+        new PostgresSchemaCapture(
+            postgres,
+            serviceProvider.GetRequiredService<ILogger<PostgresSchemaCapture>>()),
         serviceProvider.GetRequiredService<ILogger<PostgresChangeSource>>()));
 }
 
