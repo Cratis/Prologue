@@ -46,7 +46,8 @@ public class a_library_extraction_result : Specification
                                                 new ExtractedValidationRule("Name", ExtractedValidationRuleKind.MaxLength, "200", "Name must be at most 200 characters"),
                                                 new ExtractedValidationRule("Email", ExtractedValidationRuleKind.MinLength, "3", string.Empty),
                                                 new ExtractedValidationRule("Email", ExtractedValidationRuleKind.Pattern, "^.+@.+$", "Must be a valid email address")
-                                            ])
+                                            ],
+                                            "Registers an author with a unique email address")
                                     ],
                                     [
                                         new ExtractedEvent(

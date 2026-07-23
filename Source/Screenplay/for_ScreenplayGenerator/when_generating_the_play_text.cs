@@ -18,6 +18,7 @@ public class when_generating_the_play_text : given.a_library_extraction_result
     [Fact] void should_describe_the_state_change_slice() => _play.ShouldContain("description \"Registers an author in the catalog\"");
     [Fact] void should_declare_the_state_view_slice() => _play.ShouldContain("slice StateView AllAuthors");
     [Fact] void should_declare_the_command() => _play.ShouldContain("command RegisterAuthor");
+    [Fact] void should_describe_the_command_as_the_first_body_line() => _play.ShouldContain("command RegisterAuthor\n        description \"Registers an author with a unique email address\"");
     [Fact] void should_map_a_guid_property_to_uuid() => _play.ShouldContain("authorId Uuid");
     [Fact] void should_map_a_string_property_to_string() => _play.ShouldContain("name String");
     [Fact] void should_map_a_date_only_property_to_date() => _play.ShouldContain("bornOn Date");
