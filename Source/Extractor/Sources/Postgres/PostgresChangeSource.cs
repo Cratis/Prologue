@@ -8,19 +8,23 @@ namespace Cratis.Prologue.Extractor.Sources.Postgres;
 
 /// <summary>
 /// Watches a PostgreSQL database via logical replication, publishing one observation per committed transaction
-/// that changed at least one table.
+/// that changed at least one table. When capture starts, the database's schema is published once as structural
+/// evidence.
 /// </summary>
 /// <param name="options">The configuration for this PostgreSQL source.</param>
 /// <param name="channel">The channel observations are published to.</param>
 /// <param name="preparer">Checks the server is configured for logical replication before the reader starts.</param>
+/// <param name="schemaCapture">Captures the database's schema as evidence when capture starts.</param>
 /// <param name="logger">The logger.</param>
 public class PostgresChangeSource(
     PostgresOptions options,
     IObservationChannel channel,
     PostgresReplicationPreparer preparer,
+    PostgresSchemaCapture schemaCapture,
     ILogger<PostgresChangeSource> logger) : BackgroundService
 {
     readonly PostgresReplicationReader _reader = new();
+    bool _schemaCaptured;
 
     /// <inheritdoc/>
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
@@ -38,6 +42,7 @@ public class PostgresChangeSource(
             try
             {
                 await _reader.EnsureInfrastructure(options, stoppingToken);
+                await CaptureSchemaOnce(stoppingToken);
                 PostgresChangeSourceLog.Watching(logger, options.Name, options.Slot);
 
                 await foreach (var observation in _reader.Stream(options, stoppingToken))
@@ -85,5 +90,26 @@ public class PostgresChangeSource(
         }
 
         return false;
+    }
+
+    /// <summary>
+    /// Publishes the database's schema as an observation the first time it can be read. The watch loop re-enters
+    /// on failure, so the guard keeps a reconnect from repeating evidence that was already captured.
+    /// </summary>
+    /// <param name="stoppingToken">A <see cref="CancellationToken"/> for the operation.</param>
+    /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
+    async Task CaptureSchemaOnce(CancellationToken stoppingToken)
+    {
+        if (_schemaCaptured)
+        {
+            return;
+        }
+
+        var observation = await schemaCapture.Capture(stoppingToken);
+        if (observation is not null)
+        {
+            await channel.Publish(observation, stoppingToken);
+            _schemaCaptured = true;
+        }
     }
 }
