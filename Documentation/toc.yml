@@ -1,0 +1,14 @@
+- name: Overview
+  href: index.md
+- name: Getting started
+  href: getting-started.md
+- name: Why Prologue
+  href: why-prologue.md
+- name: How Prologue works
+  href: concepts.md
+- name: Architecture
+  href: architecture.md
+- name: Guides
+  href: guides/toc.yml
+- name: Reference
+  href: reference/toc.yml
