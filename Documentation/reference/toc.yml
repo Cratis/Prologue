@@ -1,0 +1,12 @@
+- name: Overview
+  href: index.md
+- name: Configuration
+  href: configuration.md
+- name: Capture sources
+  href: capture-sources.md
+- name: Receiver API
+  href: receiver.md
+- name: Extraction result
+  href: extraction-result.md
+- name: Troubleshooting and FAQ
+  href: faq.md
