@@ -50,9 +50,15 @@ var receiver = builder.AddProject<Projects.Receiver>("receiver")
 IResourceBuilder<IResourceWithConnectionString> libraryDatabase;
 IResourceBuilder<IResource> databaseServer;
 
+// Password and host port are pinned rather than Aspire-assigned, so the connection strings documented for
+// pointing the standalone Cratis CLI or Studio at this sample stay correct run after run instead of changing
+// every time the composition starts.
 if (database.IsSqlServer)
 {
-    var sqlServer = builder.AddSqlServer("sqlserver")
+    var sqlServerPassword = builder.AddParameter("sqlserver-password", LibraryComposition.DatabasePassword, secret: true);
+
+    var sqlServer = builder.AddSqlServer("sqlserver", password: sqlServerPassword)
+        .WithHostPort(LibraryComposition.SqlServerPort)
         .WithEnvironment("MSSQL_AGENT_ENABLED", "true")
         .WithLifetime(ContainerLifetime.Persistent);
 
@@ -61,7 +67,10 @@ if (database.IsSqlServer)
 }
 else
 {
-    var postgres = builder.AddPostgres("postgres")
+    var postgresPassword = builder.AddParameter("postgres-password", LibraryComposition.DatabasePassword, secret: true);
+
+    var postgres = builder.AddPostgres("postgres", password: postgresPassword)
+        .WithHostPort(LibraryComposition.PostgresPort)
         .WithArgs("-c", "wal_level=logical", "-c", "max_replication_slots=10", "-c", "max_wal_senders=10")
         .WithLifetime(ContainerLifetime.Persistent);
 

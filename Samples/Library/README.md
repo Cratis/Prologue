@@ -37,19 +37,18 @@ database is running, connection string and all. Reach for this section only when
 already wired — useful for trying the interactive tooling against a real target without standing up your own
 system first.
 
-Both tools ask for the same thing: a connection string to the database to watch. Aspire generates a random
-password and picks a free host port for `postgres`/`sqlserver` on every run, so there is no fixed string to copy
-from here — open the resource in the Aspire dashboard and reveal its **Connection string** to get the current
-host, port, and password, then substitute them below:
+Both tools ask for the same thing: a connection string to the database to watch. `Composition/AppHost.cs` pins the
+password and host port for `postgres`/`sqlserver` rather than letting Aspire assign them, so these stay correct
+for as long as the sample runs on `localhost` — whichever engine `aspire run` starts is reachable at:
 
 ```text
 # PostgreSQL — database name is `library`
-Host=localhost;Port=<port>;Username=postgres;Password=<password>;Database=library;
+Host=localhost;Port=15432;Username=postgres;Password=PrologueSample1!;Database=library
 ```
 
 ```text
 # SQL Server — database name is `LibraryDb`
-Server=localhost,<port>;Database=LibraryDb;User Id=sa;Password=<password>;TrustServerCertificate=True;
+Server=localhost,11433;User ID=sa;Password=PrologueSample1!;TrustServerCertificate=true;Database=LibraryDb
 ```
 
 Neither engine needs any extra preparation for this sample specifically: `AppHost.cs` already starts PostgreSQL

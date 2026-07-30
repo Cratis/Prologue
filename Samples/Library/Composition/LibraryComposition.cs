@@ -71,4 +71,32 @@ public static class LibraryComposition
     /// same Prologue and can be interpreted together.
     /// </summary>
     public const string DefaultPrologueId = "8f6b1c40-5d2e-4a71-9c3f-0b7a5e21d4c8";
+
+    /// <summary>
+    /// The host port PostgreSQL is published on while orchestrated here.
+    /// </summary>
+    /// <remarks>
+    /// Fixed rather than Aspire-assigned, and offset clear of the conventional 5432 — a developer machine
+    /// commonly has its own PostgreSQL already bound to that port — so the connection string documented for
+    /// pointing the standalone Cratis CLI or Studio at this sample stays correct run after run.
+    /// </remarks>
+    public const int PostgresPort = 15432;
+
+    /// <summary>
+    /// The host port SQL Server is published on while orchestrated here.
+    /// </summary>
+    /// <remarks>
+    /// Fixed rather than Aspire-assigned, and offset clear of the conventional 1433, for the same reason as
+    /// <see cref="PostgresPort"/>.
+    /// </remarks>
+    public const int SqlServerPort = 11433;
+
+    /// <summary>
+    /// The password both database engines are started with while orchestrated here.
+    /// </summary>
+    /// <remarks>
+    /// A fixed development-only credential, not a secret — it lives in source control alongside the rest of the
+    /// composition so the connection strings documented for this sample are stable and copy-pasteable.
+    /// </remarks>
+    public const string DatabasePassword = "PrologueSample1!";
 }
