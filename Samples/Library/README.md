@@ -29,6 +29,58 @@ the captures accumulate in MongoDB.
 
 Everything is a project reference; nothing is pulled as a Docker image except the databases and MongoDB.
 
+## Configuring a Prologue with the CLI or Studio
+
+`aspire run` already configures and starts the Extractor for you — `Composition/AppHost.cs` hands it whichever
+database is running, connection string and all. Reach for this section only when you want to point the
+**standalone Cratis CLI** or **Cratis Studio** at this sample's database directly, instead of the one Aspire
+already wired — useful for trying the interactive tooling against a real target without standing up your own
+system first.
+
+Both tools ask for the same thing: a connection string to the database to watch. Aspire generates a random
+password and picks a free host port for `postgres`/`sqlserver` on every run, so there is no fixed string to copy
+from here — open the resource in the Aspire dashboard and reveal its **Connection string** to get the current
+host, port, and password, then substitute them below:
+
+```text
+# PostgreSQL — database name is `library`
+Host=localhost;Port=<port>;Username=postgres;Password=<password>;Database=library;
+```
+
+```text
+# SQL Server — database name is `LibraryDb`
+Server=localhost,<port>;Database=LibraryDb;User Id=sa;Password=<password>;TrustServerCertificate=True;
+```
+
+Neither engine needs any extra preparation for this sample specifically: `AppHost.cs` already starts PostgreSQL
+with `wal_level=logical` and SQL Server with the Agent enabled, and the default accounts (`postgres`, `sa`)
+already hold the permissions their capture method needs — `REPLICATION` for logical replication, `sysadmin` for
+CDC. A system you point Prologue at yourself won't have those for free; see the Extractor's own
+[prerequisites](../../Source/Extractor/README.md#preparing-the-target-databases) for what a real target has to
+satisfy.
+
+### Cratis CLI
+
+```shell
+cratis prologue start
+```
+
+An interactive wizard: pick **PostgreSQL** or **SQL Server** as a source, paste the connection string above, and
+choose where captures go — a folder of `.jsonl` files is the simplest starting point. It writes a
+`cratis-prologue.json` and prints the `docker run` command that starts the Extractor as a sidecar. See the
+[CLI reference](https://cratis.io/cli/reference/prologue/) for every option.
+
+### Cratis Studio
+
+The Prologue setup wizard in [Cratis Studio](https://github.com/Cratis/Studio) walks the same decisions
+visually: name the Prologue, choose **Database** as a source, paste the connection string, and select **Connect**
+— Studio reads the schema and lets you narrow the capture to specific tables before generating
+`cratis-prologue.json` for you to download.
+
+Either way, the full property list behind `cratis-prologue.json` — including how to route output straight to a
+Receiver instead of files — is in
+[Point Prologue at your system](../../Documentation/guides/point-prologue-at-your-system.md).
+
 ## What runs
 
 ```text
