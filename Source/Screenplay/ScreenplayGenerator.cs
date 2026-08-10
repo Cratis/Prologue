@@ -54,7 +54,8 @@ public class ScreenplayGenerator(IScreenplayPrinter printer) : IScreenplayGenera
             [.. slice.Events.Select(Event)],
             [.. slice.Commands.Select(command => Command(command, slice.Events))],
             [.. slice.ReadModels.Select(Query)],
-            slice.Projections.Count > 0 ? Projection(slice.Projections[0], slice.ReadModels.Count > 0 ? slice.ReadModels[0] : null, events) : null,
+            [.. slice.Projections.Select((projection, index) =>
+                Projection(projection, index < slice.ReadModels.Count ? slice.ReadModels[index] : null, events))],
             [],
             [],
             [],
