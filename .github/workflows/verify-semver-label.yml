@@ -1,0 +1,52 @@
+name: Verify Release Intent
+
+# Every pull request into main must make one explicit release decision. A major/minor/patch label publishes;
+# no-release intentionally publishes nothing. No label is indistinguishable from a forgotten release, while
+# multiple intent labels are ambiguous, so both are visible failures before the merge.
+#
+# It also closes a race the publish workflow cannot: a label added moments after the merge may land too late
+# for the release to pick it up. Demanding the label before the merge means there is nothing to race.
+#
+# Triggered on labeled/unlabeled as well as the usual events, so adding the label re-runs the check rather than
+# leaving a red cross behind that only a push would clear.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+on:
+  pull_request:
+    types: [opened, reopened, synchronize, labeled, unlabeled]
+    # Scoped to the same branch Publish releases from. A pull request stacked onto another one's branch cannot
+    # cut a release, so demanding a version label of it would be asking which version a merge that publishes
+    # nothing should carry.
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Require exactly one release-intent label
+        env:
+          LABELS: ${{ toJSON(github.event.pull_request.labels.*.name) }}
+        run: |
+          set -euo pipefail
+
+          count=$(printf '%s' "$LABELS" | jq '[.[] | select(. == "major" or . == "minor" or . == "patch" or . == "no-release")] | length')
+
+          if [ "$count" -eq 1 ]; then
+            echo "Found one release-intent label."
+            exit 0
+          fi
+
+          if [ "$count" -eq 0 ]; then
+            echo "::error::This pull request has no release-intent label. Add exactly one of major, minor, patch, or no-release. Without an explicit decision, a merged change can silently publish nothing."
+          else
+            echo "::error::This pull request carries $count release-intent labels. Exactly one of major, minor, patch, or no-release is required."
+          fi
+
+          exit 1
