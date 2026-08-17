@@ -5,8 +5,8 @@
   </PropertyGroup>
   <ItemGroup>
     <!-- Cratis -->
-    <PackageVersion Include="Cratis.Fundamentals" Version="7.17.1" />
-    <PackageVersion Include="Cratis.Screenplay" Version="3.1.0" />
+    <PackageVersion Include="Cratis.Fundamentals" Version="7.18.0" />
+    <PackageVersion Include="Cratis.Screenplay" Version="4.0.1" />
     <!-- AI -->
     <PackageVersion Include="Anthropic" Version="12.40.0" />
     <PackageVersion Include="Microsoft.Extensions.AI" Version="10.9.0" />
@@ -57,8 +57,8 @@
     <PackageVersion Include="SharpCompress" Version="0.50.4" />
     <!-- Analysis -->
     <PackageVersion Include="StyleCop.Analyzers" Version="1.2.0-beta.556" NoWarn="NU5104" />
-    <PackageVersion Include="Roslynator.Analyzers" Version="4.16.0" />
-    <PackageVersion Include="Meziantou.Analyzer" Version="3.0.157" />
+    <PackageVersion Include="Roslynator.Analyzers" Version="4.16.1" />
+    <PackageVersion Include="Meziantou.Analyzer" Version="3.0.159" />
     <!-- Testing & Specifications -->
     <PackageVersion Include="Cratis.Specifications" Version="4.0.0" />
     <PackageVersion Include="Cratis.Specifications.XUnit" Version="4.0.0" />
