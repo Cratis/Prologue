@@ -1,30 +1,41 @@
 ---
 title: Prologue
-description: Prologue captures what an existing system actually does — HTTP commands, database changes, and telemetry — and interprets that into a Cratis event model, without touching the system's code.
+description: Prologue captures selected HTTP, database, and telemetry signals from an existing system and proposes a Cratis event model for review.
 ---
 
 ## The system nobody fully understands anymore
 
 Somewhere in every organization there's a system like this: it works, it matters, and nobody left on the team can say with confidence what it actually does under load. The people who built it have moved on. The wiki page is three reorganizations out of date. Rewriting it as an event-sourced Cratis application would be the right long-term move, but the first step — figuring out what to model — usually means weeks of archaeology: reading code nobody trusts, interviewing whoever's left, and guessing at the rest.
 
-Prologue skips the archaeology. It stands beside the running system, watches what it *actually does* — the HTTP commands that change state, the database rows that change alongside them, the telemetry the system already emits — and hands you back a structured event model: modules, features, and slices with their commands, events, read models, and projections. Not a guess. Evidence.
+Prologue gives you another source of evidence. It stands beside the running system, observes selected HTTP
+commands, database changes, and telemetry, and proposes a structured event model: modules, features, and slices
+with candidate commands, events, read models, and projections. You review and correct that proposal rather than
+treating observed implementation behavior as recovered domain intent.
 
-It captures **metadata, not data** — which tables and columns changed, which endpoints were called, which spans fired — never the actual values. The story, not anyone's private lines.
+Prologue does not capture database row values or HTTP bodies. Its metadata can still be sensitive: HTTP
+observations include query strings, telemetry includes identifiers and names, and explicitly allowlisted
+OpenTelemetry attributes include their values. Minimize the capture configuration and protect the resulting
+files and persisted observations.
 
 ## How it fits together
 
 ```mermaid
 flowchart LR
-    Sys["Existing system"] --> Ext{{"Extractor\nDB · HTTP · OTel — metadata only"}}
+    Sys["Existing system"] --> Ext{{"Extractor\nDB · HTTP · OTel — selected metadata"}}
     Ext -->|"capture .jsonl files"| Folder[["Mounted folder"]]
     Ext -.->|"HTTP"| Rcv["Receiver"] --> Mongo[("MongoDB")]
     Folder --> Interp{{"Interpreter\n(+ optional LLM)"}}
-    Interp -->|"extraction-result.json + .play"| Model["Event model\nStudio · CLI · Stage"]
+    Interp -->|"extraction-result.json + .play"| Model["Provisional event model\nreview · continue authoring"]
 ```
 
-The **Extractor** watches the system from three angles at once — database change capture, an HTTP reverse proxy, and an OpenTelemetry proxy — and correlates what it sees into **captures**: a command plus the database transactions committed in the same window, read as one act. It writes those captures to a mounted folder as it goes, or posts them straight to the **Receiver**, which stores them in MongoDB. Either way, the **Interpreter** reads the captures back — heuristically at first, then optionally refined by a language model — and reconstructs them into an `ExtractionResult`: the event model, plus a generated [Screenplay](/screenplay/) `.play` file ready to run.
+The **Extractor** watches the system through database change capture, an HTTP reverse proxy, and an OpenTelemetry
+proxy. It correlates observations into **captures** using trace identifiers where available and a time window
+otherwise. It writes captures to a mounted folder or posts them to the **Receiver**, which stores them in MongoDB.
+The **Interpreter** analyzes those captures heuristically, can optionally refine names and descriptions with a
+language model, and produces an `ExtractionResult` plus a generated [Screenplay](/screenplay/) `.play` file.
 
-Prologue is self-contained. It has no dependency on Studio and doesn't require Orleans or any other hosting model — everything runs as a downloadable CLI extractor or as three plain containers.
+Prologue has no dependency on Studio. The Extractor, Receiver, and batch Interpreter run without Orleans. The
+Interpreter's optional resumable service mode embeds an Orleans silo for persisted interpretation sessions.
 
 ## The cast
 
@@ -34,9 +45,11 @@ Prologue is self-contained. It has no dependency on Studio and doesn't require O
 | Interpreter | Reads captures and interprets them into an event model and a Screenplay | `cratis/prologue-interpreter` (Docker) |
 | Receiver | An HTTP endpoint the Extractor can post captures to directly, storing them in MongoDB | `cratis/prologue-receiver` (Docker) |
 | `Cratis.Prologue.Contracts` | The capture contract and canonical JSON/capture-file formats | NuGet |
-| `Cratis.Prologue.Configuration` | Typed configuration for `cratis-prologue.json`, shared by every tool | NuGet |
+| `Cratis.Prologue.Configuration` | Typed `cratis-prologue.json` configuration for the Extractor and Interpreter | NuGet |
 | `Cratis.Prologue.Storage` | MongoDB persistence for captures, used by the Receiver and by Studio | NuGet |
 | `Cratis.Prologue.Interpreter.Contracts` | The `ExtractionResult` contract | NuGet |
+| `Cratis.Prologue.Interpretation` | Heuristic construction and optional language-model refinement | NuGet |
+| `Cratis.Prologue.Screenplay` | Conversion from an extraction result to a `.play` document | NuGet |
 
 See [Architecture](architecture.md) for how these pieces compose and deploy.
 

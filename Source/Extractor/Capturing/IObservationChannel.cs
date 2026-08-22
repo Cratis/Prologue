@@ -4,8 +4,10 @@
 namespace Cratis.Prologue.Extractor.Capturing;
 
 /// <summary>
-/// Defines the in-process channel sources publish observations to and the correlation worker consumes from.
-/// This is the extension seam — a new source kind only needs to publish <see cref="Observation"/>s here.
+/// Defines the in-process producer/consumer boundary that configured observation producers publish to and the
+/// correlation worker consumes from. Source hosting, payload registration, persistence, and interpretation are
+/// composed separately; this interface alone is not an external plug-in contract. It is the narrow seam through
+/// which a configured producer enters the capture pipeline.
 /// </summary>
 public interface IObservationChannel
 {

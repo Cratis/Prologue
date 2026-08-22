@@ -20,11 +20,17 @@ Every capture is stamped with a `prologueId`. If a folder or a Receiver's MongoD
 
 ## The event model has mechanical, generic names
 
-That's the heuristic result — structurally correct, but naming things after what the evidence literally showed rather than domain language. Configure the `llm` section in `cratis-prologue.json` to have the Interpreter refine names and derive a system name; see [Configure LLM refinement](../guides/running-the-interpreter.md#configure-llm-refinement). Without a configured model, or in a non-interactive run, the Interpreter never guesses beyond the heuristics — it finalizes with its best mechanical effort rather than inventing domain language it can't verify.
+That is a provisional heuristic result with mechanical names. Configure the `llm` section in
+`cratis-prologue.json` to have the Interpreter refine names and derive a system name; see
+[Configure LLM refinement](../guides/running-the-interpreter.md#configure-llm-refinement). Without a configured
+model, the Interpreter does not apply language-model refinement. The heuristics still infer candidate structure
+from incomplete evidence, so review the result in either mode.
 
 ## A service-mode Interpreter container keeps exiting
 
-That's by design, not a crash. A service-mode session waiting on your answer past `PROLOGUE_GRACE_PERIOD`, or sitting idle past `PROLOGUE_IDLE_TIMEOUT`, exits cleanly on purpose — session state is already persisted in MongoDB, so an orchestrator restarting the container resumes the same session rather than losing it. If you're driving batch mode instead (the common case outside Studio), this doesn't apply.
+That is by design, not a crash. A service-mode session waiting on your answer past `PROLOGUE_GRACE_PERIOD`, or
+sitting idle past `PROLOGUE_IDLE_TIMEOUT`, exits cleanly. An orchestrator can restart the process and resume the
+session from its last MongoDB-backed checkpoint. This lifecycle does not apply to batch mode.
 
 ## Where to ask
 

@@ -3,7 +3,10 @@ title: Capture sources
 description: What triggers a capture for each source the Extractor watches, and the configuration specific to it.
 ---
 
-The Extractor runs up to four capture sources at once. Every one of them captures **metadata, not data** — see [Why Prologue](../why-prologue.md#what-prologue-captures--and-doesnt).
+The Extractor can run four source families at once. SQL Server and PostgreSQL observations exclude row values,
+and HTTP observations exclude request and response bodies. Capture output can still contain query strings,
+identifiers, names, and explicitly allowlisted OpenTelemetry attribute values. See
+[Why Prologue](../why-prologue.md#what-prologue-captures--and-doesnt) for the complete boundary.
 
 ## SQL Server
 
@@ -31,7 +34,7 @@ The Extractor runs up to four capture sources at once. Every one of them capture
 |---|---|
 | Enabled by | Adding a `reverseProxy` section — the Extractor becomes a [YARP](https://microsoft.github.io/reverse-proxy/) reverse proxy in front of your system |
 | Mechanism | Every request that reaches the proxy passes through to your system unchanged; state-changing requests are also captured |
-| Captures | Method, path, response status, and the W3C `traceparent` trace id if present, for `POST`, `PUT`, and `DELETE` requests only |
+| Captures | Method, path including query string, response status, and the W3C `traceparent` trace id if present, for `POST`, `PUT`, and `DELETE` requests only |
 | Never captures | `GET`/read traffic, request or response bodies |
 | Config | Plain YARP `routes`/`clusters` configuration — see [Configuration](configuration.md#root-shape) |
 
@@ -41,13 +44,16 @@ The Extractor runs up to four capture sources at once. Every one of them capture
 |---|---|
 | Enabled by | `prologue.openTelemetry.enabled: true` |
 | Mechanism | An OTLP proxy (HTTP and gRPC). Telemetry is captured, then forwarded on to `upstream.http`/`upstream.grpc` unchanged — or nowhere, if you leave both empty, making the Extractor a terminal collector |
-| Captures | Span, metric, and log metadata: service name (if it matches `serviceNames`, or all services if that's empty) and the values of an allowlisted set of `attributeKeys` |
-| Never captures | Attribute keys not in the allowlist, full span/log payloads |
+| Captures | Span, metric, and log names and identifiers; every observed attribute key; values only for configured `attributeKeys`; service names matching `serviceNames`, or all services when empty |
+| Never captures | Log bodies, metric measurements, or values for attributes not in `attributeKeys` |
 | Config | `enabled`, `serviceNames`, `attributeKeys`, `upstream.http`, `upstream.grpc` — see [Configuration](configuration.md#prologueopentelemetry) |
 
 ## How they combine
 
-None of these run in isolation — the correlator groups whatever fires within the same [correlation window](../concepts.md#how-captures-get-correlated) into one capture, regardless of which sources contributed. A typical write request produces an HTTP capture *and* one or more database-change captures for the same act; OpenTelemetry adds the trace context that ties them together even when the timing alone wouldn't.
+Any source family can run alone. When several are enabled, the correlator uses the
+[correlation window](../concepts.md#how-captures-get-correlated) and trace identifiers where available to
+associate currently unclaimed observations. The association is provisional: database transactions do not carry
+trace identifiers in the current contract and therefore correlate with HTTP commands by time.
 
 ## Next
 

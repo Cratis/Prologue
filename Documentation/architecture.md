@@ -1,9 +1,12 @@
 ---
 title: Architecture
-description: How the Extractor, Interpreter, and Receiver deploy and compose — and why Prologue has no dependency on Studio or Orleans.
+description: How the Extractor, Receiver, and batch or service Interpreter modes deploy and compose.
 ---
 
-Prologue is deliberately self-contained. Every other Cratis product either runs inside an Orleans silo (Chronicle) or is a library you reference from one (Arc, Components). Prologue is neither — it's three ordinary containers (or a downloadable binary, for the Extractor) that read and write plain files and HTTP, so it can stand next to *any* system, Cratis-based or not, without pulling in a hosting model of its own.
+Prologue is deliberately self-contained and has no dependency on Studio. The Extractor and Receiver are ordinary
+services, while the Interpreter supports two hosting shapes: a run-to-completion batch process and a resumable
+HTTP service. Only the resumable service mode embeds an Orleans silo; file-based capture and batch interpretation
+do not require Orleans.
 
 ## The pieces
 
@@ -16,21 +19,24 @@ flowchart LR
         Rcv["Receiver"]
     end
     subgraph "cratis/prologue-interpreter"
-        Interp["Interpreter"]
+        Batch["Batch mode"]
+        Service["Service mode\nOrleans silo"]
     end
     Sys["Your system"] <-->|"reverse proxy"| Ext
     Ext -->|"JSON capture files"| Folder[["Mounted folder"]]
     Ext -->|"HTTP POST"| Rcv --> Mongo[("MongoDB")]
-    Folder --> Interp
-    Mongo -.->|"service mode"| Interp
-    Interp --> Output[["extraction-result.json\n+ .play"]]
+    Folder --> Batch --> Files[["extraction-result.json\n+ .play"]]
+    Mongo -.-> Service --> Api["SessionResult over HTTP"]
 ```
 
 - **Extractor** — a reverse proxy plus a database and telemetry watcher, all in one process. It's the only piece that has to run continuously, next to the system it's watching.
 - **Receiver** — a thin HTTP endpoint (`POST /captures`, `POST /prologues/{id}/captures`) that stores whatever the Extractor posts to it in MongoDB via `Cratis.Prologue.Storage`. It's optional — the Extractor can write JSON files to a mounted folder instead, with no Receiver or MongoDB involved at all.
-- **Interpreter** — a job, not a service, by default. It reads a folder of capture files, interprets them, and exits. A second mode keeps it running as a resumable HTTP session backed by MongoDB, for Studio's interactive review flow.
+- **Interpreter** — a job, not a service, by default. It reads a folder of capture files, interprets them, and exits. A second mode embeds Orleans and keeps interpretation running as resumable session grains with state backed by MongoDB.
 
-The shared `Cratis.Prologue.Contracts`, `Cratis.Prologue.Configuration`, and `Cratis.Prologue.Interpreter.Contracts` NuGet packages give all three tools (and any consumer, like Studio) one canonical shape for captures, configuration, and the extraction result — nobody hand-parses another tool's output format.
+The shared `Cratis.Prologue.Contracts`, `Cratis.Prologue.Configuration`, and
+`Cratis.Prologue.Interpreter.Contracts` packages define the canonical capture, configuration, and extraction-result
+formats. `Cratis.Prologue.Interpretation` contains the interpretation engine, and `Cratis.Prologue.Screenplay`
+converts an extraction result into a `.play` document.
 
 ## Two ways to run the Interpreter
 
@@ -45,11 +51,15 @@ flowchart TD
 
 **Batch mode** is what you get from the image by default, and what the [Cratis CLI](/cli/reference/prologue/)'s `cratis prologue interpret` drives — a folder of captures in, an `ExtractionResult` and a Screenplay `.play` file out, then the container exits. See [Running the Interpreter](guides/running-the-interpreter.md).
 
-**Service mode** hosts the same interpretation logic as a resumable session over HTTP, with session state persisted in MongoDB rather than kept in memory — so a long-running interpretation (one that's waiting on you to answer an LLM's clarifying question, for instance) survives the container being recycled. This is the mode Studio drives; if you're not integrating with Studio, batch mode is what you want.
+**Service mode** embeds an Orleans silo and hosts interpretation as resumable session grains over HTTP. Session
+state persists in MongoDB, so a session waiting for answers can resume after the process restarts. This mode is
+intended for interactive integrations; use batch mode when you only need file-based input and output.
 
 ## No dependency on Studio
 
-Nothing here requires Studio to be running, and nothing in Studio requires Prologue — Studio simply happens to be a good consumer of the `ExtractionResult`/MongoDB shape when you want to review and reshape a model visually before running it. If you only want a `.play` file, the Extractor and the batch Interpreter are the whole pipeline; the [Cratis CLI](/cli/reference/prologue/) is the most convenient way to drive them.
+Nothing here requires Studio to be running. If you only want an `ExtractionResult` and `.play` file, the Extractor
+and batch Interpreter are the complete Prologue pipeline; the [Cratis CLI](/cli/reference/prologue/) provides the
+corresponding command workflow.
 
 ## Next
 
