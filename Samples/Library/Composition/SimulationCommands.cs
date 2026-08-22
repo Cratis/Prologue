@@ -65,7 +65,7 @@ public static class SimulationCommands
         int defaultTransactionCount,
         ExecuteCommandContext context)
     {
-        var interaction = context.ServiceProvider.GetRequiredService<IInteractionService>();
+        var interaction = context.Services.GetRequiredService<IInteractionService>();
 
         var transactionCount = defaultTransactionCount;
 
