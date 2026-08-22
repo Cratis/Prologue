@@ -1,9 +1,10 @@
 ---
 title: Getting started
-description: Run the bundled sample system, watch Prologue capture it end to end, then turn a folder of captures into a .play file you can run.
+description: Run the bundled sample system, inspect its captures, then produce a provisional extraction result and .play file for review.
 ---
 
-By the end of this page you'll have watched Prologue capture a real (if ordinary) system, and separately produced your own `extraction-result.json` and `.play` file from a folder of captures — the two things every Prologue run ultimately does.
+By the end of this page you'll have watched Prologue capture an ordinary sample system and used batch mode to
+produce your own provisional `extraction-result.json` and `.play` file from a folder of captures.
 
 ## Part A — watch it work
 
@@ -15,7 +16,9 @@ cd Prologue/Samples/Library
 aspire run                        # PostgreSQL
 ```
 
-Open the dashboard at **<http://localhost:18880>**. On the `core` resource, run the **Simulate load** command — pick a transaction count and the library starts behaving like a system in real use: authors get registered, books get reserved and returned, some of it gets rejected (no copies left, an author with an outstanding loan). Watch the captures accumulate in MongoDB as the Extractor's reverse proxy sees the HTTP commands, its database watcher sees the resulting transactions, and its OTLP proxy sees the telemetry — all three sources, correlated, for every transaction the simulation drives through.
+Open the dashboard at **<http://localhost:18880>**. On the `core` resource, run the **Simulate load** command — pick a transaction count and the library starts behaving like a system in real use: authors get registered, books get reserved and returned, some of it gets rejected (no copies left, an author with an outstanding loan). Watch observations accumulate in MongoDB as the Extractor's reverse proxy sees HTTP commands, its database
+watcher sees transactions, and its OTLP proxy sees telemetry. The Extractor correlates those enabled signals
+heuristically as the simulation runs.
 
 That's the full pipeline running end to end, feeding the Receiver so a resumable Interpreter session (the path Studio uses) can pick the captures up later. See the [sample's README](https://github.com/Cratis/Prologue/blob/main/Samples/Library/README.md) for what each resource does.
 
@@ -92,16 +95,20 @@ docker run --rm \
   cratis/prologue-interpreter
 ```
 
-Batch mode is the Interpreter image's default: it reads every `.jsonl` file under `/captures`, reconstructs the correlated captures, and writes both `/output/extraction-result.json` and a generated `.play` file to `/output`. Configure a language model in `cratis-prologue.json`'s `llm` section first if you want the names refined into domain language instead of the heuristic's best guess — see [Running the Interpreter](guides/running-the-interpreter.md).
+Batch mode is the Interpreter image's default: it reads every `.jsonl` file under `/captures`, analyzes the
+correlated evidence, and writes `/output/extraction-result.json` plus a generated `.play` file to `/output`.
+Configure a language model in `cratis-prologue.json`'s `llm` section if you want names and descriptions refined;
+see [Running the Interpreter](guides/running-the-interpreter.md). Review the candidate structure in either mode.
 
 ### What you'll see
 
-An `extraction-result.json` shaped like this — one module per capture group, with the commands, events, and read models the heuristics (and any configured LLM) inferred:
+The exact candidates depend on the observations. The result has this shape, with names and structure proposed by
+the heuristics and any configured language-model refinement:
 
 ```json title="output/extraction-result.json (excerpt)"
 {
   "prologueId": "00000000-0000-0000-0000-000000000000",
-  "systemName": "Library",
+  "systemName": "",
   "modules": [
     {
       "name": "Catalog",
@@ -134,10 +141,12 @@ An `extraction-result.json` shaped like this — one module per capture group, w
 }
 ```
 
-alongside a `.play` file describing the same model in [Screenplay](/screenplay/)'s declarative language — the script the rest of the Cratis platform performs. See [The extraction result](reference/extraction-result.md) for the full shape.
+alongside a `.play` file expressing the same provisional model in [Screenplay](/screenplay/)'s declarative
+language. Validate and review it before treating it as authored intent. See
+[The extraction result](reference/extraction-result.md) for the full shape.
 
 ## What's next
 
 - **[cratis prologue interpret](/cli/reference/prologue/)** — the CLI wraps everything in Part B into two commands, including a wizard that writes `cratis-prologue.json` for you.
 - **[Reference — Configuration](reference/configuration.md)** — every `cratis-prologue.json` property, not just the ones used here.
-- Run the resulting `.play` file with **`cratis run`** to boot it as a local [Stage](/screenplay/) sandbox, or bring it into **Studio** to keep shaping it visually.
+- Validate and review the resulting `.play` file, then use the supported [Screenplay](/screenplay/) workflow for the constructs it contains.

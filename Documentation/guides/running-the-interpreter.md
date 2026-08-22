@@ -21,7 +21,8 @@ docker run --rm \
   cratis/prologue-interpreter
 ```
 
-It reads every capture file under `/captures`, reconstructs the correlated captures, and writes `/output/extraction-result.json` plus a generated `.play` file, then exits.
+It reads every capture file under `/captures`, analyzes the correlated evidence, writes a provisional
+`/output/extraction-result.json` plus a generated `.play` file, and exits.
 
 Every input and output path is overridable, as a CLI argument on the binary or an environment variable on the container:
 
@@ -36,7 +37,8 @@ Every input and output path is overridable, as a CLI argument on the binary or a
 
 ## Run service mode
 
-Service mode hosts the same interpretation as a resumable HTTP session, with state persisted in MongoDB, for Studio's interactive flow rather than a one-shot CLI run:
+Service mode embeds an Orleans silo and hosts interpretation as resumable session grains over HTTP, with state
+persisted in MongoDB:
 
 ```bash
 docker run --rm -p 5004:5004 \
@@ -53,7 +55,12 @@ docker run --rm -p 5004:5004 \
 | `PROLOGUE_GRACE_PERIOD` | `300` seconds | How long a session waits for an answer to a clarifying question before the container is allowed to exit |
 | `PROLOGUE_IDLE_TIMEOUT` | `600` seconds | How long an idle session waits before the container is allowed to exit |
 
-When the grace period or idle timeout elapses, the container exits cleanly — session state is already in MongoDB, so an orchestrator restarting it later resumes exactly where it left off. If you're not integrating with Studio, batch mode is what you want.
+When the grace period or idle timeout elapses, the container exits cleanly. An orchestrator can restart it and
+resume the session from its last MongoDB-backed checkpoint.
+
+Service mode does not write the batch output files. After a session completes,
+`GET /sessions/{prologueId}/result` returns a `SessionResult` containing the `ExtractionResult` and generated
+Screenplay source. Use batch mode when you need file-based input and output.
 
 ## Configure LLM refinement
 
@@ -72,7 +79,10 @@ Add an `llm` section to `cratis-prologue.json` to have the Interpreter rename th
 
 `kind` is one of `Ollama` (the default, a local model over its native chat API — no `accessToken` needed), `OpenAI`, `AzureOpenAI` (where `modelId` is the deployment name, not a model name), `OpenAICompatible` (any `/v1`-compatible endpoint — set `endpoint` explicitly), or `Anthropic`. The hosted providers default to their public endpoint; override it with `endpoint` for a private or self-hosted deployment.
 
-With refinement enabled and running in an interactive terminal, the Interpreter may ask a clarifying question when a decision would materially change the model — one at a time, with its background context and always an "Other" choice. Non-interactive runs (CI, piped output) never ask; they finalize with the model's best effort.
+With refinement enabled, service mode can return clarification questions through its session API and resume after
+answers are submitted. Batch mode sets the question limit to zero and finalizes without asking questions. In both
+modes, refinement changes names and descriptions around the heuristic candidate; review the resulting structure
+before relying on it.
 
 :::note
 The [Cratis CLI](/cli/reference/prologue/)'s `cratis prologue interpret` wraps batch mode with the same configuration precedence and prints the same result — use it if you'd rather not hand-roll `docker run` for every capture folder.
@@ -81,4 +91,4 @@ The [Cratis CLI](/cli/reference/prologue/)'s `cratis prologue interpret` wraps b
 ## Next
 
 - **[Reference — Extraction result](../reference/extraction-result.md)** — the full shape of what gets written.
-- Run the generated `.play` file with `cratis run` to boot it in a local Stage sandbox.
+- Validate and review the generated `.play` file before using it with a supported Screenplay runtime.

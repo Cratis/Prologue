@@ -1,7 +1,7 @@
 # Prologue Extractor
 
-Prologue Extractor points at an existing ("brownfield") system and captures **what changes**, from two angles
-at once, to help reverse-engineer the commands a system supports and the data changes they cause:
+Prologue Extractor points at an existing ("brownfield") system and captures **what changes**, from several
+signals, to propose commands and the data changes they may have caused:
 
 1. **Database change capture** — watches SQL Server *and* PostgreSQL and records, **per transaction**,
    which tables and columns changed. **Metadata only** — never the actual data values.
@@ -17,33 +17,75 @@ output (the **Prologue Receiver** or rolling JSON files).
 
 ## Architecture
 
+```text
+SQL Server / PostgreSQL hosted services ─┐
+HTTP reverse-proxy transform             ├─► IObservationChannel ─► CorrelationWorker
+OTLP HTTP and gRPC endpoints             ┘                              │
+                                                                        ▼
+                                                              TimeWindowCorrelator
+                                                                        │
+                                                                        ▼
+                                                             BufferedCaptureStore
+                                                                        │
+                                                                        ▼
+                                                                  CaptureBuffer
+                                                                        │
+                                                                        ▼
+                                                             CaptureOutputWorker
+                                                               ├─► JSONL files
+                                                               └─► Receiver API
 ```
-[SqlServerChangeSource] ─┐
-[PostgresChangeSource]  ─┼─► IObservationChannel ─► TimeWindowCorrelator ─► ApiCaptureStore ─► Prologue Receiver ─► Mongo
-[CommandCaptureTransform]┘        (per source)        (groups by time)       (POST /captures)
-```
 
-- **`Observation`** — the common unit every source emits (`Source`, `Occurred`, polymorphic `Payload`).
-- **`ICaptureSource`s** publish observations to **`IObservationChannel`** — the extension seam. A new kind
-  of source only needs to publish observations here; nothing downstream changes.
-- **`ICorrelator`** (`TimeWindowCorrelator`) groups observations into a **`Capture`** — a command plus the
-  database transactions committed within the window become one capture.
-- **`ICaptureStore`** (`ApiCaptureStore`) sends captures to the Prologue Receiver. `ObservationPayload`s are
-  polymorphic, so new source kinds add new entry types without breaking the schema.
+- **`Observation`** is the common unit each producer publishes: a source, timestamp, and polymorphic payload.
+- **`IObservationChannel`** is the in-process producer/consumer boundary between the configured producers and
+  `CorrelationWorker`.
+- **`ICorrelator`** is implemented by `TimeWindowCorrelator`, which groups settled observations into a
+  `Capture` using trace identifiers where available and a configured time window otherwise.
+- **`ICaptureStore`** is implemented by `BufferedCaptureStore`. It enqueues captures so output I/O does not block
+  observation capture.
+- **`ICaptureOutput`** writes rolling JSONL files through `JsonFileCaptureOutput` or posts captures through
+  `ApiCaptureOutput`, as selected by configuration.
 
-The capture contract (`Capture`, `Observation`, payloads, `SourceKind`) lives in **`Cratis.Prologue.Contracts`**, shared
-with the Prologue Receiver.
+The capture contract (`Capture`, `Observation`, payloads, and `SourceKind`) lives in
+**`Cratis.Prologue.Contracts`**, shared by the Extractor, Receiver, storage, and Interpreter.
 
-## Configuration (`appsettings.json` → `Prologue` section)
+### Adding another observation source
 
-- `Api.Endpoint` — the base address of the Prologue Receiver captures are posted to.
-- `Correlation.WindowMilliseconds` — the correlation window.
-- `SqlServer[]` / `Postgres[]` — one entry per database to watch (connection string + source name).
-  `SqlServer[].EnableChangeDataCapture` (default `true`) lets the extractor turn CDC on itself; `SqlServer[].Tables`
-  narrows it to named tables (`schema.table` or bare `table`) instead of every user table.
-- `PrologueId` — the Prologue captures belong to. When set, captures are stamped with it and posted to the
-  Receiver's Prologue-scoped endpoint so they can later be interpreted on their own.
-- `ReverseProxy` (standard YARP section) — the catch-all route/cluster pointing at the monitored system.
+`IObservationChannel` is a useful in-process seam, but Prologue does not currently provide binary plug-in discovery
+or an external source SDK. Source composition is explicit in `Program.cs` because the existing producers have
+several hosting shapes: background services, a YARP transform, and mapped OTLP HTTP/gRPC endpoints.
+
+A new source must be reviewed across the complete pipeline:
+
+1. define configuration and startup registration;
+2. publish bounded, classified metadata as `Observation` instances;
+3. add any payload type to the canonical JSON discriminator set;
+4. define correlation behavior and failure/recovery semantics;
+5. verify JSON and MongoDB persistence compatibility;
+6. teach the Interpreter how to use or explicitly ignore the new evidence; and
+7. add denied-data, serialization, correlation, and interpretation specifications.
+
+Do not force a new source into a relational table/column payload when its native semantics differ. Captured output
+is evidence for a provisional model, not automatic domain truth.
+
+## Configuration
+
+The Extractor reads `cratis-prologue.json` from its working directory. Set `PROLOGUE_CONFIG` to use another path.
+The file provides the baseline and environment variables override it using the normal double-underscore form.
+
+- `Prologue.Output.Kind` selects `Json` or `Api` output.
+- `Prologue.Output.Json.Directory` selects the JSONL capture directory.
+- `Prologue.Output.Api.Endpoint` selects the Receiver base address.
+- `Prologue.Correlation.WindowMilliseconds` sets the correlation window.
+- `Prologue.SqlServer[]` / `Prologue.Postgres[]` configure databases to watch.
+  `SqlServer[].EnableChangeDataCapture` defaults to `true`; `SqlServer[].Tables` narrows capture to named tables.
+- `Prologue.PrologueId` associates captures with one interpretation session.
+- `Prologue.OpenTelemetry` configures OTLP capture, filtering, allowlisted attribute values, and optional forwarding.
+- `ReverseProxy` is the standard YARP route/cluster configuration for the monitored HTTP application.
+
+HTTP observations include the query string, and OpenTelemetry observations can include values for explicitly
+allowlisted attributes. Treat configuration and capture output as sensitive, minimize the allowlist, and exclude
+credentials, personal data, and other unrestricted values.
 
 ## Preparing the target databases
 

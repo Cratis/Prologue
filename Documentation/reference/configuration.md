@@ -1,34 +1,44 @@
 ---
 title: Configuration
-description: The full cratis-prologue.json schema — every property, its default, and its environment-variable override name.
+description: Configuration used by the Extractor, Receiver, and batch or service Interpreter modes.
 ---
 
-Every Prologue tool binds the same `cratis-prologue.json`, via the shared `Cratis.Prologue.Configuration` package — never `appsettings.json`. The Extractor binds the `prologue` section; the Interpreter binds `llm`; the HTTP capture source binds the top-level `reverseProxy` section (a plain [YARP](https://microsoft.github.io/reverse-proxy/) configuration block, not a Prologue-specific schema).
+The Extractor and Interpreter add `cratis-prologue.json` through the shared
+`Cratis.Prologue.Configuration` package. The Extractor binds capture settings under `prologue` and YARP's
+`reverseProxy` section. Batch interpretation binds `llm`; service interpretation also binds `prologue.mongo`.
+The Receiver uses standard ASP.NET configuration, including `appsettings.json` and environment variables, and
+binds `prologue.mongo`.
 
 ## Where the file comes from
 
-- Each tool looks for `cratis-prologue.json` in its working directory by default. Override the path with the `PROLOGUE_CONFIG` environment variable, or point `--config`-style hosting at a different `basePath` if you're calling `AddPrologueConfiguration()` yourself.
-- **The file is the baseline; environment variables override it.** Every property below has a double-underscore environment variable equivalent — `Prologue__Output__Kind`, `Prologue__SqlServer__0__ConnectionString`, `ReverseProxy__Clusters__monitored__Destinations__primary__Address` — so a deployed tool can be configured by its host (a container, an orchestrator, an Aspire composition) without rewriting the file. If you're hosting a Prologue tool yourself, `AddPrologueConfiguration()` from `Cratis.Prologue.Configuration` wires up that precedence for you.
-- The file is missing? That's fine — every property below has a default, and environment variables still apply.
+- The Extractor and Interpreter look for `cratis-prologue.json` in their working directory. Override the path with
+  `PROLOGUE_CONFIG`, or pass another base path when calling `AddPrologueConfiguration()` in a custom host.
+- **The file is the baseline; environment variables override it.** Properties have double-underscore environment
+  equivalents such as `Prologue__Output__Kind`, `Prologue__SqlServer__0__ConnectionString`, and
+  `ReverseProxy__Clusters__monitored__Destinations__primary__Address`.
+- The Receiver follows standard ASP.NET precedence instead. Configure MongoDB in its `appsettings.json` or with
+  `Prologue__Mongo__ConnectionString`, `Prologue__Mongo__Database`, and `Prologue__Mongo__Collection`.
+- A missing `cratis-prologue.json` is allowed; type defaults and environment variables still apply.
 
 ## Root shape
 
 | Property | Type | Purpose |
 |---|---|---|
-| `prologue` | [`PrologueOptions`](#prologue) | Capture sources, correlation, and output — bound by the Extractor |
-| `llm` | [`LlmOptions`](#llm) | Optional language-model refinement — bound by the Interpreter |
+| `prologue` | [`PrologueOptions`](#prologue) and storage options | Capture sources, correlation, output, and MongoDB storage for the applicable host |
+| `llm` | [`LlmOptions`](#llm) | Optional language-model refinement bound by the Interpreter |
 | `reverseProxy` | YARP configuration | Routes and clusters for the HTTP capture source — see [YARP's configuration docs](https://microsoft.github.io/reverse-proxy/articles/config-files.html) |
 
 ## `prologue`
 
 | Property | Type | Default | Purpose |
 |---|---|---|---|
-| `prologueId` | `guid` | a fresh id | Identifies this Prologue's captures, so a folder or Receiver can hold more than one Prologue's data without mixing them |
+| `prologueId` | `guid` | empty guid | Associates captures with one interpretation session when explicitly configured |
 | `output` | [`OutputOptions`](#prologueoutput) | — | Where captures are written |
 | `correlation` | [`CorrelationOptions`](#prologuecorrelation) | — | The correlation time window |
 | `sqlServer` | array of [`SqlServerOptions`](#prologuesqlserver) | `[]` | SQL Server databases to watch via CDC |
 | `postgres` | array of [`PostgresOptions`](#prologuepostgres) | `[]` | PostgreSQL databases to watch via logical replication |
 | `openTelemetry` | [`OpenTelemetryOptions`](#prologueopentelemetry) | — | OTLP proxy configuration |
+| `mongo` | [`MongoOptions`](#prologuemongo) | — | Capture and service-session storage used by the Receiver and service Interpreter |
 
 ### `prologue.output`
 
@@ -70,11 +80,22 @@ Every Prologue tool binds the same `cratis-prologue.json`, via the shared `Crati
 |---|---|---|---|
 | `enabled` | `bool` | `false` | Whether the OTLP proxy is active |
 | `serviceNames` | array of `string` | `[]` | Service name allowlist; empty captures telemetry from every service |
-| `attributeKeys` | array of `string` | `[]` | Span/log attribute keys whose *values* are captured; everything else is dropped |
+| `attributeKeys` | array of `string` | `[]` | Attribute keys whose values are captured; all observed keys remain visible while other values are dropped |
 | `upstream.http` | `string` | — | Upstream OTLP/HTTP collector to forward telemetry to |
 | `upstream.grpc` | `string` | — | Upstream OTLP/gRPC collector to forward telemetry to |
 
 Leave both `upstream` addresses empty to make the Extractor a terminal collector rather than a forwarding proxy.
+
+### `prologue.mongo`
+
+The Receiver and service-mode Interpreter bind these settings through `Cratis.Prologue.Storage`. The service also
+stores interpretation checkpoints in the configured database.
+
+| Property | Type | Default | Purpose |
+|---|---|---|---|
+| `connectionString` | `string` | `"mongodb://localhost:27017"` | MongoDB connection used for captures and service checkpoints |
+| `database` | `string` | `"Prologue"` | Database containing Prologue collections |
+| `collection` | `string` | `"captures"` | Capture collection used by the Receiver and Interpreter |
 
 ## `llm`
 

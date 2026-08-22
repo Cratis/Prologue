@@ -6,9 +6,9 @@ using System.Text.Json.Serialization;
 namespace Cratis.Prologue.Contracts;
 
 /// <summary>
-/// Represents the polymorphic, source-specific metadata carried by an <see cref="Observation"/>. New source kinds
-/// extend the capture model by adding a new derived payload — nothing downstream needs to change. The type
-/// discriminators are shared by the HTTP transport (System.Text.Json) and the Prologue API's MongoDB persistence.
+/// Represents the polymorphic, source-specific metadata carried by an <see cref="Observation"/>. The derived types
+/// below form the canonical JSON discriminator set shared by transport, storage, and interpretation. Adding a new
+/// payload requires compatible registration and behavior across every consumer of the capture contract.
 /// </summary>
 [JsonPolymorphic(TypeDiscriminatorPropertyName = "type")]
 [JsonDerivedType(typeof(DatabaseTransactionObserved), DatabaseTransactionDiscriminator)]

@@ -1,6 +1,6 @@
 ---
 title: How Prologue works
-description: The capture, correlation, and interpretation pipeline in depth — what each capture source watches, how captures get correlated, and how the Interpreter turns them into an event model.
+description: The capture, correlation, and interpretation pipeline in depth — what each source watches and how the Interpreter proposes an event model.
 ---
 
 Prologue's job splits into three stages that run as two separate tools: the **Extractor** watches and correlates, the **Interpreter** reads the result and builds the model.
@@ -27,27 +27,42 @@ flowchart TD
 
 - **SQL Server** — change data capture. The Extractor enables CDC on the database itself (you don't need to); an optional table allowlist narrows which tables it watches, otherwise it captures every user table's changes.
 - **PostgreSQL** — logical replication. The Extractor creates its own publication and replication slot on the configured database — nothing to prepare on the database side beyond `wal_level = logical`.
-- **HTTP** — a YARP reverse proxy sits in front of the system. It captures only state-changing methods (`POST`, `PUT`, `DELETE`) — method, path, response status, and the W3C `traceparent` trace id if one's present — and forwards the request through unchanged. `GET` and other read traffic is invisible to Prologue by design; reads don't produce facts to model.
-- **OpenTelemetry** — an OTLP proxy. It captures span, metric, and log metadata — service name and an allowlisted set of attribute keys, never full payloads — and forwards everything on to wherever your telemetry already goes, so nothing about your observability stack changes.
+- **HTTP** — a YARP reverse proxy sits in front of the system. It captures only state-changing methods (`POST`, `PUT`, `DELETE`) — method, path including query string, response status, and the W3C `traceparent` trace id if one's present — and forwards the request through unchanged. `GET` and other read traffic is invisible to Prologue.
+- **OpenTelemetry** — an OTLP proxy. It retains span, metric, and log names and identifiers, every observed attribute key, and values only for explicitly allowlisted attribute keys. Log bodies and metric measurements are dropped. It can forward the original telemetry to an upstream collector when configured.
 
-Every source captures **metadata, not data** — see [Why Prologue](why-prologue.md#what-prologue-captures--and-doesnt) for why that boundary is deliberate.
+Database row values and HTTP bodies are excluded, but capture output can still contain sensitive metadata such as
+query strings, identifiers, operation names, and allowlisted telemetry values. Minimize the configuration and
+protect the resulting captures. See [Why Prologue](why-prologue.md#what-prologue-captures--and-doesnt) for the
+boundary.
 
 ## How captures get correlated
 
-A single command rarely tells the whole story on its own — the interesting fact is usually the command *and* the database transactions it caused. The Extractor's correlator groups observations within a configurable time window (`correlation.windowMilliseconds`, 2000ms by default) into one **capture**:
+A single command rarely tells the whole story on its own. The Extractor therefore uses a configurable time window
+(`correlation.windowMilliseconds`, 2000ms by default) and trace identifiers to associate observations into one
+**capture**:
 
-- An HTTP command plus every database transaction, telemetry span, or log observed within `[command occurred, command occurred + window]` — or that shares the command's trace id — becomes one capture. The command and its effects are read together.
-- Telemetry that carries a trace id but has no preceding command of its own groups into one capture per trace id — useful for background work that never went through the reverse proxy.
-- Everything else — a standalone database transaction, a bare metric — becomes its own capture.
-- A database *schema* change (a table or column appearing or disappearing) is recorded but is never itself evidence that groups other observations together — schema drift isn't a business fact.
+- An HTTP command claims currently unclaimed database transactions, spans, metrics, and logs observed between the
+  command timestamp and the end of its window.
+- Spans and logs that share the command's trace id can join it even when their timestamps fall outside the window.
+  Database transactions and metrics do not carry trace identifiers in the current contract and associate by time.
+- Settled spans and logs without a command group by trace id. A later drain can produce another capture for the
+  same long-running trace.
+- Other settled observations, including standalone database transactions, metrics, and the schema captured when a
+  database source starts, become individual captures.
 
-The correlator only emits a capture once nothing newer than the window could still join it — so a capture is never split across two runs just because the window hadn't closed yet.
+Normal periodic drains wait for observations to settle beyond the configured window. Pending observations remain
+in process memory, so this is a correlation heuristic rather than a cross-process losslessness guarantee.
 
 ## From captures to an event model
 
-The Interpreter reads back whichever captures it's pointed at — a folder of JSON files (batch mode) or MongoDB (service mode, for Studio) — and reconstructs them into an `ExtractionResult`: modules, features, and slices, each carrying the commands, events, read models, projections, and constraints the heuristics inferred from the evidence. See [The extraction result](reference/extraction-result.md) for the exact shape.
+The Interpreter reads a folder of JSON files in batch mode or MongoDB in service mode and analyzes the captures
+to propose an `ExtractionResult`: modules, features, and slices carrying candidate commands, events, read models,
+projections, and constraints. See [The extraction result](reference/extraction-result.md) for the exact shape.
 
-Heuristics alone get you a structurally correct model with mechanical names. Point the `llm` section of `cratis-prologue.json` at a language model — Ollama, OpenAI, Azure OpenAI, any OpenAI-compatible endpoint, or Anthropic — and the Interpreter refines that structure into domain language: renaming commands, events, and read models, deriving a system name, and, when it's genuinely uncertain about a decision that would materially change the model, asking you a clarifying question rather than guessing silently.
+Heuristics produce a provisional model with mechanical names that must be reviewed. Point the `llm` section of
+`cratis-prologue.json` at Ollama, OpenAI, Azure OpenAI, an OpenAI-compatible endpoint, or Anthropic to refine names
+and descriptions, derive a system name, and ask bounded clarification questions in service mode. Language-model
+refinement does not turn observed implementation evidence into accepted domain truth.
 
 ## Next
 

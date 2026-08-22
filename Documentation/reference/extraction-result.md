@@ -3,7 +3,9 @@ title: Extraction result
 description: The exact shape of extraction-result.json — modules, features, slices, and the commands, events, read models, projections, and constraints inside each slice.
 ---
 
-The Interpreter writes one JSON document, `extraction-result.json`, plus a generated [Screenplay](/screenplay/) `.play` file describing the same model in Screenplay's declarative language. This page documents the JSON shape; the `.play` file is what you'd hand-edit or run.
+In batch mode, the Interpreter writes `extraction-result.json` plus a generated [Screenplay](/screenplay/)
+`.play` file expressing the same provisional model. Service mode instead returns both values in a `SessionResult`
+from `GET /sessions/{prologueId}/result`. This page documents the extraction-result shape.
 
 ## Shape
 
@@ -24,7 +26,7 @@ flowchart TD
 | Property | Type | Purpose |
 |---|---|---|
 | `prologueId` | `guid` | Which Prologue these captures belonged to |
-| `systemName` | `string` | The system name — heuristic-derived, or set by LLM refinement |
+| `systemName` | `string` | Empty without a derived name; language-model refinement can propose one |
 | `modules` | array of `ExtractedModule` | The top-level structure the Interpreter inferred |
 
 ## `ExtractedModule`
@@ -49,13 +51,13 @@ flowchart TD
 | Property | Type | Purpose |
 |---|---|---|
 | `name` | `string` | Slice name |
-| `type` | `"StateChange"` \| `"StateView"` \| `"Automation"` \| `"Translation"` | Which of the four Cratis slice types the evidence matches |
+| `type` | `"StateChange"` \| `"StateView"` \| `"Automation"` \| `"Translation"` | Candidate slice type; the current deterministic analyzer produces the first three types |
 | `description` | `string` | Optional description |
 | `commands` | array of `ExtractedCommand` | At most one, for a `StateChange` slice |
 | `events` | array of `ExtractedEvent` | The facts the slice produces |
 | `readModels` | array of `ExtractedReadModel` | For a `StateView` slice |
 | `projections` | array of `ExtractedProjection` | How read models are built from events |
-| `constraints` | array of `ExtractedConstraint` | Uniqueness/invariant rules inferred from rejected requests |
+| `constraints` | array of `ExtractedConstraint` | Candidate uniqueness constraints inferred from captured database schema |
 
 `commands` is a list rather than a nullable single value — a `StateView`/`Automation`/`Translation` slice simply has an empty list, so the shape never carries a null.
 
@@ -88,7 +90,9 @@ flowchart TD
 
 ## What happens to it next
 
-The generated `.play` file is a working starting point, not a finished model — [run it directly](/screenplay/) with `cratis run` to boot it as a local Stage sandbox, bring it into Studio to keep shaping it visually, or hand-edit the `.play` file itself, since Screenplay is meant to be authored by hand as much as generated.
+The generated `.play` file is a provisional starting point, not accepted intent. Review and correct its domain
+terms and boundaries, validate it with the applicable Screenplay compiler/profile, and verify its behavior before
+using it as model input.
 
 ## Next
 
