@@ -314,3 +314,6 @@ captures/
 
 # Playwright MCP session artifacts
 .playwright-mcp/
+
+# Local AI work artifacts (plans, handovers, session notes) — never tracked
+.ai-work/
