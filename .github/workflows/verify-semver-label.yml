@@ -1,14 +1,10 @@
 name: Verify Release Intent
 
-# Every pull request into main must make one explicit release decision. A major/minor/patch label publishes;
-# no-release intentionally publishes nothing. No label is indistinguishable from a forgotten release, while
-# multiple intent labels are ambiguous, so both are visible failures before the merge.
-#
-# It also closes a race the publish workflow cannot: a label added moments after the merge may land too late
-# for the release to pick it up. Demanding the label before the merge means there is nothing to race.
-#
-# Triggered on labeled/unlabeled as well as the usual events, so adding the label re-runs the check rather than
-# leaving a red cross behind that only a push would clear.
+# Thin caller of the organization-wide release-intent gate. The policy - which
+# labels are accepted and what the errors say - lives in
+# Cratis/Workflows/.github/workflows/verify-release-intent.yml. Thirty diverging
+# per-repository copies of that logic are how the 2026-08-25 unintended releases
+# happened; do not reintroduce logic here.
 concurrency:
   group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: true
@@ -27,27 +23,4 @@ permissions:
 
 jobs:
   verify:
-    runs-on: ubuntu-latest
-    timeout-minutes: 60
-
-    steps:
-      - name: Require exactly one release-intent label
-        env:
-          LABELS: ${{ toJSON(github.event.pull_request.labels.*.name) }}
-        run: |
-          set -euo pipefail
-
-          count=$(printf '%s' "$LABELS" | jq '[.[] | select(. == "major" or . == "minor" or . == "patch" or . == "no-release")] | length')
-
-          if [ "$count" -eq 1 ]; then
-            echo "Found one release-intent label."
-            exit 0
-          fi
-
-          if [ "$count" -eq 0 ]; then
-            echo "::error::This pull request has no release-intent label. Add exactly one of major, minor, patch, or no-release. Without an explicit decision, a merged change can silently publish nothing."
-          else
-            echo "::error::This pull request carries $count release-intent labels. Exactly one of major, minor, patch, or no-release is required."
-          fi
-
-          exit 1
+    uses: Cratis/Workflows/.github/workflows/verify-release-intent.yml@main
