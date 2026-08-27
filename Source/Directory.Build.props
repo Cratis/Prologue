@@ -11,6 +11,7 @@
         <PublishRepositoryUrl>true</PublishRepositoryUrl>
         <RepositoryUrl>https://github.com/Cratis/Prologue</RepositoryUrl>
         <PackageProjectUrl>https://github.com/Cratis/Prologue</PackageProjectUrl>
+        <PackageTags>cratis;event-sourcing;event-modeling;cqrs;prologue;cdc;reverse-engineering</PackageTags>
 
         <GenerateAssemblyTitleAttribute>true</GenerateAssemblyTitleAttribute>
         <GenerateAssemblyDescriptionAttribute>true</GenerateAssemblyDescriptionAttribute>
