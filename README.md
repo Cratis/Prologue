@@ -20,6 +20,11 @@ running application, captures selected SQL Server and PostgreSQL changes, HTTP c
 signals, and uses that evidence to propose an **event model**. The result can be reviewed and continued as a
 Cratis Screenplay rather than treated as recovered domain truth.
 
+Prologue is **experimental** and part of the early-development Cratis model-first layer. The event model it
+proposes is a starting point for building an event-sourced system with Cratis — event sourcing with
+[Chronicle](https://github.com/Cratis/Chronicle) recording what happens and [Arc](https://github.com/Cratis/Arc)
+exposing typed commands and queries.
+
 Prologue captures structural and operational metadata rather than database row values or HTTP bodies. Some
 metadata can still be sensitive: HTTP observations include query strings, telemetry contains identifiers and
 names, and explicitly allowlisted OpenTelemetry attributes include their values. Minimize and review the capture
@@ -37,9 +42,13 @@ Three reasons, and they all line up:
   system that already exists — the story so far — before you model it in Cratis.
 - **It comes first.** Its output is an event model — the script the rest of the cast performs. Prologue always
   opens the show: capture and interpret, then hand the model on.
-- **The Cratis storytelling family.** Cratis names its products after telling a story: **Chronicle** records
-  new events, **Arc** shapes the plot, **Screenplay** is the script, **Stage** performs it, **Studio**
-  storyboards it… **Prologue** writes the opening act from a system that predates them all. It joins the cast.
+- **The Cratis storytelling family.** Cratis names its products after telling a story:
+  **[Chronicle](https://github.com/Cratis/Chronicle)** records new events,
+  **[Arc](https://github.com/Cratis/Arc)** shapes the plot,
+  **[Screenplay](https://github.com/Cratis/Screenplay)** is the script,
+  **[Stage](https://github.com/Cratis/Stage)** performs it,
+  **[Studio](https://github.com/Cratis/Studio)** storyboards it… **Prologue** writes the opening act from a
+  system that predates them all. It joins the cast.
 
 ## 🎥 From a running system to a script
 
@@ -172,6 +181,23 @@ docker build -f Source/Receiver/Dockerfile    -t cratis/prologue-receiver .
 dotnet build -c Release     # zero warnings, zero errors
 dotnet test                 # all specs green
 ```
+
+## The Cratis ecosystem
+
+This project is part of [Cratis](https://www.cratis.io) — free, MIT-licensed tools for building event-sourced
+and CQRS applications.
+
+- **[Chronicle](https://github.com/Cratis/Chronicle)** — event-sourcing database and runtime. Orleans-based kernel, pluggable storage (MongoDB default; PostgreSQL, SQL Server, SQLite, in-memory), language-agnostic gRPC contracts. [Docs](https://www.cratis.io/chronicle/)
+- **Chronicle clients** — first-class [.NET SDK](https://github.com/Cratis/Chronicle), plus [TypeScript](https://github.com/Cratis/Chronicle.TypeScript), [Kotlin/Java](https://github.com/Cratis/Chronicle.Kotlin), and [Elixir](https://github.com/Cratis/Chronicle.Elixir); [Python](https://github.com/Cratis/Chronicle.Python) coming soon (pre-alpha). AI agents connect through the [Chronicle MCP server](https://github.com/Cratis/Chronicle.Mcp).
+- **[Arc](https://github.com/Cratis/Arc)** — opinionated CQRS framework for ASP.NET Core with commands, queries, validation, authorization, and TypeScript proxy generation. Works without event sourcing. [Docs](https://www.cratis.io/arc/)
+- **[Components](https://github.com/Cratis/Components)** — React components aligned with Arc patterns. [Docs](https://www.cratis.io/components/)
+- **[CLI](https://github.com/Cratis/cli) + Workbench** — inspect and diagnose Chronicle from the terminal or the browser. [Docs](https://www.cratis.io/cli/)
+- **Model-first layer (experimental)** — [Studio](https://github.com/Cratis/Studio), [Screenplay](https://github.com/Cratis/Screenplay), [Stage](https://github.com/Cratis/Stage), [Scene](https://github.com/Cratis/Scene), and Prologue (this repository)
+- **Supporting** — [Fundamentals](https://github.com/Cratis/Fundamentals), [Specifications](https://github.com/Cratis/Specifications), [Synopsis](https://github.com/Cratis/Synopsis), [Lens](https://github.com/Cratis/Lens), [Narrator](https://github.com/Cratis/Narrator), and free [AI tooling](https://github.com/Cratis/AI) (preview); [Ensemble](https://github.com/Cratis/Ensemble) coming soon (pre-release)
+- **[Samples](https://github.com/Cratis/Samples)** — runnable event sourcing and CQRS samples for the whole stack
+
+Everything Cratis publishes today is MIT licensed and free to use. Come talk with us on
+[Discord](https://discord.gg/kt4AMpV8WV).
 
 ---
 
