@@ -47,7 +47,7 @@ Three reasons, and they all line up:
   **[Arc](https://github.com/Cratis/Arc)** shapes the plot,
   **[Screenplay](https://github.com/Cratis/Screenplay)** is the script,
   **[Stage](https://github.com/Cratis/Stage)** performs it,
-  **Studio** storyboards it… **Prologue** writes the opening act from a
+  **[Studio](https://github.com/Cratis/Studio)** storyboards it… **Prologue** writes the opening act from a
   system that predates them all. It joins the cast.
 
 ## 🎥 From a running system to a script
@@ -192,8 +192,8 @@ and CQRS applications.
 - **[Arc](https://github.com/Cratis/Arc)** — opinionated CQRS framework for ASP.NET Core with commands, queries, validation, authorization, and TypeScript proxy generation. Works without event sourcing. [Docs](https://www.cratis.io/arc/)
 - **[Components](https://github.com/Cratis/Components)** — React components aligned with Arc patterns. [Docs](https://www.cratis.io/components/)
 - **[CLI](https://github.com/Cratis/cli) + Workbench** — inspect and diagnose Chronicle from the terminal or the browser. [Docs](https://www.cratis.io/cli/)
-- **Model-first layer (experimental)** — Studio, [Screenplay](https://github.com/Cratis/Screenplay), [Stage](https://github.com/Cratis/Stage), [Scene](https://github.com/Cratis/Scene), and Prologue (this repository)
-- **Supporting** — [Fundamentals](https://github.com/Cratis/Fundamentals), [Specifications](https://github.com/Cratis/Specifications), [Synopsis](https://github.com/Cratis/Synopsis), [Lens](https://github.com/Cratis/Lens), [Narrator](https://github.com/Cratis/Narrator), and free [AI tooling](https://github.com/Cratis/AI) (preview); Ensemble coming soon (pre-release)
+- **Model-first layer (experimental)** — [Studio](https://github.com/Cratis/Studio), [Screenplay](https://github.com/Cratis/Screenplay), [Stage](https://github.com/Cratis/Stage), [Scene](https://github.com/Cratis/Scene), and Prologue (this repository)
+- **Supporting** — [Fundamentals](https://github.com/Cratis/Fundamentals), [Specifications](https://github.com/Cratis/Specifications), [Synopsis](https://github.com/Cratis/Synopsis), [Lens](https://github.com/Cratis/Lens), [Narrator](https://github.com/Cratis/Narrator), and free [AI tooling](https://github.com/Cratis/AI) (preview); [Ensemble](https://github.com/Cratis/Ensemble) coming soon (pre-release)
 - **[Samples](https://github.com/Cratis/Samples)** — runnable event sourcing and CQRS samples for the whole stack
 
 Everything Cratis publishes today is MIT licensed and free to use. Come talk with us on
