@@ -11,11 +11,11 @@ public static class Location
 {
     /// <summary>
     /// Splits an HTTP route into the module it belongs to, the feature within that module, the singular resource
-    /// the request acted on, and an optional trailing action. A leading <c>api</c> segment, query strings, and
-    /// id-looking segments (GUIDs, numbers, and <c>{template}</c> placeholders) are ignored so they never bleed
+    /// the request acted on, and an optional trailing action. A leading <c language="csharp">api</c> segment, query strings, and
+    /// id-looking segments (GUIDs, numbers, and <c language="csharp">{template}</c> placeholders) are ignored so they never bleed
     /// into names. The feature is the first collection segment (so every operation on a collection groups together),
     /// the resource is the last collection segment singularized, and a trailing non-collection segment is treated as
-    /// an action (for example <c>/api/inventory/{isbn}/lost</c> → resource <c>Inventory</c>, action <c>Lost</c>).
+    /// an action (for example <c language="csharp">/api/inventory/{isbn}/lost</c> → resource <c language="csharp">Inventory</c>, action <c language="csharp">Lost</c>).
     /// </summary>
     /// <param name="path">The observed request route or path, optionally including a query string.</param>
     /// <returns>A tuple of the module, feature, singular resource, and action (empty when there is none).</returns>

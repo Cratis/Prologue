@@ -13,7 +13,7 @@ namespace Cratis.Prologue.Contracts;
 /// <param name="SpanId">The span's identifier.</param>
 /// <param name="ParentSpanId">The parent span's identifier, or empty when the span is a root.</param>
 /// <param name="Name">The span name (the operation or command).</param>
-/// <param name="Kind">The span kind (for example <c>Server</c>, <c>Client</c>, <c>Producer</c>, <c>Consumer</c>, <c>Internal</c>).</param>
+/// <param name="Kind">The span kind (for example <c language="csharp">Server</c>, <c language="csharp">Client</c>, <c language="csharp">Producer</c>, <c language="csharp">Consumer</c>, <c language="csharp">Internal</c>).</param>
 /// <param name="ServiceName">The name of the service that produced the span.</param>
 /// <param name="StatusCode">The span status code (0 unset, 1 ok, 2 error).</param>
 /// <param name="DurationMilliseconds">The span duration in milliseconds.</param>

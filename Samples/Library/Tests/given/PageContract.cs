@@ -32,7 +32,7 @@ public static class PagePaths
 }
 
 /// <summary>
-/// Every <c>data-testid</c> the specs touch, named once. Both frontends render these on the same elements — that
+/// Every <c language="csharp">data-testid</c> the specs touch, named once. Both frontends render these on the same elements — that
 /// agreement is the whole reason a single driver can work against either of them.
 /// </summary>
 public static class TestIds

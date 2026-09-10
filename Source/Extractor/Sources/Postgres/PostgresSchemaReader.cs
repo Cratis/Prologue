@@ -7,7 +7,7 @@ using Npgsql;
 namespace Cratis.Prologue.Extractor.Sources.Postgres;
 
 /// <summary>
-/// Reads the structure of a PostgreSQL database from <c>information_schema</c> and <c>pg_catalog</c> — columns,
+/// Reads the structure of a PostgreSQL database from <c language="csharp">information_schema</c> and <c language="csharp">pg_catalog</c> — columns,
 /// primary keys, foreign keys, and unique constraints — as the flat rows
 /// <see cref="SchemaObservationBuilder"/> assembles into an observation. Only metadata is selected; no data
 /// values are ever read.

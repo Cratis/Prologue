@@ -39,13 +39,13 @@ public class OpenTelemetryOptions
 public class UpstreamOptions
 {
     /// <summary>
-    /// Gets or sets the base address of the upstream OTLP/HTTP collector (for example <c>http://collector:4318</c>).
+    /// Gets or sets the base address of the upstream OTLP/HTTP collector (for example <c language="csharp">http://collector:4318</c>).
     /// Empty disables HTTP forwarding.
     /// </summary>
     public string Http { get; set; } = string.Empty;
 
     /// <summary>
-    /// Gets or sets the address of the upstream OTLP/gRPC collector (for example <c>http://collector:4317</c>).
+    /// Gets or sets the address of the upstream OTLP/gRPC collector (for example <c language="csharp">http://collector:4317</c>).
     /// Empty disables gRPC forwarding.
     /// </summary>
     public string Grpc { get; set; } = string.Empty;

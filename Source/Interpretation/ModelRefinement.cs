@@ -11,7 +11,7 @@ namespace Cratis.Prologue.Interpretation;
 /// </summary>
 /// <param name="SystemName">The name the model derived for the captured system as a whole; empty when it offered none.</param>
 /// <param name="Renames">The map from provisional name to refined name.</param>
-/// <param name="Descriptions">The descriptions keyed by <c>module:&lt;module&gt;</c>, <c>feature:&lt;module&gt;/&lt;feature&gt;</c>, <c>slice:&lt;module&gt;/&lt;feature&gt;/&lt;slice&gt;</c>, and <c>command:&lt;module&gt;/&lt;feature&gt;/&lt;slice&gt;/&lt;command&gt;</c> — the keys refer to the renamed names.</param>
+/// <param name="Descriptions">The descriptions keyed by <c language="csharp">module:&lt;module&gt;</c>, <c language="csharp">feature:&lt;module&gt;/&lt;feature&gt;</c>, <c language="csharp">slice:&lt;module&gt;/&lt;feature&gt;/&lt;slice&gt;</c>, and <c language="csharp">command:&lt;module&gt;/&lt;feature&gt;/&lt;slice&gt;/&lt;command&gt;</c> — the keys refer to the renamed names.</param>
 /// <param name="Questions">The questions the model asked; empty in the normal case.</param>
 public record ModelRefinement(
     string SystemName,

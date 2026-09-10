@@ -9,8 +9,8 @@ namespace Cratis.Prologue.Contracts;
 /// data points arrived, attribute names, and the values of an allowlisted set of attributes — never the measured
 /// values themselves.
 /// </summary>
-/// <param name="Name">The metric name (for example <c>http.server.request.duration</c>).</param>
-/// <param name="Kind">The metric kind (<c>Gauge</c>, <c>Sum</c>, <c>Histogram</c>, <c>ExponentialHistogram</c>, or <c>Summary</c>).</param>
+/// <param name="Name">The metric name (for example <c language="csharp">http.server.request.duration</c>).</param>
+/// <param name="Kind">The metric kind (<c language="csharp">Gauge</c>, <c language="csharp">Sum</c>, <c language="csharp">Histogram</c>, <c language="csharp">ExponentialHistogram</c>, or <c language="csharp">Summary</c>).</param>
 /// <param name="Unit">The unit of the measurement, or empty when unspecified.</param>
 /// <param name="ServiceName">The name of the service that produced the metric.</param>
 /// <param name="DataPointCount">The number of data points carried in the export for this metric.</param>

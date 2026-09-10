@@ -12,7 +12,7 @@ namespace Cratis.Prologue.Configuration;
 public static class PrologueConfigurationExtensions
 {
     /// <summary>
-    /// Adds <c>cratis-prologue.json</c> as the base configuration and then re-applies environment variables on top
+    /// Adds <c language="csharp">cratis-prologue.json</c> as the base configuration and then re-applies environment variables on top
     /// of it.
     /// </summary>
     /// <remarks>
@@ -23,7 +23,7 @@ public static class PrologueConfigurationExtensions
     /// Re-adding the environment variables afterwards restores the expected precedence.
     /// </remarks>
     /// <param name="builder">The <see cref="IConfigurationBuilder"/> to add the configuration to.</param>
-    /// <param name="basePath">The base directory the configuration file is resolved against when <c>PROLOGUE_CONFIG</c> is not set.</param>
+    /// <param name="basePath">The base directory the configuration file is resolved against when <c language="csharp">PROLOGUE_CONFIG</c> is not set.</param>
     /// <param name="reloadOnChange">Whether to reload the configuration when the file changes.</param>
     /// <returns>The <paramref name="builder"/> for chaining.</returns>
     public static IConfigurationBuilder AddPrologueConfiguration(

@@ -7,7 +7,7 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 namespace Library.Core.Members;
 
 /// <summary>
-/// Maps <see cref="Member"/> onto the <c>Members</c> table.
+/// Maps <see cref="Member"/> onto the <c language="csharp">Members</c> table.
 /// </summary>
 public class MemberConfiguration : IEntityTypeConfiguration<Member>
 {

@@ -11,7 +11,7 @@ namespace Cratis.Prologue.Interpretation;
 
 /// <summary>
 /// Builds the messages of the structured refinement conversation — the system instructions (from the embedded
-/// <c>Prompts/refinement.txt</c> resource, with the question policy switched off for non-interactive hosts), the
+/// <c language="csharp">Prompts/refinement.txt</c> resource, with the question policy switched off for non-interactive hosts), the
 /// user evidence message carrying the provisional model and the observed behavior and schema, and the follow-up
 /// message that relays the user's answers when the model asked questions.
 /// </summary>

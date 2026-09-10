@@ -4,7 +4,7 @@
 namespace Library.Core.Simulation;
 
 /// <summary>
-/// Represents how the simulated load is generated, bound from the <c>Library:Simulation</c> configuration section.
+/// Represents how the simulated load is generated, bound from the <c language="csharp">Library:Simulation</c> configuration section.
 /// </summary>
 public class SimulationOptions
 {

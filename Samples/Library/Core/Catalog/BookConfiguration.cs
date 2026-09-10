@@ -7,7 +7,7 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 namespace Library.Core.Catalog;
 
 /// <summary>
-/// Maps <see cref="Book"/> onto the <c>Books</c> table.
+/// Maps <see cref="Book"/> onto the <c language="csharp">Books</c> table.
 /// </summary>
 public class BookConfiguration : IEntityTypeConfiguration<Book>
 {
@@ -30,7 +30,7 @@ public class BookConfiguration : IEntityTypeConfiguration<Book>
 }
 
 /// <summary>
-/// Maps <see cref="BookTag"/> onto the <c>BookTags</c> table.
+/// Maps <see cref="BookTag"/> onto the <c language="csharp">BookTags</c> table.
 /// </summary>
 public class BookTagConfiguration : IEntityTypeConfiguration<BookTag>
 {

@@ -11,8 +11,8 @@ using Microsoft.Extensions.AI;
 namespace Cratis.Prologue.Interpretation;
 
 /// <summary>
-/// A minimal <see cref="IChatClient"/> that calls Ollama's native <c>/api/chat</c> endpoint directly. This avoids
-/// routing through the OpenAI SDK, which throws on <c>finish_reason</c> values it does not recognize when Ollama
+/// A minimal <see cref="IChatClient"/> that calls Ollama's native <c language="csharp">/api/chat</c> endpoint directly. This avoids
+/// routing through the OpenAI SDK, which throws on <c language="csharp">finish_reason</c> values it does not recognize when Ollama
 /// is accessed through its OpenAI-compatible endpoint.
 /// </summary>
 internal sealed class OllamaChatClient : IChatClient

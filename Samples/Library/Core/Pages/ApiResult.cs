@@ -5,7 +5,7 @@ namespace Library.Core.Pages;
 
 /// <summary>
 /// Represents a rejection or failure the library API reported, in the shape the pages render it — the
-/// <c>title</c> and <c>detail</c> of an RFC 7807 problem document.
+/// <c language="csharp">title</c> and <c language="csharp">detail</c> of an RFC 7807 problem document.
 /// </summary>
 /// <param name="Title">The short summary of what went wrong.</param>
 /// <param name="Detail">The explanation of why it went wrong.</param>

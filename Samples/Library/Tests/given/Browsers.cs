@@ -17,7 +17,7 @@ public static class Browsers
     static readonly Lazy<string?> _unavailableReason = new(Install, LazyThreadSafetyMode.ExecutionAndPublication);
 
     /// <summary>
-    /// Gets why Chromium cannot be driven, or <c>null</c> when it is installed and ready.
+    /// Gets why Chromium cannot be driven, or <c language="csharp">null</c> when it is installed and ready.
     /// </summary>
     public static string? UnavailableReason => _unavailableReason.Value;
 

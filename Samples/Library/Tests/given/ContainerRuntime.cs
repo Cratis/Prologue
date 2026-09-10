@@ -16,7 +16,7 @@ public static class ContainerRuntime
     static readonly Lazy<string?> _unavailableReason = new(Probe, LazyThreadSafetyMode.ExecutionAndPublication);
 
     /// <summary>
-    /// Gets why the container runtime cannot be used, or <c>null</c> when it is available.
+    /// Gets why the container runtime cannot be used, or <c language="csharp">null</c> when it is available.
     /// </summary>
     public static string? UnavailableReason => _unavailableReason.Value;
 

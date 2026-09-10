@@ -4,7 +4,7 @@
 namespace Cratis.Prologue.Configuration;
 
 /// <summary>
-/// Represents the root configuration for the Prologue Extractor capture tool, bound from the <c>Prologue</c> configuration section.
+/// Represents the root configuration for the Prologue Extractor capture tool, bound from the <c language="csharp">Prologue</c> configuration section.
 /// </summary>
 public class PrologueOptions
 {

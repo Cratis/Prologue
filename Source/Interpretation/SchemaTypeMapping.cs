@@ -14,7 +14,7 @@ public static class SchemaTypeMapping
     /// <summary>
     /// Maps an engine-specific column data type to the property type it evidences.
     /// </summary>
-    /// <param name="dataType">The engine-specific data type name (for example <c>nvarchar</c> or <c>uuid</c>).</param>
+    /// <param name="dataType">The engine-specific data type name (for example <c language="csharp">nvarchar</c> or <c language="csharp">uuid</c>).</param>
     /// <returns>The property type, or <see langword="null"/> when the data type is not recognized.</returns>
     public static string? TypeFor(string dataType) =>
         dataType.ToLowerInvariant() switch

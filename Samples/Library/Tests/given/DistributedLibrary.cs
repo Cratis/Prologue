@@ -60,12 +60,12 @@ public sealed class DistributedLibrary : IAsyncLifetime
     public static Guid PrologueId => Guid.Parse(LibraryComposition.DefaultPrologueId);
 
     /// <summary>
-    /// Gets why the composition is not running, or <c>null</c> when it is.
+    /// Gets why the composition is not running, or <c language="csharp">null</c> when it is.
     /// </summary>
     public string? UnavailableReason { get; private set; }
 
     /// <summary>
-    /// Gets why no browser can be driven, or <c>null</c> when one can. Kept apart from
+    /// Gets why no browser can be driven, or <c language="csharp">null</c> when one can. Kept apart from
     /// <see cref="UnavailableReason"/> so a machine without browsers still runs everything that needs no frontend.
     /// </summary>
     public string? BrowsersUnavailableReason { get; private set; }

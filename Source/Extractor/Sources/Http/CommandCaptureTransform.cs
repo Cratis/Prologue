@@ -8,8 +8,8 @@ using Yarp.ReverseProxy.Transforms.Builder;
 namespace Cratis.Prologue.Extractor.Sources.Http;
 
 /// <summary>
-/// Represents a YARP transform provider that observes state-changing HTTP commands (<c>POST</c>, <c>PUT</c>,
-/// <c>DELETE</c>) flowing through the reverse proxy and publishes them as observations. Only metadata is captured —
+/// Represents a YARP transform provider that observes state-changing HTTP commands (<c language="csharp">POST</c>, <c language="csharp">PUT</c>,
+/// <c language="csharp">DELETE</c>) flowing through the reverse proxy and publishes them as observations. Only metadata is captured —
 /// method, path, and the proxied response status — never the request or response body.
 /// </summary>
 /// <param name="channel">The channel observations are published to.</param>

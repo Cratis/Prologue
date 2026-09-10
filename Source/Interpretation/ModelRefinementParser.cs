@@ -7,7 +7,7 @@ namespace Cratis.Prologue.Interpretation;
 
 /// <summary>
 /// Parses the language model's response text into a <see cref="ModelRefinement"/> — defensively, because models
-/// wrap JSON in prose, truncate output, and invent shapes. The first balanced <c>{…}</c> object in the text is
+/// wrap JSON in prose, truncate output, and invent shapes. The first balanced <c language="csharp">{…}</c> object in the text is
 /// deserialized; anything unusable yields <see langword="null"/> so the caller falls back to the unrefined model
 /// instead of failing.
 /// </summary>

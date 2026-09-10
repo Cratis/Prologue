@@ -5,7 +5,7 @@ namespace Cratis.Prologue.Screenplay;
 
 /// <summary>
 /// Derives the file name a generated Screenplay document is written to — the system name sanitized to a PascalCase
-/// identifier with the <c>.play</c> extension, falling back to <see cref="Fallback"/> when the name yields nothing.
+/// identifier with the <c language="csharp">.play</c> extension, falling back to <see cref="Fallback"/> when the name yields nothing.
 /// </summary>
 public static class ScreenplayFileName
 {
@@ -23,7 +23,7 @@ public static class ScreenplayFileName
     /// Derives the file name for a system name.
     /// </summary>
     /// <param name="systemName">The system name derived for the captured system; may be empty.</param>
-    /// <returns>The derived file name (for example <c>LibrarySystem.play</c>).</returns>
+    /// <returns>The derived file name (for example <c language="csharp">LibrarySystem.play</c>).</returns>
     public static string For(string systemName)
     {
         var words = systemName.Split(

@@ -4,7 +4,7 @@
 namespace Cratis.Prologue.Storage;
 
 /// <summary>
-/// Represents the configuration for Prologue capture storage, bound from the <c>Prologue</c> configuration section.
+/// Represents the configuration for Prologue capture storage, bound from the <c language="csharp">Prologue</c> configuration section.
 /// </summary>
 public class PrologueStorageOptions
 {

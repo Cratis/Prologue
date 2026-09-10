@@ -24,7 +24,7 @@ public enum LlmKind
     AzureOpenAI,
 
     /// <summary>
-    /// Any service exposing an OpenAI-compatible <c>/v1</c> API.
+    /// Any service exposing an OpenAI-compatible <c language="csharp">/v1</c> API.
     /// </summary>
     OpenAICompatible,
 

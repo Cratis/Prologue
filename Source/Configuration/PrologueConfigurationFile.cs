@@ -7,7 +7,7 @@ using System.Text.Json.Serialization;
 namespace Cratis.Prologue.Configuration;
 
 /// <summary>
-/// Reads and writes <c>cratis-prologue.json</c> files — the dedicated configuration file every Prologue tool
+/// Reads and writes <c language="csharp">cratis-prologue.json</c> files — the dedicated configuration file every Prologue tool
 /// expects. Consumers (Studio, the Cratis CLI, custom tooling) use this to produce configuration in the exact
 /// format the tools bind, instead of hand-rolling JSON.
 /// </summary>
@@ -34,7 +34,7 @@ public static class PrologueConfigurationFile
     };
 
     /// <summary>
-    /// Serializes the given configuration to the <c>cratis-prologue.json</c> format.
+    /// Serializes the given configuration to the <c language="csharp">cratis-prologue.json</c> format.
     /// </summary>
     /// <param name="configuration">The configuration to serialize.</param>
     /// <returns>The JSON content for the configuration file.</returns>
@@ -42,7 +42,7 @@ public static class PrologueConfigurationFile
         JsonSerializer.Serialize(configuration, SerializerOptions);
 
     /// <summary>
-    /// Writes the given configuration to a <c>cratis-prologue.json</c> file at the given path.
+    /// Writes the given configuration to a <c language="csharp">cratis-prologue.json</c> file at the given path.
     /// </summary>
     /// <param name="configuration">The configuration to write.</param>
     /// <param name="path">The path of the file to write.</param>
@@ -51,7 +51,7 @@ public static class PrologueConfigurationFile
         File.WriteAllTextAsync(path, Write(configuration));
 
     /// <summary>
-    /// Deserializes a <c>cratis-prologue.json</c> content string into a <see cref="PrologueConfiguration"/>.
+    /// Deserializes a <c language="csharp">cratis-prologue.json</c> content string into a <see cref="PrologueConfiguration"/>.
     /// </summary>
     /// <param name="json">The JSON content to deserialize.</param>
     /// <returns>The deserialized configuration, or a default configuration when the content is empty.</returns>
@@ -59,7 +59,7 @@ public static class PrologueConfigurationFile
         JsonSerializer.Deserialize<PrologueConfiguration>(json, SerializerOptions) ?? new PrologueConfiguration();
 
     /// <summary>
-    /// Reads a <c>cratis-prologue.json</c> file from the given path.
+    /// Reads a <c language="csharp">cratis-prologue.json</c> file from the given path.
     /// </summary>
     /// <param name="path">The path of the file to read.</param>
     /// <returns>The deserialized configuration.</returns>
@@ -67,8 +67,8 @@ public static class PrologueConfigurationFile
         Read(await File.ReadAllTextAsync(path));
 
     /// <summary>
-    /// Resolves the effective configuration file path for a tool — the <c>PROLOGUE_CONFIG</c> environment
-    /// variable when set, otherwise <c>cratis-prologue.json</c> in the given base directory.
+    /// Resolves the effective configuration file path for a tool — the <c language="csharp">PROLOGUE_CONFIG</c> environment
+    /// variable when set, otherwise <c language="csharp">cratis-prologue.json</c> in the given base directory.
     /// </summary>
     /// <param name="basePath">The base directory to resolve the default path against.</param>
     /// <returns>The resolved configuration file path.</returns>

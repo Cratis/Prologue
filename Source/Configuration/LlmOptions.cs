@@ -5,7 +5,7 @@ namespace Cratis.Prologue.Configuration;
 
 /// <summary>
 /// Represents the configuration for the language model the interpreter uses to refine the extracted event model's
-/// names, bound from the <c>Llm</c> configuration section. Any supported <see cref="LlmKind"/> works — the default
+/// names, bound from the <c language="csharp">Llm</c> configuration section. Any supported <see cref="LlmKind"/> works — the default
 /// points at the local Ollama service bundled with the Studio docker-compose stack.
 /// </summary>
 public class LlmOptions

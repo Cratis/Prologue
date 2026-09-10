@@ -10,5 +10,5 @@ namespace Cratis.Prologue.Interpreter;
 /// Screenplay document generated from it. Only available once the session has completed.
 /// </summary>
 /// <param name="ExtractionResult">The extracted event model.</param>
-/// <param name="Screenplay">The generated <c>.play</c> source text.</param>
+/// <param name="Screenplay">The generated <c language="csharp">.play</c> source text.</param>
 public record SessionResult(ExtractionResult ExtractionResult, string Screenplay);

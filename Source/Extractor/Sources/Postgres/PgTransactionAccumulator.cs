@@ -6,7 +6,7 @@ using Cratis.Prologue.Extractor.Capturing;
 namespace Cratis.Prologue.Extractor.Sources.Postgres;
 
 /// <summary>
-/// Accumulates the table changes streamed between a PostgreSQL logical-replication <c>BEGIN</c> and <c>COMMIT</c>
+/// Accumulates the table changes streamed between a PostgreSQL logical-replication <c language="csharp">BEGIN</c> and <c language="csharp">COMMIT</c>
 /// into a single per-transaction observation. This is pure metadata collection — no row values are recorded.
 /// </summary>
 public class PgTransactionAccumulator
@@ -17,7 +17,7 @@ public class PgTransactionAccumulator
     /// <summary>
     /// Begins a new transaction, discarding any partially accumulated state.
     /// </summary>
-    /// <param name="transactionId">The transaction id reported by the <c>BEGIN</c> message.</param>
+    /// <param name="transactionId">The transaction id reported by the <c language="csharp">BEGIN</c> message.</param>
     public void Begin(string transactionId)
     {
         _changes.Clear();

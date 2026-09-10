@@ -27,7 +27,7 @@ public class SqlServerOptions
     public bool EnableChangeDataCapture { get; set; } = true;
 
     /// <summary>
-    /// Gets or sets the tables to enable Change Data Capture on, as <c>schema.table</c> or just <c>table</c> for
+    /// Gets or sets the tables to enable Change Data Capture on, as <c language="csharp">schema.table</c> or just <c language="csharp">table</c> for
     /// the default schema. Empty enables it on every user table in the database.
     /// </summary>
     public IList<string> Tables { get; set; } = [];

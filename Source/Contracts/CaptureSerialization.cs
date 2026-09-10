@@ -15,7 +15,7 @@ public static class CaptureSerialization
     /// <summary>
     /// Gets the <see cref="JsonSerializerOptions"/> used to serialize and deserialize captures. Web defaults
     /// (camelCase, case-insensitive) plus the Cratis concept converters so <see cref="SourceKind"/> and other
-    /// <c>ConceptAs</c> values round-trip as their underlying primitive.
+    /// <c language="csharp">ConceptAs</c> values round-trip as their underlying primitive.
     /// </summary>
     public static readonly JsonSerializerOptions Options = Create();
 

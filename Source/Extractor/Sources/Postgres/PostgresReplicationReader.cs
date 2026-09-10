@@ -13,7 +13,7 @@ namespace Cratis.Prologue.Extractor.Sources.Postgres;
 
 /// <summary>
 /// Streams metadata about committed transactions from a PostgreSQL database using logical replication
-/// (the <c>pgoutput</c> plugin), grouping each transaction's table changes between its <c>BEGIN</c> and <c>COMMIT</c>.
+/// (the <c language="csharp">pgoutput</c> plugin), grouping each transaction's table changes between its <c language="csharp">BEGIN</c> and <c language="csharp">COMMIT</c>.
 /// Only table and column names are extracted; no row values are read.
 /// </summary>
 public class PostgresReplicationReader

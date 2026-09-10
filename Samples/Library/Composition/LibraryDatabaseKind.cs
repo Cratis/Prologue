@@ -7,9 +7,9 @@ namespace Library.Composition;
 
 /// <summary>
 /// Represents the database engine the composition was asked to run the library on, chosen with
-/// <c>--database postgres|mssql</c>.
+/// <c language="csharp">--database postgres|mssql</c>.
 /// </summary>
-/// <param name="Provider">The value the Core service binds its <c>Library:Database:Provider</c> option from.</param>
+/// <param name="Provider">The value the Core service binds its <c language="csharp">Library:Database:Provider</c> option from.</param>
 /// <param name="IsSqlServer">Whether SQL Server was chosen.</param>
 public readonly record struct LibraryDatabaseKind(string Provider, bool IsSqlServer)
 {

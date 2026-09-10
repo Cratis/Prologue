@@ -7,7 +7,7 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 namespace Library.Core.Inventory;
 
 /// <summary>
-/// Maps <see cref="InventoryItem"/> onto the <c>Inventory</c> table.
+/// Maps <see cref="InventoryItem"/> onto the <c language="csharp">Inventory</c> table.
 /// </summary>
 public class InventoryItemConfiguration : IEntityTypeConfiguration<InventoryItem>
 {

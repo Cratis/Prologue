@@ -7,7 +7,7 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 namespace Library.Core.Authors;
 
 /// <summary>
-/// Maps <see cref="Author"/> onto the <c>Authors</c> table.
+/// Maps <see cref="Author"/> onto the <c language="csharp">Authors</c> table.
 /// </summary>
 public class AuthorConfiguration : IEntityTypeConfiguration<Author>
 {

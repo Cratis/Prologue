@@ -6,7 +6,7 @@ using System.Text.Json.Nodes;
 namespace Cratis.Prologue.Configuration;
 
 /// <summary>
-/// Represents the full content of a <c>cratis-prologue.json</c> configuration file — the single configuration
+/// Represents the full content of a <c language="csharp">cratis-prologue.json</c> configuration file — the single configuration
 /// file every Prologue tool reads. The Extractor binds <see cref="Prologue"/>; the Interpreter binds <see cref="Llm"/>.
 /// </summary>
 public class PrologueConfiguration

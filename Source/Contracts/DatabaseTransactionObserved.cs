@@ -6,7 +6,7 @@ namespace Cratis.Prologue.Contracts;
 /// <summary>
 /// Represents the metadata of a single database transaction that changed one or more tables.
 /// </summary>
-/// <param name="Engine">The database engine the transaction occurred in (for example <c>sqlserver</c> or <c>postgres</c>).</param>
+/// <param name="Engine">The database engine the transaction occurred in (for example <c language="csharp">sqlserver</c> or <c language="csharp">postgres</c>).</param>
 /// <param name="Database">The name of the database the transaction occurred in.</param>
 /// <param name="TransactionId">The engine-specific identifier of the transaction (commit LSN for SQL Server, transaction id for PostgreSQL).</param>
 /// <param name="Tables">The per-table change metadata for the transaction.</param>

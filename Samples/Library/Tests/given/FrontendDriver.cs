@@ -4,7 +4,7 @@
 namespace Library.Tests.given;
 
 /// <summary>
-/// Drives a frontend through nothing but the <c>data-testid</c>s both of them agree on. There is deliberately no
+/// Drives a frontend through nothing but the <c language="csharp">data-testid</c>s both of them agree on. There is deliberately no
 /// branching on which frontend is being driven — the base address is the only thing that differs, and everything
 /// below waits for an outcome rather than assuming one, which is what lets a server-rendered form post and a
 /// client-side fetch be expressed the same way.
@@ -28,7 +28,7 @@ public sealed partial class FrontendDriver : IAsyncDisposable
 
     /// <summary>
     /// Opens a frontend and lands on the authors page — the first navigation item, so the shell is rendered and the
-    /// <c>frontend-kind</c> badge can be read before anything else happens.
+    /// <c language="csharp">frontend-kind</c> badge can be read before anything else happens.
     /// </summary>
     /// <param name="browser">The <see cref="IBrowser"/> to open a context in.</param>
     /// <param name="baseAddress">The address the frontend is served from.</param>
@@ -72,7 +72,7 @@ public sealed partial class FrontendDriver : IAsyncDisposable
     /// <summary>
     /// Types a value into a field.
     /// </summary>
-    /// <param name="testId">The <c>data-testid</c> of the field.</param>
+    /// <param name="testId">The <c language="csharp">data-testid</c> of the field.</param>
     /// <param name="value">The value to type.</param>
     /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
     public Task Fill(string testId, string value) => _page.GetByTestId(testId).FillAsync(value);
@@ -81,7 +81,7 @@ public sealed partial class FrontendDriver : IAsyncDisposable
     /// Picks an option by its value. Every picker is populated from the API with the integer id or the ISBN as the
     /// option value, in both frontends.
     /// </summary>
-    /// <param name="testId">The <c>data-testid</c> of the picker.</param>
+    /// <param name="testId">The <c language="csharp">data-testid</c> of the picker.</param>
     /// <param name="value">The option value to pick.</param>
     /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
     public async Task Pick(string testId, string value)
@@ -103,7 +103,7 @@ public sealed partial class FrontendDriver : IAsyncDisposable
     /// <summary>
     /// Presses a button.
     /// </summary>
-    /// <param name="testId">The <c>data-testid</c> of the button.</param>
+    /// <param name="testId">The <c language="csharp">data-testid</c> of the button.</param>
     /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
     public async Task Press(string testId)
     {
@@ -133,18 +133,18 @@ public sealed partial class FrontendDriver : IAsyncDisposable
     /// <summary>
     /// Determines whether a table holds a row containing the given text, waiting for it to turn up.
     /// </summary>
-    /// <param name="table">The <c>data-testid</c> of the table.</param>
-    /// <param name="row">The <c>data-testid</c> of its rows.</param>
+    /// <param name="table">The <c language="csharp">data-testid</c> of the table.</param>
+    /// <param name="row">The <c language="csharp">data-testid</c> of its rows.</param>
     /// <param name="text">The text the row is recognized by.</param>
     /// <returns>True when the row is there, false when it never turned up.</returns>
     public Task<bool> HasRow(string table, string row, string text) => Appears(Row(table, row, text));
 
     /// <summary>
-    /// Reads the key of the row containing the given text. Every row carries its integer key as <c>data-id</c>,
+    /// Reads the key of the row containing the given text. Every row carries its integer key as <c language="csharp">data-id</c>,
     /// which is what the pickers on the other pages are populated with.
     /// </summary>
-    /// <param name="table">The <c>data-testid</c> of the table.</param>
-    /// <param name="row">The <c>data-testid</c> of its rows.</param>
+    /// <param name="table">The <c language="csharp">data-testid</c> of the table.</param>
+    /// <param name="row">The <c language="csharp">data-testid</c> of its rows.</param>
     /// <param name="text">The text the row is recognized by.</param>
     /// <returns>The row's key.</returns>
     /// <exception cref="RowNotFound">Thrown when no such row turns up, or it carries no key.</exception>
@@ -163,10 +163,10 @@ public sealed partial class FrontendDriver : IAsyncDisposable
     /// <summary>
     /// Presses a button inside the row containing the given text.
     /// </summary>
-    /// <param name="table">The <c>data-testid</c> of the table.</param>
-    /// <param name="row">The <c>data-testid</c> of its rows.</param>
+    /// <param name="table">The <c language="csharp">data-testid</c> of the table.</param>
+    /// <param name="row">The <c language="csharp">data-testid</c> of its rows.</param>
     /// <param name="text">The text the row is recognized by.</param>
-    /// <param name="button">The <c>data-testid</c> of the button in the row.</param>
+    /// <param name="button">The <c language="csharp">data-testid</c> of the button in the row.</param>
     /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
     public async Task PressInRow(string table, string row, string text, string button)
     {
@@ -178,10 +178,10 @@ public sealed partial class FrontendDriver : IAsyncDisposable
     /// Determines whether the row containing the given text offers a button, waiting for the page to settle first.
     /// Used to tell an open loan from a returned one without knowing how either renders.
     /// </summary>
-    /// <param name="table">The <c>data-testid</c> of the table.</param>
-    /// <param name="row">The <c>data-testid</c> of its rows.</param>
+    /// <param name="table">The <c language="csharp">data-testid</c> of the table.</param>
+    /// <param name="row">The <c language="csharp">data-testid</c> of its rows.</param>
     /// <param name="text">The text the row is recognized by.</param>
-    /// <param name="button">The <c>data-testid</c> of the button in the row.</param>
+    /// <param name="button">The <c language="csharp">data-testid</c> of the button in the row.</param>
     /// <returns>True when the button is offered.</returns>
     public async Task<bool> RowOffers(string table, string row, string text, string button)
     {

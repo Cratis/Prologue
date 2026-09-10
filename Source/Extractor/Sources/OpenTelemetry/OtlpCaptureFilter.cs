@@ -21,7 +21,7 @@ public sealed class OtlpCaptureFilter(OpenTelemetryOptions options)
     readonly HashSet<string> _attributeKeys = new(options.AttributeKeys, StringComparer.OrdinalIgnoreCase);
 
     /// <summary>
-    /// Resolves the <c>service.name</c> resource attribute.
+    /// Resolves the <c language="csharp">service.name</c> resource attribute.
     /// </summary>
     /// <param name="attributes">The resource attributes to resolve from.</param>
     /// <returns>The service name, or an empty string when absent.</returns>

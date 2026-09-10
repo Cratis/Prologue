@@ -17,7 +17,7 @@ public class SqlServerChangeCapturePreparer(SqlServerOptions options, ILogger<Sq
 {
     /// <summary>
     /// Narrows the tables found in the database to those the configuration asks for. An empty allowlist means
-    /// every table; entries match either the bare table name or a qualified <c>schema.table</c>.
+    /// every table; entries match either the bare table name or a qualified <c language="csharp">schema.table</c>.
     /// </summary>
     /// <param name="all">The tables found in the database.</param>
     /// <param name="requested">The configured allowlist.</param>
@@ -40,7 +40,7 @@ public class SqlServerChangeCapturePreparer(SqlServerOptions options, ILogger<Sq
 
     /// <summary>
     /// Enables Change Data Capture on the database and on every table that should be watched, skipping whatever
-    /// is already enabled. Requires <c>sysadmin</c> and a running SQL Server Agent.
+    /// is already enabled. Requires <c language="csharp">sysadmin</c> and a running SQL Server Agent.
     /// </summary>
     /// <param name="connection">An open connection to the database being watched.</param>
     /// <param name="cancellationToken">A <see cref="CancellationToken"/> for the operation.</param>

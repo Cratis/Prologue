@@ -4,7 +4,7 @@
 namespace Library.Core.Database;
 
 /// <summary>
-/// Represents how the library system talks to its database, bound from the <c>Library:Database</c> configuration
+/// Represents how the library system talks to its database, bound from the <c language="csharp">Library:Database</c> configuration
 /// section. The Aspire composition sets these from whichever database it was asked to run.
 /// </summary>
 public class DatabaseOptions

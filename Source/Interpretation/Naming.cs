@@ -16,7 +16,7 @@ public static class Naming
     /// Turns a raw token (a path segment, table, or column) into a PascalCase identifier.
     /// </summary>
     /// <param name="value">The value to convert.</param>
-    /// <returns>The PascalCase form, or <c>Unknown</c> when the value has no letters or digits.</returns>
+    /// <returns>The PascalCase form, or <c language="csharp">Unknown</c> when the value has no letters or digits.</returns>
     public static string Pascalize(string value)
     {
         var words = value.Split(['_', '-', ' ', '.', '/'], StringSplitOptions.RemoveEmptyEntries);
@@ -55,7 +55,7 @@ public static class Naming
     /// </summary>
     /// <param name="entity">The singular, PascalCase entity name.</param>
     /// <param name="operation">The change operation observed.</param>
-    /// <returns>A provisional past-tense event name (for example <c>AuthorCreated</c>).</returns>
+    /// <returns>A provisional past-tense event name (for example <c language="csharp">AuthorCreated</c>).</returns>
     public static string EventName(string entity, ChangeOperation operation) =>
         $"{entity}{operation switch
         {
@@ -70,7 +70,7 @@ public static class Naming
     /// </summary>
     /// <param name="method">The HTTP method observed.</param>
     /// <param name="entity">The singular, PascalCase resource name.</param>
-    /// <returns>A provisional imperative command name (for example <c>CreateAuthor</c>).</returns>
+    /// <returns>A provisional imperative command name (for example <c language="csharp">CreateAuthor</c>).</returns>
     public static string CommandName(string method, string entity) =>
         $"{method.ToUpperInvariant() switch
         {

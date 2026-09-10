@@ -7,7 +7,7 @@ using Microsoft.AspNetCore.Mvc.Filters;
 namespace Library.Core.Telemetry;
 
 /// <summary>
-/// Wraps every controller action — the <c>GET</c>s that read and the <c>POST</c>s and <c>DELETE</c>s that change
+/// Wraps every controller action — the <c language="csharp">GET</c>s that read and the <c language="csharp">POST</c>s and <c language="csharp">DELETE</c>s that change
 /// state — in a span named after the action itself. The Prologue Extractor sees these alongside the HTTP command
 /// it proxied and the database transaction it produced, correlated by trace id.
 /// </summary>

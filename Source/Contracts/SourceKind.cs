@@ -6,7 +6,7 @@ using Cratis.Concepts;
 namespace Cratis.Prologue.Contracts;
 
 /// <summary>
-/// Represents the kind of source an observation originated from (for example <c>http</c>, <c>sqlserver</c>, or <c>postgres</c>).
+/// Represents the kind of source an observation originated from (for example <c language="csharp">http</c>, <c language="csharp">sqlserver</c>, or <c language="csharp">postgres</c>).
 /// </summary>
 /// <param name="Value">The underlying string value.</param>
 public record SourceKind(string Value) : ConceptAs<string>(Value)

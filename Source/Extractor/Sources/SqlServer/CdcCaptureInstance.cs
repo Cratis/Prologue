@@ -7,7 +7,7 @@ namespace Cratis.Prologue.Extractor.Sources.SqlServer;
 /// Represents a SQL Server CDC capture instance — the change table tracking one source table — and the ordered
 /// names of the columns it captures.
 /// </summary>
-/// <param name="Name">The capture instance name (the <c>cdc.&lt;name&gt;_CT</c> change table).</param>
+/// <param name="Name">The capture instance name (the <c language="csharp">cdc.&lt;name&gt;_CT</c> change table).</param>
 /// <param name="Schema">The schema of the source table.</param>
 /// <param name="Table">The name of the source table.</param>
 /// <param name="Columns">The captured column names, ordered by column ordinal.</param>

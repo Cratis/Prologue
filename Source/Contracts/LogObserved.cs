@@ -12,7 +12,7 @@ namespace Cratis.Prologue.Contracts;
 /// </summary>
 /// <param name="TraceId">The W3C trace id the log record belongs to, used to correlate it with the command that caused it; empty when absent.</param>
 /// <param name="SpanId">The span the log record was written within, or empty when absent.</param>
-/// <param name="SeverityText">The severity as text (for example <c>Information</c>, <c>Warning</c>, <c>Error</c>).</param>
+/// <param name="SeverityText">The severity as text (for example <c language="csharp">Information</c>, <c language="csharp">Warning</c>, <c language="csharp">Error</c>).</param>
 /// <param name="SeverityNumber">The numeric OpenTelemetry severity (1 trace through 24 fatal).</param>
 /// <param name="ServiceName">The name of the service that produced the log record.</param>
 /// <param name="ScopeName">The name of the instrumentation scope (typically the logger category).</param>

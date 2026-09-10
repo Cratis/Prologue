@@ -7,7 +7,7 @@ namespace Cratis.Prologue.Interpreter.Contracts;
 /// Represents a command inferred for a slice — the imperative intent behind an observed state-changing HTTP request
 /// or telemetry span.
 /// </summary>
-/// <param name="Name">The imperative name of the command (for example <c>RegisterAuthor</c>).</param>
+/// <param name="Name">The imperative name of the command (for example <c language="csharp">RegisterAuthor</c>).</param>
 /// <param name="Properties">The inferred input properties of the command.</param>
 /// <param name="Validations">The validation rules inferred for the command's properties, derived from observed database schema constraints.</param>
 /// <param name="Description">The description of the logic the command performs; empty when not derived.</param>

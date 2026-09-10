@@ -12,7 +12,7 @@ namespace Cratis.Prologue.Interpreter;
 /// Hosts one Prologue's interpreter session for the service mode — the decision logic the session grain delegates
 /// to, kept free of Orleans so it is testable on its own. Starting is idempotent: the first start creates the
 /// session from the stored captures (resuming from a previously persisted state when one exists) and kicks the
-/// session's <c>Proceed</c> off in the background; later starts just continue it. Every checkpoint the session
+/// session's <c language="csharp">Proceed</c> off in the background; later starts just continue it. Every checkpoint the session
 /// reaches is handed to the persist callback, so a process exit at any time loses nothing.
 /// </summary>
 /// <param name="prologueId">The Prologue the hosted session interprets captures for.</param>

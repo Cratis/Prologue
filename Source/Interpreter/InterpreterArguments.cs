@@ -79,10 +79,10 @@ public record InterpreterArguments(
             : Path.Combine(Path.GetDirectoryName(OutputFile) ?? string.Empty, ScreenplayFileName.For(systemName));
 
     /// <summary>
-    /// Parses the command-line arguments, falling back to the <c>PROLOGUE_CAPTURES</c>, <c>PROLOGUE_OUTPUT</c>,
-    /// <c>PROLOGUE_PLAY_OUTPUT</c> and <c>PROLOGUE_ID</c> environment variables and then the defaults. Service
-    /// mode is selected with <c>--serve</c> or <c>PROLOGUE_MODE=service</c>, and its behavior is tuned through
-    /// <c>PROLOGUE_SERVICE_PORT</c>, <c>PROLOGUE_GRACE_PERIOD</c> and <c>PROLOGUE_IDLE_TIMEOUT</c> (seconds).
+    /// Parses the command-line arguments, falling back to the <c language="csharp">PROLOGUE_CAPTURES</c>, <c language="csharp">PROLOGUE_OUTPUT</c>,
+    /// <c language="csharp">PROLOGUE_PLAY_OUTPUT</c> and <c language="csharp">PROLOGUE_ID</c> environment variables and then the defaults. Service
+    /// mode is selected with <c language="csharp">--serve</c> or <c language="csharp">PROLOGUE_MODE=service</c>, and its behavior is tuned through
+    /// <c language="csharp">PROLOGUE_SERVICE_PORT</c>, <c language="csharp">PROLOGUE_GRACE_PERIOD</c> and <c language="csharp">PROLOGUE_IDLE_TIMEOUT</c> (seconds).
     /// </summary>
     /// <param name="args">The raw command-line arguments.</param>
     /// <returns>The parsed arguments, or <see langword="null"/> when the arguments are malformed.</returns>

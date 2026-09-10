@@ -10,7 +10,7 @@ namespace Library.Tests.given;
 /// </summary>
 /// <remarks>
 /// The decision is made at discovery, which is the only place xUnit v2 lets a test opt out cleanly — there is no
-/// runtime equivalent of <c>Assert.Skip</c> in that version.
+/// runtime equivalent of <c language="csharp">Assert.Skip</c> in that version.
 /// </remarks>
 public sealed class IntegrationFactAttribute : FactAttribute
 {

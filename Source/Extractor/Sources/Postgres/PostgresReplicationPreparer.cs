@@ -8,9 +8,9 @@ namespace Cratis.Prologue.Extractor.Sources.Postgres;
 
 /// <summary>
 /// Checks that the PostgreSQL server can actually be read from before the reader starts trying. The extractor
-/// creates its own publication and replication slot, but <c>wal_level</c> is a server setting that only a restart
+/// creates its own publication and replication slot, but <c language="csharp">wal_level</c> is a server setting that only a restart
 /// can change — so it is worth saying precisely what is wrong rather than failing on a confusing error from
-/// <c>pg_create_logical_replication_slot</c> every few seconds.
+/// <c language="csharp">pg_create_logical_replication_slot</c> every few seconds.
 /// </summary>
 /// <param name="options">The configuration for this PostgreSQL source.</param>
 /// <param name="logger">The logger.</param>

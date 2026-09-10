@@ -5,7 +5,7 @@ namespace Library.Tests.given;
 
 /// <summary>
 /// The two frontends the library sample ships over the same API. They render the same markup skeleton and the same
-/// <c>data-testid</c>s on purpose, so one suite drives both — the name is what the <c>frontend-kind</c> badge reads.
+/// <c language="csharp">data-testid</c>s on purpose, so one suite drives both — the name is what the <c language="csharp">frontend-kind</c> badge reads.
 /// </summary>
 public enum Frontend
 {

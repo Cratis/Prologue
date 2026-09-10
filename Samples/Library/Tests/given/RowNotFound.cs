@@ -6,7 +6,7 @@ namespace Library.Tests.given;
 /// <summary>
 /// The exception that is thrown when a row a spec needs to act on never turned up in the table it was expected in.
 /// </summary>
-/// <param name="table">The <c>data-testid</c> of the table that was looked in.</param>
+/// <param name="table">The <c language="csharp">data-testid</c> of the table that was looked in.</param>
 /// <param name="text">The text the row was recognized by.</param>
 public class RowNotFound(string table, string text)
     : Exception($"No row containing '{text}' turned up in '{table}'.");

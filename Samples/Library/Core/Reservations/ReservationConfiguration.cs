@@ -7,7 +7,7 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 namespace Library.Core.Reservations;
 
 /// <summary>
-/// Maps <see cref="Reservation"/> onto the <c>Reservations</c> table.
+/// Maps <see cref="Reservation"/> onto the <c language="csharp">Reservations</c> table.
 /// </summary>
 public class ReservationConfiguration : IEntityTypeConfiguration<Reservation>
 {

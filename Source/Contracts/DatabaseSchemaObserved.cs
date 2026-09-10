@@ -9,7 +9,7 @@ namespace Cratis.Prologue.Contracts;
 /// never data values; the downstream interpreter uses it to learn field sizes, required fields, and how the
 /// tables relate.
 /// </summary>
-/// <param name="Engine">The database engine the schema belongs to (for example <c>sqlserver</c> or <c>postgres</c>).</param>
+/// <param name="Engine">The database engine the schema belongs to (for example <c language="csharp">sqlserver</c> or <c language="csharp">postgres</c>).</param>
 /// <param name="Database">The name of the database the schema belongs to.</param>
 /// <param name="Source">The configured logical name of the source the schema was read from.</param>
 /// <param name="Tables">The tables that make up the schema.</param>

@@ -8,7 +8,7 @@ namespace Cratis.Prologue.Interpreter.Contracts;
 /// The single command/read-model/projection each modeled as a list of zero or one so the structure never carries a
 /// nullable property, which keeps it safe to store on a Chronicle event and in a MongoDB read model.
 /// </summary>
-/// <param name="Name">The name of the slice (the action, for example <c>Register</c>).</param>
+/// <param name="Name">The name of the slice (the action, for example <c language="csharp">Register</c>).</param>
 /// <param name="Type">The type of the slice.</param>
 /// <param name="Commands">The command the slice accepts; empty for slices that do not accept a command.</param>
 /// <param name="Events">The events the slice produces or reacts to.</param>

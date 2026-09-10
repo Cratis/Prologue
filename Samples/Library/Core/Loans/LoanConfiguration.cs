@@ -7,7 +7,7 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 namespace Library.Core.Loans;
 
 /// <summary>
-/// Maps <see cref="Loan"/> onto the <c>Loans</c> table.
+/// Maps <see cref="Loan"/> onto the <c language="csharp">Loans</c> table.
 /// </summary>
 public class LoanConfiguration : IEntityTypeConfiguration<Loan>
 {

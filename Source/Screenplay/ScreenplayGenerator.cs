@@ -13,12 +13,12 @@ namespace Cratis.Prologue.Screenplay;
 /// <summary>
 /// Represents an implementation of <see cref="IScreenplayGenerator"/> that maps the extracted module → feature →
 /// slice tree onto the Screenplay syntax tree and prints it. Modules, features, slices, and commands carry their
-/// descriptions through; commands declare their properties, validation rules, and <c>produces</c> mappings; slice events become
+/// descriptions through; commands declare their properties, validation rules, and <c language="csharp">produces</c> mappings; slice events become
 /// event declarations; read models become an all-instances query and the projection that builds them; and observed
-/// uniqueness becomes <c>constraint</c> declarations. Every node uses <see cref="SourceLocation.Start"/> as a
+/// uniqueness becomes <c language="csharp">constraint</c> declarations. Every node uses <see cref="SourceLocation.Start"/> as a
 /// placeholder — the printer never reads locations.
 /// </summary>
-/// <param name="printer">The <see cref="IScreenplayPrinter"/> that renders the syntax tree to <c>.play</c> source text.</param>
+/// <param name="printer">The <see cref="IScreenplayPrinter"/> that renders the syntax tree to <c language="csharp">.play</c> source text.</param>
 public class ScreenplayGenerator(IScreenplayPrinter printer) : IScreenplayGenerator
 {
     /// <inheritdoc/>
