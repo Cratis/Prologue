@@ -5,8 +5,8 @@
   </PropertyGroup>
   <ItemGroup>
     <!-- Cratis -->
-    <PackageVersion Include="Cratis.Fundamentals" Version="7.19.4" />
-    <PackageVersion Include="Cratis.Screenplay" Version="4.24.1" />
+    <PackageVersion Include="Cratis.Fundamentals" Version="7.19.6" />
+    <PackageVersion Include="Cratis.Screenplay" Version="4.32.0" />
     <!-- AI -->
     <PackageVersion Include="Anthropic" Version="12.50.0" />
     <PackageVersion Include="Microsoft.Extensions.AI" Version="10.10.0" />
