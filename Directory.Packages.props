@@ -26,7 +26,7 @@
     <PackageVersion Include="Grpc.AspNetCore" Version="2.84.0" />
     <PackageVersion Include="Grpc.Net.Client" Version="2.84.0" />
     <PackageVersion Include="Npgsql" Version="10.0.3" />
-    <PackageVersion Include="Microsoft.Data.SqlClient" Version="7.1.0" />
+    <PackageVersion Include="Microsoft.Data.SqlClient" Version="7.1.1" />
     <!-- Storage -->
     <PackageVersion Include="MongoDB.Driver" Version="3.12.0" />
     <!-- Samples — Library sample (Aspire 13.2, EF Core 10, OpenTelemetry) -->
@@ -41,11 +41,11 @@
     <PackageVersion Include="OpenTelemetry.Instrumentation.Http" Version="1.19.0" />
     <PackageVersion Include="OpenTelemetry.Instrumentation.Runtime" Version="1.19.0" />
     <PackageVersion Include="OpenTelemetry.Instrumentation.SqlClient" Version="1.19.0" />
-    <PackageVersion Include="Aspire.Hosting.PostgreSQL" Version="13.5.4" />
-    <PackageVersion Include="Aspire.Hosting.SqlServer" Version="13.5.4" />
-    <PackageVersion Include="Aspire.Hosting.MongoDB" Version="13.5.4" />
-    <PackageVersion Include="Aspire.Hosting.JavaScript" Version="13.5.4" />
-    <PackageVersion Include="Aspire.Hosting.Testing" Version="13.5.4" />
+    <PackageVersion Include="Aspire.Hosting.PostgreSQL" Version="13.6.0" />
+    <PackageVersion Include="Aspire.Hosting.SqlServer" Version="13.6.0" />
+    <PackageVersion Include="Aspire.Hosting.MongoDB" Version="13.6.0" />
+    <PackageVersion Include="Aspire.Hosting.JavaScript" Version="13.6.0" />
+    <PackageVersion Include="Aspire.Hosting.Testing" Version="13.6.0" />
     <PackageVersion Include="Microsoft.Playwright" Version="1.63.0" />
     <!--
         Aspire 13.2.4 pulls these in transitively at versions with published advisories (MessagePack and
