@@ -5,7 +5,7 @@ name: Publish
 # pull_request-trigger hazard where closing several consolidated pull requests started competing releases.
 concurrency:
   group: ${{ github.workflow }}
-  cancel-in-progress: false
+  queue: max
 
 env:
   NUGET_OUTPUT: ./Artifacts/NuGet
