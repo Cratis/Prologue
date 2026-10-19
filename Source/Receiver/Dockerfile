@@ -9,7 +9,9 @@ ARG COMMIT=dev
 ####################################
 # Stage 1: Build
 ####################################
-FROM mcr.microsoft.com/dotnet/sdk:10.0 AS builder
+# The build stage runs on the builder's own platform and publishes portable, framework-dependent output, so
+# one build serves every target platform without emulation. Only the runtime stage below is per-platform.
+FROM --platform=$BUILDPLATFORM mcr.microsoft.com/dotnet/sdk:10.0 AS builder
 
 ARG VERSION
 ARG COMMIT
