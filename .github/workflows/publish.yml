@@ -216,6 +216,8 @@ jobs:
           context: .
           file: ${{ matrix.dockerfile }}
           push: true
+          # Apple Silicon machines pull linux/arm64; without it the documented docker run fails at the pull.
+          platforms: linux/amd64,linux/arm64
           build-args: |
             VERSION=${{ needs.release.outputs.version }}
             COMMIT=${{ github.sha }}
