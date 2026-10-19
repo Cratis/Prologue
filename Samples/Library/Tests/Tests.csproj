@@ -16,6 +16,9 @@
         <PackageReference Include="Aspire.Hosting.Testing" />
         <PackageReference Include="Microsoft.Playwright" />
         <PackageReference Include="MongoDB.Driver" />
+
+        <!-- Lift the vulnerable transitive to the patched version; see Directory.Packages.props. -->
+        <PackageReference Include="System.Security.Cryptography.Pkcs" />
     </ItemGroup>
 
     <ItemGroup>

@@ -55,6 +55,13 @@
     <PackageVersion Include="MessagePack" Version="3.1.11" />
     <PackageVersion Include="Snappier" Version="1.3.1" />
     <PackageVersion Include="SharpCompress" Version="0.50.5" />
+    <!--
+        System.Security.Cryptography.Pkcs comes in transitively (via the Extractor's and the Library sample's
+        dependencies) at 9.0.x and 10.0.12, which carry published advisories (GHSA-846f-f764-76mx,
+        GHSA-2fmv-rv2c-59x7). The Extractor and the Library sample's Core, Composition and Tests reference it
+        directly to lift it to the patched version.
+    -->
+    <PackageVersion Include="System.Security.Cryptography.Pkcs" Version="10.0.13" />
     <!-- Analysis -->
     <PackageVersion Include="StyleCop.Analyzers" Version="1.2.0-beta.556" NoWarn="NU5104" />
     <PackageVersion Include="Roslynator.Analyzers" Version="5.0.1" />
