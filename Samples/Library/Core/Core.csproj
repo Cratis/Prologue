@@ -10,6 +10,9 @@
         <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" />
         <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" />
         <PackageReference Include="EFCore.NamingConventions" />
+
+        <!-- Lift the vulnerable transitive to the patched version; see Directory.Packages.props. -->
+        <PackageReference Include="System.Security.Cryptography.Pkcs" />
     </ItemGroup>
 
     <ItemGroup>
