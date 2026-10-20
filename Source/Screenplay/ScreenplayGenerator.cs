@@ -25,33 +25,34 @@ public class ScreenplayGenerator(IScreenplayPrinter printer) : IScreenplayGenera
     public ApplicationSyntax Build(ExtractionResult result)
     {
         var events = EventsOf(result);
-        return new([], [], [], [.. result.Modules.Select(module => Module(module, events))], SourceLocation.Start);
+        var declaredEvents = new HashSet<string>(StringComparer.Ordinal);
+        return new([], [], [], [.. result.Modules.Select(module => Module(module, events, declaredEvents))], SourceLocation.Start);
     }
 
     /// <inheritdoc/>
     public string Generate(ExtractionResult result) => printer.Print(Build(result));
 
-    static ModuleSyntax Module(ExtractedModule module, IReadOnlyDictionary<string, ExtractedEvent> events) =>
+    static ModuleSyntax Module(ExtractedModule module, IReadOnlyDictionary<string, ExtractedEvent> events, HashSet<string> declaredEvents) =>
         new(
             module.Name,
             [],
-            [.. module.Features.Select(feature => Feature(feature, events))],
+            [.. module.Features.Select(feature => Feature(feature, events, declaredEvents))],
             SourceLocation.Start,
             DescriptionOf(module.Description));
 
-    static FeatureSyntax Feature(ExtractedFeature feature, IReadOnlyDictionary<string, ExtractedEvent> events) =>
+    static FeatureSyntax Feature(ExtractedFeature feature, IReadOnlyDictionary<string, ExtractedEvent> events, HashSet<string> declaredEvents) =>
         new(
             feature.Name,
-            [.. feature.SubFeatures.Select(subFeature => Feature(subFeature, events))],
-            [.. feature.Slices.Select(slice => Slice(slice, events))],
+            [.. feature.SubFeatures.Select(subFeature => Feature(subFeature, events, declaredEvents))],
+            [.. feature.Slices.Select(slice => Slice(slice, events, declaredEvents))],
             SourceLocation.Start,
             DescriptionOf(feature.Description));
 
-    static SliceSyntax Slice(ExtractedSlice slice, IReadOnlyDictionary<string, ExtractedEvent> events) =>
+    static SliceSyntax Slice(ExtractedSlice slice, IReadOnlyDictionary<string, ExtractedEvent> events, HashSet<string> declaredEvents) =>
         new(
             TypeOf(slice.Type),
             slice.Name,
-            [.. slice.Events.Select(Event)],
+            [.. slice.Events.Where(@event => declaredEvents.Add(@event.Name)).Select(Event)],
             [.. slice.Commands.Select(command => Command(command, slice.Events))],
             [.. slice.ReadModels.Select(Query)],
             [.. slice.Projections.Select((projection, index) =>
