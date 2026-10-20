@@ -34,19 +34,30 @@ public class HeuristicModelBuilder : IBuildHeuristicModel
             .Select(featureGroup => new ExtractedFeature(featureGroup.Key, [], BuildSlices(featureGroup)))
     ];
 
-    static IReadOnlyList<ExtractedSlice> BuildSlices(IEnumerable<SliceDraft> featureDrafts) =>
-    [
-        .. featureDrafts
-            .GroupBy(draft => (draft.Name, draft.Type))
-            .Select(sliceGroup => new ExtractedSlice(
-                sliceGroup.Key.Name,
-                sliceGroup.Key.Type,
-                Merge(sliceGroup.SelectMany(draft => draft.Commands), command => command.Name),
-                Merge(sliceGroup.SelectMany(draft => draft.Events), @event => @event.Name),
-                Merge(sliceGroup.SelectMany(draft => draft.ReadModels), readModel => readModel.Name),
-                MergeProjections(sliceGroup.SelectMany(draft => draft.Projections)),
-                Merge(sliceGroup.SelectMany(draft => draft.Constraints), constraint => constraint.Name)))
-    ];
+    static IReadOnlyList<ExtractedSlice> BuildSlices(IEnumerable<SliceDraft> featureDrafts)
+    {
+        var behaviors = featureDrafts
+            .GroupBy(draft => (draft.Name, draft.Type, Command: string.Join("And", draft.Commands.Select(command => command.Name))))
+            .ToList();
+        return
+        [
+            .. behaviors.Select(group => BuildSlice(
+                behaviors.Count(candidate => candidate.Key.Name == group.Key.Name && candidate.Key.Type == group.Key.Type) > 1
+                    ? group.Key.Command
+                    : group.Key.Name,
+                group))
+        ];
+    }
+
+    static ExtractedSlice BuildSlice(string name, IEnumerable<SliceDraft> drafts) =>
+        new(
+            name,
+            drafts.First().Type,
+            Merge(drafts.SelectMany(draft => draft.Commands), command => command.Name),
+            Merge(drafts.SelectMany(draft => draft.Events), @event => @event.Name),
+            Merge(drafts.SelectMany(draft => draft.ReadModels), readModel => readModel.Name),
+            MergeProjections(drafts.SelectMany(draft => draft.Projections)),
+            Merge(drafts.SelectMany(draft => draft.Constraints), constraint => constraint.Name));
 
     static IReadOnlyList<T> Merge<T>(IEnumerable<T> items, Func<T, string> keySelector) =>
     [

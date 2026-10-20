@@ -1,7 +1,6 @@
 // Copyright (c) Cratis. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System.Globalization;
 using Cratis.Prologue.Interpreter.Contracts;
 using Cratis.Screenplay.Diagnostics;
 using Cratis.Screenplay.Printing;
@@ -25,33 +24,34 @@ public class ScreenplayGenerator(IScreenplayPrinter printer) : IScreenplayGenera
     public ApplicationSyntax Build(ExtractionResult result)
     {
         var events = EventsOf(result);
-        return new([], [], [], [.. result.Modules.Select(module => Module(module, events))], SourceLocation.Start);
+        var declaredEvents = new HashSet<string>(StringComparer.Ordinal);
+        return new([], [], [], [.. result.Modules.Select(module => Module(module, events, declaredEvents))], SourceLocation.Start);
     }
 
     /// <inheritdoc/>
     public string Generate(ExtractionResult result) => printer.Print(Build(result));
 
-    static ModuleSyntax Module(ExtractedModule module, IReadOnlyDictionary<string, ExtractedEvent> events) =>
+    static ModuleSyntax Module(ExtractedModule module, IReadOnlyDictionary<string, ExtractedEvent> events, HashSet<string> declaredEvents) =>
         new(
             module.Name,
             [],
-            [.. module.Features.Select(feature => Feature(feature, events))],
+            [.. module.Features.Select(feature => Feature(feature, events, declaredEvents))],
             SourceLocation.Start,
             DescriptionOf(module.Description));
 
-    static FeatureSyntax Feature(ExtractedFeature feature, IReadOnlyDictionary<string, ExtractedEvent> events) =>
+    static FeatureSyntax Feature(ExtractedFeature feature, IReadOnlyDictionary<string, ExtractedEvent> events, HashSet<string> declaredEvents) =>
         new(
             feature.Name,
-            [.. feature.SubFeatures.Select(subFeature => Feature(subFeature, events))],
-            [.. feature.Slices.Select(slice => Slice(slice, events))],
+            [.. feature.SubFeatures.Select(subFeature => Feature(subFeature, events, declaredEvents))],
+            [.. feature.Slices.Select(slice => Slice(slice, events, declaredEvents))],
             SourceLocation.Start,
             DescriptionOf(feature.Description));
 
-    static SliceSyntax Slice(ExtractedSlice slice, IReadOnlyDictionary<string, ExtractedEvent> events) =>
+    static SliceSyntax Slice(ExtractedSlice slice, IReadOnlyDictionary<string, ExtractedEvent> events, HashSet<string> declaredEvents) =>
         new(
             TypeOf(slice.Type),
             slice.Name,
-            [.. slice.Events.Select(Event)],
+            [.. slice.Events.Where(@event => declaredEvents.Add(@event.Name)).Select(Event)],
             [.. slice.Commands.Select(command => Command(command, slice.Events))],
             [.. slice.ReadModels.Select(Query)],
             [.. slice.Projections.Select((projection, index) =>
@@ -62,42 +62,19 @@ public class ScreenplayGenerator(IScreenplayPrinter printer) : IScreenplayGenera
             [.. slice.Constraints.Select(Constraint)],
             [],
             SourceLocation.Start,
-            DescriptionOf(slice.Description));
+            DescriptionOf(slice.Description),
+            ReadModels: [.. slice.ReadModels.Select(ReadModel)]);
 
     static CommandSyntax Command(ExtractedCommand command, IReadOnlyList<ExtractedEvent> produced) =>
         new(
             command.Name,
             [.. command.Properties.Select(Property)],
             null,
-            Validations(command.Validations),
+            ScreenplayValidation.From(command),
             [.. produced.Select(@event => Produces(@event, command))],
             null,
             SourceLocation.Start,
             Description: DescriptionOf(command.Description));
-
-    static IEnumerable<ValidateSyntax> Validations(IReadOnlyList<ExtractedValidationRule> validations)
-    {
-        var rules = validations.Select(Rule).OfType<ValidationRuleSyntax>().ToList();
-        return rules.Count == 0 ? [] : [new DeclarativeValidateSyntax(rules, SourceLocation.Start)];
-    }
-
-    static ValidationRuleSyntax? Rule(ExtractedValidationRule rule)
-    {
-        var property = Camelize(rule.Property);
-        var message = rule.Message.Length == 0 ? null : rule.Message;
-        return rule.Kind switch
-        {
-            ExtractedValidationRuleKind.Required =>
-                new(property, ValidationRuleKind.NotEmpty, null, message, SourceLocation.Start),
-            ExtractedValidationRuleKind.MaxLength when TryNumber(rule.Argument, out var maximum) =>
-                new(property, ValidationRuleKind.Max, Literal(maximum), message, SourceLocation.Start),
-            ExtractedValidationRuleKind.MinLength when TryNumber(rule.Argument, out var minimum) =>
-                new(property, ValidationRuleKind.Min, Literal(minimum), message, SourceLocation.Start),
-            ExtractedValidationRuleKind.Pattern when rule.Argument.Length > 0 =>
-                new(property, ValidationRuleKind.Matches, Literal(rule.Argument), message, SourceLocation.Start),
-            _ => null
-        };
-    }
 
     static ProducesSyntax Produces(ExtractedEvent @event, ExtractedCommand command)
     {
@@ -118,6 +95,16 @@ public class ScreenplayGenerator(IScreenplayPrinter printer) : IScreenplayGenera
             Camelize(property.Name),
             new(ScreenplayTypeMapping.TypeFor(property.Type), IsCollection: false, IsOptional: false, SourceLocation.Start),
             SourceLocation.Start);
+
+    static ReadModelSyntax ReadModel(ExtractedReadModel readModel)
+    {
+        var key = readModel.Properties.FirstOrDefault(property => property.Name.Equals("Id", StringComparison.OrdinalIgnoreCase))
+            ?? readModel.Properties.FirstOrDefault(property => property.Name.Equals($"{readModel.Name}Id", StringComparison.OrdinalIgnoreCase));
+        return new(
+            readModel.Name,
+            [.. readModel.Properties.Select(property => Property(property) with { IsKey = property.Name == key?.Name })],
+            SourceLocation.Start);
+    }
 
     static QuerySyntax Query(ExtractedReadModel readModel) =>
         new(
@@ -197,9 +184,4 @@ public class ScreenplayGenerator(IScreenplayPrinter printer) : IScreenplayGenera
 
     static string Camelize(string name) =>
         name.Length == 0 ? name : char.ToLowerInvariant(name[0]) + name[1..];
-
-    static bool TryNumber(string argument, out int number) =>
-        int.TryParse(argument, NumberStyles.Integer, CultureInfo.InvariantCulture, out number);
-
-    static LiteralExpressionSyntax Literal(object value) => new(value, SourceLocation.Start);
 }

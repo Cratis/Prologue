@@ -27,7 +27,7 @@ public static class CaptureAnalyzer
         var transactions = payloads.OfType<DatabaseTransactionObserved>().ToList();
         var spans = payloads.OfType<TelemetryObserved>().ToList();
 
-        var events = BuildEvents(transactions, schema);
+        var events = EventInference.From(transactions, schema);
 
         if (http is not null)
         {
@@ -136,20 +136,6 @@ public static class CaptureAnalyzer
             yield return new SliceDraft(module, feature, $"All{entity}s", ExtractedSliceType.StateView, [], [], [readModel], [projection], []);
         }
     }
-
-    static IReadOnlyList<ExtractedEvent> BuildEvents(IReadOnlyList<DatabaseTransactionObserved> transactions, SchemaIndex schema) =>
-    [
-        .. transactions
-            .SelectMany(transaction => transaction.Tables.Select(table => (transaction.Database, Table: table)))
-            .Select(scoped =>
-            {
-                var schemaTable = schema.Find(scoped.Database, scoped.Table.Schema, scoped.Table.Table);
-                var entity = Naming.Singularize(Naming.Pascalize(scoped.Table.Table));
-                return new ExtractedEvent(
-                    Naming.EventName(entity, scoped.Table.Operation),
-                    [.. scoped.Table.Columns.Select(column => PropertyInference.Property(column, schemaTable?.Column(column)))]);
-            })
-    ];
 
     static IEnumerable<string> EntitiesIn(IReadOnlyList<DatabaseTransactionObserved> transactions) =>
         transactions
