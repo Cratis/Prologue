@@ -2,6 +2,9 @@
 
 # 📜 Cratis Prologue
 
+Cratis Prologue is an experimental tool for teams modernizing existing systems that captures signals and
+proposes a provisional event model for review.
+
 **Captures selected signals from an existing system — HTTP commands, database changes, and telemetry — and interprets them into a provisional event model for review.**
 
 [![Discord](https://img.shields.io/discord/1182595891576717413?label=Discord&logo=discord&logoColor=white)](https://discord.gg/kt4AMpV8WV)
