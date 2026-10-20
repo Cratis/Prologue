@@ -62,7 +62,8 @@ public class ScreenplayGenerator(IScreenplayPrinter printer) : IScreenplayGenera
             [.. slice.Constraints.Select(Constraint)],
             [],
             SourceLocation.Start,
-            DescriptionOf(slice.Description));
+            DescriptionOf(slice.Description),
+            ReadModels: [.. slice.ReadModels.Select(ReadModel)]);
 
     static CommandSyntax Command(ExtractedCommand command, IReadOnlyList<ExtractedEvent> produced) =>
         new(
@@ -94,6 +95,16 @@ public class ScreenplayGenerator(IScreenplayPrinter printer) : IScreenplayGenera
             Camelize(property.Name),
             new(ScreenplayTypeMapping.TypeFor(property.Type), IsCollection: false, IsOptional: false, SourceLocation.Start),
             SourceLocation.Start);
+
+    static ReadModelSyntax ReadModel(ExtractedReadModel readModel)
+    {
+        var key = readModel.Properties.FirstOrDefault(property => property.Name.Equals("Id", StringComparison.OrdinalIgnoreCase))
+            ?? readModel.Properties.FirstOrDefault(property => property.Name.Equals($"{readModel.Name}Id", StringComparison.OrdinalIgnoreCase));
+        return new(
+            readModel.Name,
+            [.. readModel.Properties.Select(property => Property(property) with { IsKey = property.Name == key?.Name })],
+            SourceLocation.Start);
+    }
 
     static QuerySyntax Query(ExtractedReadModel readModel) =>
         new(

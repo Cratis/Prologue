@@ -36,6 +36,7 @@ public class when_generating_the_play_text : given.a_library_extraction_result
     [Fact] void should_declare_the_constraint() => _play.ShouldContain("constraint UniqueEmail");
     [Fact] void should_declare_the_unique_property() => _play.ShouldContain("unique email on AuthorRegistered");
     [Fact] void should_declare_the_query_for_the_read_model() => _play.ShouldContain("query AllAuthors => Author[]");
+    [Fact] void should_print_the_explicit_read_model_key() => _play.ShouldContain("authorId Uuid key");
     [Fact] void should_declare_the_projection_targeting_the_read_model() => _play.ShouldContain("projection AuthorProjection => Author");
     [Fact] void should_subscribe_to_the_source_event() => _play.ShouldContain("from AuthorRegistered");
     [Fact] void should_map_the_read_model_properties_by_identity() => _play.ShouldContain("name = name");
