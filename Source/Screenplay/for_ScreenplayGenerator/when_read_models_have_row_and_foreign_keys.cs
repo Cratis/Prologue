@@ -14,7 +14,7 @@ public class when_read_models_have_row_and_foreign_keys : given.a_library_extrac
     {
         var module = _result.Modules.Single();
         var feature = module.Features.Single();
-        var slice = feature.Slices.Last();
+        var slice = feature.Slices[^1];
         _result = _result with
         {
             Modules = [module with
