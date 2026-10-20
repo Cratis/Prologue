@@ -67,7 +67,7 @@ cratis prologue start
 An interactive wizard: pick **PostgreSQL** or **SQL Server** as a source, paste the connection string above, and
 choose where captures go — a folder of `.jsonl` files is the simplest starting point. It writes a
 `cratis-prologue.json` and prints the `docker run` command that starts the Extractor as a sidecar. See the
-[CLI reference](https://cratis.io/cli/reference/prologue/) for every option.
+[CLI reference](https://www.cratis.io/cli/reference/prologue/) for every option.
 
 ### Cratis Studio
 
