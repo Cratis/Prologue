@@ -4,6 +4,7 @@
         <AssemblyName>Library.Tests</AssemblyName>
         <RootNamespace>Library.Tests</RootNamespace>
         <IsTestProject>true</IsTestProject>
+        <OutputType>Exe</OutputType>
 
         <!--
             The samples carry their specs inline behind #if DEBUG; this one is a separate project, so the sample
@@ -23,9 +24,9 @@
 
     <ItemGroup>
         <PackageReference Include="Cratis.Specifications" />
-        <PackageReference Include="Cratis.Specifications.XUnit" />
+        <PackageReference Include="Cratis.Specifications.XUnit.v3" />
         <PackageReference Include="Microsoft.NET.Test.Sdk" />
-        <PackageReference Include="xunit" />
+        <PackageReference Include="xunit.v3.mtp-off" />
         <PackageReference Include="xunit.runner.visualstudio" />
     </ItemGroup>
 

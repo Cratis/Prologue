@@ -42,12 +42,15 @@
     <PropertyGroup Condition="'$(Configuration)' == 'Debug'">
         <IsTestProject>true</IsTestProject>
 
+        <!-- xUnit v3 specs are executables; Release builds stay libraries. -->
+        <OutputType>Exe</OutputType>
+
         <!-- The test SDK generates an entry point; projects with top-level statements keep their own. -->
-        <NoWarn>$(NoWarn);CS7022</NoWarn>
+        <NoWarn>$(NoWarn);CS7022;CRSPECEXP01</NoWarn>
     </PropertyGroup>
 
     <ItemGroup Condition="'$(Configuration)' == 'Debug' AND '$(DedicatedSpecsProject)' != 'true'">
-        <PackageReference Include="xunit" />
+        <PackageReference Include="xunit.v3.mtp-off" />
         <PackageReference Include="xunit.runner.visualstudio">
             <PrivateAssets>all</PrivateAssets>
             <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
@@ -55,6 +58,6 @@
         <PackageReference Include="NSubstitute" />
         <PackageReference Include="Microsoft.NET.Test.Sdk" />
         <PackageReference Include="Cratis.Specifications" />
-        <PackageReference Include="Cratis.Specifications.XUnit" />
+        <PackageReference Include="Cratis.Specifications.XUnit.v3" />
     </ItemGroup>
 </Project>
