@@ -166,14 +166,17 @@ dotnet build                # Debug — includes inline specs
 # Run each native spec executable (Debug only — Release strips inline specs):
 python3 .github/scripts/run-specs.py Source/Configuration/Configuration.csproj -trait- Category=Integration
 python3 .github/scripts/run-specs.py Source/Screenplay/Screenplay.csproj -trait- Category=Integration
-python3 .github/scripts/run-specs.py Source/Extractor.Specs/Extractor.Specs.csproj -trait- Category=Integration
+python3 .github/scripts/run-specs.py Source/Extractor/Extractor.csproj --specifications -trait- Category=Integration
 python3 .github/scripts/run-specs.py Source/Interpretation/Interpretation.csproj -trait- Category=Integration
-python3 .github/scripts/run-specs.py Source/Interpreter.Specs/Interpreter.Specs.csproj -trait- Category=Integration
+python3 .github/scripts/run-specs.py Source/Interpreter/Interpreter.csproj --specifications -trait- Category=Integration
 dotnet build -c Release     # Release — warnings are errors
 ```
 
 > The helper requires Python 3, runs the already-built Debug executable with `dotnet run --no-build --no-restore`,
 > and rejects missing, malformed, or empty xUnit XML results. The inline specs are compiled only in Debug.
+> The Extractor and Interpreter keep their normal application entry points: pass `--specifications` as the
+> first argument in Debug to run inline specs before any application configuration or host creation. Without
+> that argument, application startup is unchanged; Release has no spec runner.
 > `-trait- Category=Integration` excludes integration tests. The Library sample's separate integration suite
 > needs Docker and browsers and is not included above; see its README.
 

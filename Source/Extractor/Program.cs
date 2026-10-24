@@ -10,6 +10,13 @@ using Cratis.Prologue.Extractor.Sources.Postgres;
 using Cratis.Prologue.Extractor.Sources.SqlServer;
 using Yarp.ReverseProxy.Transforms.Builder;
 
+#if DEBUG
+if (args.FirstOrDefault() == "--specifications")
+{
+    return await Xunit.Runner.InProc.SystemConsole.ConsoleRunner.Run(args[1..]);
+}
+#endif
+
 // Force invariant culture for the backend
 CultureInfo.DefaultThreadCurrentCulture = CultureInfo.InvariantCulture;
 CultureInfo.DefaultThreadCurrentUICulture = CultureInfo.InvariantCulture;
@@ -117,3 +124,4 @@ if (prologue.OpenTelemetry.Enabled)
 }
 
 await app.RunAsync();
+return 0;
