@@ -13,6 +13,13 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 
+#if DEBUG
+if (args.FirstOrDefault() == "--specifications")
+{
+    return await Xunit.Runner.InProc.SystemConsole.ConsoleRunner.Run(args[1..]);
+}
+#endif
+
 // Force invariant culture for the backend.
 CultureInfo.DefaultThreadCurrentCulture = CultureInfo.InvariantCulture;
 CultureInfo.DefaultThreadCurrentUICulture = CultureInfo.InvariantCulture;

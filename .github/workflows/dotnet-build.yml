@@ -55,10 +55,10 @@ jobs:
         run: python3 .github/scripts/run-specs.py Source/Screenplay/Screenplay.csproj -trait- Category=Integration
 
       - name: Run Extractor specs
-        run: python3 .github/scripts/run-specs.py Source/Extractor.Specs/Extractor.Specs.csproj -trait- Category=Integration
+        run: python3 .github/scripts/run-specs.py Source/Extractor/Extractor.csproj --specifications -trait- Category=Integration
 
       - name: Run Interpretation specs
         run: python3 .github/scripts/run-specs.py Source/Interpretation/Interpretation.csproj -trait- Category=Integration
 
       - name: Run Interpreter specs
-        run: python3 .github/scripts/run-specs.py Source/Interpreter.Specs/Interpreter.Specs.csproj -trait- Category=Integration
+        run: python3 .github/scripts/run-specs.py Source/Interpreter/Interpreter.csproj --specifications -trait- Category=Integration
