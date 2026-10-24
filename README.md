@@ -163,12 +163,19 @@ CDC or logical replication, and OpenTelemetry traces, metrics, and logs. See the
 
 ```shell
 dotnet build                # Debug — includes inline specs
-dotnet test                 # run the specs (Debug only — Release strips them)
+# Run each native spec executable (Debug only — Release strips inline specs):
+python3 .github/scripts/run-specs.py Source/Configuration/Configuration.csproj -trait- Category=Integration
+python3 .github/scripts/run-specs.py Source/Screenplay/Screenplay.csproj -trait- Category=Integration
+python3 .github/scripts/run-specs.py Source/Extractor.Specs/Extractor.Specs.csproj -trait- Category=Integration
+python3 .github/scripts/run-specs.py Source/Interpretation/Interpretation.csproj -trait- Category=Integration
+python3 .github/scripts/run-specs.py Source/Interpreter.Specs/Interpreter.Specs.csproj -trait- Category=Integration
 dotnet build -c Release     # Release — warnings are errors
 ```
 
-> The inline specs are compiled only in Debug, so run `dotnet test` in Debug. The Library sample's integration
-> tests need Docker and browsers and are excluded with `--filter "Category!=Integration"`.
+> The helper requires Python 3, runs the already-built Debug executable with `dotnet run --no-build --no-restore`,
+> and rejects missing, malformed, or empty xUnit XML results. The inline specs are compiled only in Debug.
+> `-trait- Category=Integration` excludes integration tests. The Library sample's separate integration suite
+> needs Docker and browsers and is not included above; see its README.
 
 Container images are built from the repository root:
 
@@ -182,7 +189,9 @@ docker build -f Source/Receiver/Dockerfile    -t cratis/prologue-receiver .
 
 ```shell
 dotnet build -c Release     # zero warnings, zero errors
-dotnet test                 # all specs green
+dotnet build -c Debug       # compile the native spec executables
+# Run all five native spec commands above, then check the wrapper:
+python3 -B .github/scripts/test_run_specs.py
 ```
 
 ## The Cratis ecosystem
