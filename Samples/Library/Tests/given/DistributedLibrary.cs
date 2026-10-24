@@ -77,7 +77,7 @@ public sealed class DistributedLibrary : IAsyncLifetime
     public ICaptureStore Captures { get; private set; } = default!;
 
     /// <inheritdoc/>
-    public async Task InitializeAsync()
+    public async ValueTask InitializeAsync()
     {
         UnavailableReason = ContainerRuntime.UnavailableReason;
 
@@ -98,7 +98,7 @@ public sealed class DistributedLibrary : IAsyncLifetime
     }
 
     /// <inheritdoc/>
-    public async Task DisposeAsync()
+    public async ValueTask DisposeAsync()
     {
         if (_browser is not null)
         {

@@ -1,6 +1,8 @@
 // Copyright (c) Cratis. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System.Runtime.CompilerServices;
+
 namespace Library.Tests.given;
 
 /// <summary>
@@ -13,7 +15,10 @@ public sealed class IntegrationTheoryAttribute : TheoryAttribute
     /// <summary>
     /// Initializes a new instance of the <see cref="IntegrationTheoryAttribute"/> class.
     /// </summary>
-    public IntegrationTheoryAttribute()
+    /// <param name="sourceFilePath">The path of the source file the attribute is declared in.</param>
+    /// <param name="sourceLineNumber">The line the attribute is declared on.</param>
+    public IntegrationTheoryAttribute([CallerFilePath] string? sourceFilePath = null, [CallerLineNumber] int sourceLineNumber = -1)
+        : base(sourceFilePath, sourceLineNumber)
     {
         if (ContainerRuntime.UnavailableReason is { } reason)
         {
