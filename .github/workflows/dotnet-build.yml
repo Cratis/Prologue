@@ -18,6 +18,7 @@ on:
       - "Directory.Build.props"
       - "Directory.Packages.props"
       - ".github/workflows/dotnet-build.yml"
+      - ".github/scripts/**"
 
 jobs:
   build:
@@ -38,8 +39,26 @@ jobs:
       - name: Build (Release)
         run: dotnet build --configuration Release
 
-      # The inline specs only exist in Debug, where each project doubles as its test project.
-      # The Library sample's integration tests need Docker and browsers, so they are excluded here
-      # and run locally; see Samples/Library/README.md.
-      - name: Run specs (Debug)
-        run: dotnet test --configuration Debug --filter "Category!=Integration"
+      # The inline specs only exist in Debug; Release output must not be used to run them.
+      - name: Build (Debug)
+        run: dotnet build --configuration Debug
+
+      - name: Check native runner guard
+        run: python3 -B .github/scripts/test_run_specs.py
+
+      # Run each non-empty native suite explicitly. Library integration tests require Docker
+      # and browsers and are not run here; see Samples/Library/README.md.
+      - name: Run Configuration specs
+        run: python3 .github/scripts/run-specs.py Source/Configuration/Configuration.csproj -trait- Category=Integration
+
+      - name: Run Screenplay specs
+        run: python3 .github/scripts/run-specs.py Source/Screenplay/Screenplay.csproj -trait- Category=Integration
+
+      - name: Run Extractor specs
+        run: python3 .github/scripts/run-specs.py Source/Extractor.Specs/Extractor.Specs.csproj -trait- Category=Integration
+
+      - name: Run Interpretation specs
+        run: python3 .github/scripts/run-specs.py Source/Interpretation/Interpretation.csproj -trait- Category=Integration
+
+      - name: Run Interpreter specs
+        run: python3 .github/scripts/run-specs.py Source/Interpreter.Specs/Interpreter.Specs.csproj -trait- Category=Integration
