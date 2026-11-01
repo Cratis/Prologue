@@ -6,6 +6,7 @@ using Cratis.Chronicle.Connections;
 using Cratis.Prologue.Workbench.AI;
 using Cratis.Prologue.Workbench.Captures;
 using Cratis.Prologue.Workbench.Identity;
+using Cratis.Prologue.Workbench.Rebuild;
 using Cratis.Prologue.Workbench.Repositories;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.DependencyInjection;
@@ -59,6 +60,7 @@ public static class WorkbenchServiceCollectionExtensions
 
         builder.AddRepositories();
         builder.AddCaptures();
+        builder.AddRebuild();
 
         return builder;
     }
