@@ -56,4 +56,7 @@ ENV PROLOGUE_CONFIG=/config/cratis-prologue.json
 ENV ASPNETCORE_URLS=http://0.0.0.0:8080
 EXPOSE 8080 4317 4318
 
+# Runs as the non-root aspnet user; every port above is above 1024. A /captures volume must be writable by it.
+USER $APP_UID
+
 ENTRYPOINT ["dotnet", "Cratis.Prologue.Extractor.dll"]

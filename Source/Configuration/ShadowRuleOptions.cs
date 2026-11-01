@@ -27,8 +27,9 @@ public class ShadowRuleOptions
     public string Destination { get; set; } = string.Empty;
 
     /// <summary>
-    /// Gets or sets the names of credential-bearing headers to forward to the shadow destination as well, such as
-    /// <c language="csharp">Authorization</c>. Such headers are dropped unless they are listed here.
+    /// Gets or sets the names of the headers to forward to the shadow destination in addition to the allowlist (Content-Type,
+    /// Content-Encoding, Accept, Accept-Language, Accept-Encoding, traceparent, tracestate, baggage and User-Agent), such as
+    /// <c language="csharp">Authorization</c>. Every other header is dropped unless it is listed here.
     /// </summary>
     public IList<string> ForwardHeaders { get; set; } = [];
 }

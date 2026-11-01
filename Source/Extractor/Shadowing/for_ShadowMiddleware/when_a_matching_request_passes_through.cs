@@ -110,7 +110,8 @@ public class when_a_matching_request_passes_through : Specification
     [Fact] void should_carry_the_shape_and_the_path_with_its_identity() => (_job.Shape, _job.Path, _job.Query).ShouldEqual(("POST /api/loans/{id}/return", "/api/loans/4412/return", "?force=true"));
     [Fact] void should_carry_the_trace() => _job.Trace.ShouldEqual("0af7651916cd43dd8448eb211c80319c");
     [Fact] void should_leave_credentials_out_of_the_headers() => _job.Headers.Any(header => header.Key == "Authorization").ShouldBeFalse();
-    [Fact] void should_keep_the_other_headers() => _job.Headers.Any(header => header.Key == "X-Correlation").ShouldBeTrue();
+    [Fact] void should_leave_out_headers_that_are_not_on_the_allowlist() => _job.Headers.Any(header => header.Key == "X-Correlation").ShouldBeFalse();
+    [Fact] void should_keep_the_trace_context() => _job.Headers.Any(header => header.Key == "traceparent").ShouldBeTrue();
     [Fact] void should_pass_other_requests_through_untouched() => _passedThrough.ShouldEqual(2);
     [Fact] void should_report_a_body_over_the_limit_as_skipped_instead_of_copying_it() => _skippedForSize.ShouldEqual(1);
     [Fact] void should_not_mirror_when_the_legacy_system_never_answered() => _noLegacyAnswer.ShouldEqual(0);

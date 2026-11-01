@@ -20,7 +20,7 @@ public class when_sending_a_copy : Specification
     async Task Because()
     {
         var rule = Rules.For("POST /api/loans");
-        var headers = ShadowHeaders.Select([new("Content-Type", "application/json"), new("X-Correlation", "abc"), new("Authorization", "Bearer value")], rule.ForwardHeaders);
+        var headers = ShadowHeaders.Select([new("Content-Type", "application/json"), new("Accept-Language", "nb-NO"), new("Authorization", "Bearer value")], rule.ForwardHeaders);
         var job = new ShadowJob(Guid.NewGuid(), rule, DateTimeOffset.UtcNow, "POST", "/api/loans", "?dryRun=false", "POST /api/loans", string.Empty, headers, "{\"book\":1}"u8.ToArray(), 201, false);
 
         _status = await new ShadowSender(new HttpClient(_handler), NullLogger<ShadowSender>.Instance).Send(job, CancellationToken.None);
@@ -35,7 +35,7 @@ public class when_sending_a_copy : Specification
     [Fact] void should_send_to_the_destination_with_the_same_path_and_query() => _handler.Uri.ShouldEqual("http://new-system:5000/api/loans?dryRun=false");
     [Fact] void should_send_the_body() => _handler.Body.ShouldEqual("{\"book\":1}");
     [Fact] void should_send_the_content_type() => _handler.ContentType.ShouldEqual("application/json");
-    [Fact] void should_send_the_headers_it_was_given() => _handler.Headers["X-Correlation"].ShouldEqual("abc");
+    [Fact] void should_send_the_headers_it_was_given() => _handler.Headers["Accept-Language"].ShouldEqual("nb-NO");
     [Fact] void should_not_send_a_credential_that_was_dropped() => _handler.Headers.ContainsKey("Authorization").ShouldBeFalse();
     [Fact] void should_mark_the_request_as_a_copy() => _handler.Headers[ShadowHeaders.MarkerHeader].ShouldEqual("true");
     [Fact] void should_report_nothing_when_the_destination_cannot_be_reached() => _unreachable.ShouldBeNull();

@@ -14,6 +14,9 @@ internal static partial class ShadowingLog
     [LoggerMessage(LogLevel.Warning, "The shadowing queue is full; {Rule} was not mirrored")]
     internal static partial void QueueFull(ILogger logger, string rule);
 
+    [LoggerMessage(LogLevel.Warning, "The shadowing queue holds its limit of request bodies; {Rule} is reported as skipped")]
+    internal static partial void QueueBytesExceeded(ILogger logger, string rule);
+
     [LoggerMessage(LogLevel.Warning, "Shadowing failed for {Rule} without affecting the response")]
     internal static partial void ShadowingFailed(ILogger logger, string rule, Exception exception);
 

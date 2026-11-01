@@ -14,7 +14,7 @@ public class when_the_queue_is_full : Specification
 
     void Because()
     {
-        var dispatcher = new ShadowDispatcher(Substitute.For<IShadowSender>(), Substitute.For<IParityReporter>(), NullLogger<ShadowDispatcher>.Instance);
+        var dispatcher = new ShadowDispatcher(Substitute.For<IShadowSender>(), Substitute.For<IParityReporter>(), NullLogger<ShadowDispatcher>.Instance, ShadowLimits.DefaultQueuedBytes);
         var job = new ShadowJob(Guid.NewGuid(), Rules.For("POST /api/loans"), DateTimeOffset.UtcNow, "POST", "/api/loans", string.Empty, "POST /api/loans", string.Empty, [], null, 201, false);
         while (dispatcher.TryEnqueue(job))
         {

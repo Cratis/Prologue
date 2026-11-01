@@ -47,7 +47,11 @@ public static class ShadowingExtensions
         services.AddSingleton<IShadowSender>(provider => new ShadowSender(
             provider.GetRequiredService<IHttpClientFactory>().CreateClient(ShadowClientName),
             provider.GetRequiredService<ILogger<ShadowSender>>()));
-        services.AddSingleton<ShadowDispatcher>();
+        services.AddSingleton(provider => new ShadowDispatcher(
+            provider.GetRequiredService<IShadowSender>(),
+            provider.GetRequiredService<IParityReporter>(),
+            provider.GetRequiredService<ILogger<ShadowDispatcher>>(),
+            options.ShadowQueueBytes));
         services.AddSingleton<IShadowQueue>(provider => provider.GetRequiredService<ShadowDispatcher>());
         services.AddHostedService(provider => provider.GetRequiredService<ShadowDispatcher>());
         return routing;

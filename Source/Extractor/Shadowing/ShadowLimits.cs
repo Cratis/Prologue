@@ -24,6 +24,11 @@ public static class ShadowLimits
     public const int QueueCapacity = 512;
 
     /// <summary>
+    /// The default for the most request-body bytes that wait in the queue at once. Past it a request is reported as skipped.
+    /// </summary>
+    public const long DefaultQueuedBytes = 64L * 1024 * 1024;
+
+    /// <summary>
     /// How long the shadow destination has to answer.
     /// </summary>
     public static readonly TimeSpan ShadowTimeout = TimeSpan.FromSeconds(10);

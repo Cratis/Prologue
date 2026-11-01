@@ -10,7 +10,7 @@ namespace Cratis.Prologue.Extractor.Shadowing;
 /// <param name="Rule">The rule that matched.</param>
 /// <param name="Occurred">When the legacy system answered.</param>
 /// <param name="Method">The HTTP method.</param>
-/// <param name="Path">The request path, without its query string.</param>
+/// <param name="Path">The request path as it was sent (percent-encoded), without its query string.</param>
 /// <param name="Query">The query string, with its leading question mark, or empty.</param>
 /// <param name="Shape">The shape of the command.</param>
 /// <param name="Trace">The trace id the request carried, or empty.</param>

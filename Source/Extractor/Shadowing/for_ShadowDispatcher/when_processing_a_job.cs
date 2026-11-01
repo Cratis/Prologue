@@ -20,7 +20,7 @@ public class when_processing_a_job : Specification
         _reporter = Substitute.For<IParityReporter>();
         _reported = [];
         _reporter.When(reporter => reporter.Report(Arg.Any<ParityObservation>(), Arg.Any<CancellationToken>())).Do(call => _reported.Add(call.Arg<ParityObservation>()));
-        _dispatcher = new ShadowDispatcher(_sender, _reporter, NullLogger<ShadowDispatcher>.Instance);
+        _dispatcher = new ShadowDispatcher(_sender, _reporter, NullLogger<ShadowDispatcher>.Instance, ShadowLimits.DefaultQueuedBytes);
     }
 
     async Task Because()

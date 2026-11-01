@@ -25,20 +25,30 @@ public class when_selecting_headers : Specification
         new("Authorization", "Bearer value"),
         new("Cookie", "session=value"),
         new("X-Api-Key", "value"),
-        new("X-Auth-Token", "value")
+        new("X-Auth-Token", "value"),
+        new("User-Agent", "legacy-client/1.0"),
+        new("Accept-Language", "nb-NO"),
+        new("tracestate", "vendor=value"),
+        new("baggage", "tenant=a"),
+        new("X-Forwarded-For", "10.0.0.7"),
+        new("X-Tenant", "contoso"),
+        new("X-Prologue-Shadow", "false")
     ];
 
     void Because()
     {
         _selected = ShadowHeaders.Select(_headers, new HashSet<string>());
-        _withForwarded = ShadowHeaders.Select(_headers, new HashSet<string>(StringComparer.OrdinalIgnoreCase) { "authorization", "Connection" });
+        _withForwarded = ShadowHeaders.Select(_headers, new HashSet<string>(StringComparer.OrdinalIgnoreCase) { "authorization", "Connection", "x-tenant" });
     }
 
     bool Has(IReadOnlyList<KeyValuePair<string, string[]>> headers, string name) => headers.Any(header => string.Equals(header.Key, name, StringComparison.OrdinalIgnoreCase));
 
     [Fact] void should_copy_the_content_type() => Has(_selected, "Content-Type").ShouldBeTrue();
     [Fact] void should_copy_every_value_of_a_header() => _selected.Single(header => header.Key == "Accept").Value.ShouldContainOnly(["application/json", "text/plain"]);
-    [Fact] void should_copy_headers_it_has_no_reason_to_drop() => Has(_selected, "X-Correlation").ShouldBeTrue();
+    [Fact] void should_copy_the_headers_on_the_allowlist() => new[] { "Content-Type", "Accept", "Accept-Language", "User-Agent", "tracestate", "baggage" }.All(name => Has(_selected, name)).ShouldBeTrue();
+    [Fact] void should_drop_a_header_that_is_not_on_the_allowlist() => new[] { "X-Correlation", "X-Forwarded-For", "X-Tenant" }.Any(name => Has(_selected, name)).ShouldBeFalse();
+    [Fact] void should_forward_a_header_a_rule_lists_even_when_it_is_not_a_credential() => Has(_withForwarded, "X-Tenant").ShouldBeTrue();
+    [Fact] void should_not_let_the_request_set_the_marker() => _selected.Single(header => header.Key == ShadowHeaders.MarkerHeader).Value.ShouldContainOnly(["true"]);
     [Fact] void should_copy_the_trace_so_the_two_systems_can_be_followed_together() => Has(_selected, "traceparent").ShouldBeTrue();
     [Fact] void should_drop_hop_by_hop_headers() => new[] { "Connection", "Transfer-Encoding", "Upgrade" }.Any(name => Has(_selected, name)).ShouldBeFalse();
     [Fact] void should_drop_host_and_content_length() => (Has(_selected, "Host") || Has(_selected, "Content-Length")).ShouldBeFalse();

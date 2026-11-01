@@ -54,6 +54,12 @@ public class PrologueOptions
     public IList<ShadowRuleOptions> Shadowing { get; set; } = [];
 
     /// <summary>
+    /// Gets or sets the most request-body bytes shadowing keeps waiting to be mirrored, 64 MiB by default. A request that would
+    /// go past it is not copied and is reported as skipped.
+    /// </summary>
+    public long ShadowQueueBytes { get; set; } = 64L * 1024 * 1024;
+
+    /// <summary>
     /// Gets or sets the named services of a system made of several services, keyed by service name. Everything
     /// configured outside this section — the top-level databases, every reverse-proxy cluster no named service
     /// claims, and telemetry no named service claims — belongs to the default service, so a system captured as a
