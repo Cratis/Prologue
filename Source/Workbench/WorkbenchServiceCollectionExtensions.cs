@@ -2,8 +2,11 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Cratis.AI.Configuration;
+using Cratis.AI.Usage.Daily;
 using Cratis.Chronicle.Connections;
 using Cratis.Prologue.Workbench.AI;
+using Cratis.Prologue.Workbench.AI.Usage;
+using Cratis.Prologue.Workbench.Discovery;
 using Cratis.Prologue.Workbench.Identity;
 using Cratis.Prologue.Workbench.Repositories;
 using Microsoft.AspNetCore.Builder;
@@ -35,6 +38,9 @@ public static class WorkbenchServiceCollectionExtensions
         // Must run before AddCratis(): Arc snapshots its type universe the first time it is touched.
         builder.Services.AddCratisAI(ai => ai.WithAgents<PrologueAIAgents>());
 
+        // Cratis.AI's provider pools ask the host which work a provider has been given; without an answer no agent can be called.
+        builder.Services.AddScoped<IRecordedAgentSessions, RecordedAgentSessions>();
+
         builder.AddCratis(
             options =>
             {
@@ -57,6 +63,7 @@ public static class WorkbenchServiceCollectionExtensions
         builder.Services.PostConfigure<ChronicleClientOptions>(options => options.EventStore = EventStore);
 
         builder.AddRepositories();
+        builder.AddDiscovery();
 
         return builder;
     }
