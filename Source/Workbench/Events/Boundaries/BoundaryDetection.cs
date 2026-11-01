@@ -60,7 +60,7 @@ public static class BoundaryDetection
             $"{profile.Shape.Value}|across",
             profile.Shape,
             rule,
-            $"{profile.Shape.Value} writes {string.Join(", ", written.Select(write => write.Table.Value))} in one transaction. Refused {Count(refused)} times with {Codes(refused)}.",
+            $"{profile.Shape.Value} writes {string.Join(", ", written.Select(write => write.Table.Value))} in one transaction. Refused {Times(refused)} with {Codes(refused)}.",
             [
                 new BoundaryOption(OneStream, $"Decide on the {primary} stream: {others} change together with it", $"{primary} is the consistency boundary of {profile.Shape.Value}: {rule}"),
                 new BoundaryOption(Dynamic, $"Keep a stream for each and check {others} with a dynamic consistency boundary", $"{profile.Shape.Value} checks {others} with a dynamic consistency boundary: {rule}")
@@ -89,12 +89,12 @@ public static class BoundaryDetection
 
             var entity = TableEvents.Entity(removed);
             var by = string.Join(" and ", referencing.Select(TableEvents.Entity));
-            var rule = CodeRule(profile, facts) ?? $"{entity} cannot be removed while {by} refer to it";
+            var rule = CodeRule(profile, facts) ?? $"{entity} cannot be removed while {by} rows refer to it";
             yield return new ConsistencyBoundary(
                 $"{profile.Shape.Value}|removal",
                 profile.Shape,
                 rule,
-                $"{profile.Shape.Value} deletes {removed}, which {string.Join(", ", referencing)} reference. Refused {Count(refused)} times with {Codes(refused)}.",
+                $"{profile.Shape.Value} deletes {removed}, which {string.Join(", ", referencing)} reference. Refused {Times(refused)} with {Codes(refused)}.",
                 [
                     new BoundaryOption(Dynamic, $"Check the {by} of the {entity} across streams at append time", $"{profile.Shape.Value} checks {by} with a dynamic consistency boundary: {rule}"),
                     new BoundaryOption(KeepReferences, $"Allow the removal and keep {by} pointing at a retired {entity}", $"{entity} can be removed: {by} keep pointing at a retired {entity}")
@@ -109,7 +109,7 @@ public static class BoundaryDetection
 
     static List<StatusProfile> Refused(ShapeProfile profile) => [.. profile.Statuses.Where(status => status.Status.Value >= 400 && !status.Writes.Any())];
 
-    static int Count(IEnumerable<StatusProfile> statuses) => statuses.Sum(status => status.Captures);
+    static string Times(IEnumerable<StatusProfile> statuses) => statuses.Sum(status => status.Captures) is var count and not 1 ? $"{count} times" : "1 time";
 
     static string Codes(IEnumerable<StatusProfile> statuses) => string.Join(", ", statuses.Select(status => status.Status.Value).Distinct().Order());
 }

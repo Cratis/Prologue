@@ -40,11 +40,17 @@ public class InterpretationRunner(
     static readonly LlmOptions _options = new() { Enabled = true, ModelId = "cratis-ai", RefinementTimeout = TimeSpan.FromMinutes(5) };
 
     /// <summary>
-    /// Says that nothing was refined, and why when the language model could not be reached.
+    /// Says what an interpretation found and, when the language model could not be used, why the names are the mechanical ones.
     /// </summary>
+    /// <param name="suggestions">How many events were suggested.</param>
+    /// <param name="refined">Whether the language model refined the result.</param>
     /// <param name="failure">Why the language model could not be reached; empty when there is no reason to give.</param>
     /// <returns>The sentence.</returns>
-    public static string HeuristicsOnly(string failure) => failure.Length > 0 ? $"Heuristics only: {failure}" : "Heuristics only";
+    public static string Describe(int suggestions, bool refined, string failure)
+    {
+        var found = $"{suggestions} suggested event{(suggestions == 1 ? string.Empty : "s")}";
+        return refined || failure.Length == 0 ? found : $"{found}. The Interpreter agent could not be used: {failure}";
+    }
 
     /// <inheritdoc/>
     public async Task Run(InterpretationJob job, CancellationToken cancellationToken)
@@ -113,7 +119,7 @@ public class InterpretationRunner(
             if (state.PendingQuestions.Count > 0)
             {
                 sessions.Park(prologue, new ParkedInterpretation(state, context));
-                Report(prologue, InterpretationState.AwaitingAnswers, $"{state.PendingQuestions.Count} question{(state.PendingQuestions.Count == 1 ? string.Empty : "s")} from the interpreter wait for you");
+                Report(prologue, InterpretationState.AwaitingAnswers, state.PendingQuestions.Count == 1 ? "1 question from the interpreter waits for you" : $"{state.PendingQuestions.Count} questions from the interpreter wait for you");
                 return;
             }
 
@@ -143,8 +149,7 @@ public class InterpretationRunner(
 
         var refined = state.Renames is not null;
         var failure = (chatClients as ILanguageModelWatch)?.Failure ?? string.Empty;
-        var how = refined ? "Refined by the Interpreter agent" : HeuristicsOnly(failure);
-        Report(prologue, InterpretationState.Completed, $"{suggestions.Count} suggested event{(suggestions.Count == 1 ? string.Empty : "s")}. {how}", refined, suggestions.Count);
+        Report(prologue, InterpretationState.Completed, Describe(suggestions.Count, refined, failure), refined, suggestions.Count);
     }
 
     InterpreterSessionFactory Factory(IBuildHeuristicModel builder) => new(builder, chatClients, loggers.CreateLogger<InterpreterSession>());

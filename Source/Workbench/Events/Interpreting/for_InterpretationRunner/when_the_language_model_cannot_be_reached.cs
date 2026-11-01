@@ -15,7 +15,7 @@ public class when_the_language_model_cannot_be_reached : an_interpretation_runne
     }
 
     [Fact] void should_complete_with_the_heuristics() => Progress.State.ShouldEqual(InterpretationState.Completed);
-    [Fact] void should_say_that_nothing_was_refined_and_why() => Progress.Message.ShouldContain("Heuristics only: The Interpreter agent has no provider");
+    [Fact] void should_say_that_nothing_was_refined_and_why() => Progress.Message.ShouldContain("The Interpreter agent could not be used: The Interpreter agent has no provider");
     [Fact] void should_not_claim_the_result_was_refined() => Progress.Refined.ShouldBeFalse();
     [Fact] void should_record_the_interpretation_once() => _recorded.Count.ShouldEqual(1);
     [Fact] void should_record_the_suggestions() => _recorded[0].Suggestions.Select(suggestion => suggestion.Key.Value).ShouldContain("Authors/AuthorCreated");

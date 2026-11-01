@@ -89,7 +89,7 @@ export const EventCardView = ({ card, busy, onAccept, onReject, onRestore, onRen
             <div className="evidence">
                 {tables.length > 0 && <span>Evidence: <span className="mono">{tables.map(table => `${table.operation.toUpperCase()} ${table.table} (${table.columns.join(', ')})`).join(' + ')}</span></span>}
                 {code.map(place => <Link key={`${place.file}:${place.line}`} to="/discover" className="codeev">Code: {place.file}{place.line > 0 ? `:${place.line}` : ''}</Link>)}
-                <span className="num">{card.evidence.captures} captures</span>
+                <span className="num">{card.evidence.captures} {card.evidence.captures === 1 ? 'capture' : 'captures'}</span>
                 {card.evidence.shapes.map(shape => <Link key={shape.shape} to="/explore" className="mono">{shape.shape} ({shape.captures})</Link>)}
                 {card.evidence.scenarios.map(scenario => <Chip key={scenario} variant="http">{scenario}</Chip>)}
             </div>

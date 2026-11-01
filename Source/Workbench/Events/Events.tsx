@@ -45,7 +45,7 @@ const EventsPage = () => {
     return (
         <>
             <PageHeader {...header} actions={headerActions} />
-            <div className="grid events">
+            <div className="grid grid-aside events">
                 <div className="column">
                     <InterpretationBar status={data.status} busy={actions.isBusy('interpret')} onRun={() => void actions.interpret()} />
                     {!data.ready
