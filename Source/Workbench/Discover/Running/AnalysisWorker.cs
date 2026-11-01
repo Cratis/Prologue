@@ -43,11 +43,23 @@ public class AnalysisWorker(IAnalysisQueue queue, IAnalysisRunner runner, IAnaly
             {
                 return;
             }
+            catch (Exception exception)
+            {
+                // One analysis that cannot be recorded must not stop the worker, or the host, and every later analysis with it.
+                logger.RecordingFailed(job.Target.Name.Value, exception);
+                Fail(job, exception.Message);
+            }
             finally
             {
                 queue.Done(job);
             }
         }
+    }
+
+    void Fail(AnalysisJob job, string reason)
+    {
+        var latest = progress.Get(job.Target.Subject) ?? AnalysisProgress.Queued(job);
+        progress.Set(latest with { State = AnalysisState.Failed, Reason = new FailureReason(reason) });
     }
 
     async Task Process(AnalysisJob job, CancellationToken cancellationToken)

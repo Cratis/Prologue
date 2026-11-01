@@ -3,6 +3,7 @@
 
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 
 namespace Cratis.Prologue.Workbench.Events.Interpreting;
 
@@ -11,7 +12,9 @@ namespace Cratis.Prologue.Workbench.Events.Interpreting;
 /// </summary>
 /// <param name="queue">The queue to take jobs from.</param>
 /// <param name="scopes">Creates the scope a job runs in.</param>
-public class InterpretationWorker(IInterpretationQueue queue, IServiceScopeFactory scopes) : BackgroundService
+/// <param name="progress">Where an interpretation that failed unexpectedly is shown as failed.</param>
+/// <param name="logger">The logger.</param>
+public class InterpretationWorker(IInterpretationQueue queue, IServiceScopeFactory scopes, IInterpretationProgress progress, ILogger<InterpretationWorker> logger) : BackgroundService
 {
     /// <inheritdoc/>
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
@@ -36,6 +39,12 @@ public class InterpretationWorker(IInterpretationQueue queue, IServiceScopeFacto
             catch (OperationCanceledException) when (stoppingToken.IsCancellationRequested)
             {
                 return;
+            }
+            catch (Exception exception)
+            {
+                // One interpretation that fails must not stop the worker, or the host, and every later interpretation with it.
+                logger.InterpretationCrashed(job.Prologue.Value, exception);
+                progress.Set(new InterpretationProgress(job.Prologue, InterpretationState.Failed, "The interpretation could not finish", false, 0));
             }
             finally
             {
