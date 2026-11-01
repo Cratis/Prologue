@@ -6,6 +6,14 @@
   href: capture-sources.md
 - name: Receiver API
   href: receiver.md
+- name: Receiver configuration
+  href: receiver-configuration.md
+- name: Repository connections
+  href: repository-connections.md
+- name: AI setup
+  href: ai-setup.md
+- name: Extractor shadowing
+  href: shadowing.md
 - name: Extraction result
   href: extraction-result.md
 - name: Troubleshooting and FAQ

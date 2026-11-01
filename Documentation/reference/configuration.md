@@ -39,6 +39,7 @@ binds `prologue.mongo`.
 | `postgres` | array of [`PostgresOptions`](#prologuepostgres) | `[]` | PostgreSQL databases of the default service to watch via logical replication |
 | `openTelemetry` | [`OpenTelemetryOptions`](#prologueopentelemetry) | — | OTLP proxy configuration, shared by every service |
 | `services` | map of service name to [`ServiceOptions`](#prologueservices) | `{}` | Named services of a system made of several services |
+| `shadowing` | array of [shadowing rules](shadowing.md) | `[]` | Commands the Extractor mirrors to a new system to compare decisions; requires `prologueId` and the `Api` output |
 | `mongo` | [`MongoOptions`](#prologuemongo) | — | Capture and service-session storage used by the Receiver and service Interpreter |
 
 ### `prologue.output`
