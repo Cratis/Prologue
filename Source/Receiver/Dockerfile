@@ -28,7 +28,8 @@ RUN yarn build
 ####################################
 # The build stage runs on the builder's own platform and publishes portable, framework-dependent output, so
 # one build serves every target platform without emulation. Only the runtime stage below is per-platform.
-# Keep the runtime stage free of RUN steps, or add docker/setup-qemu-action to publish.yml for the arm64 build.
+# The runtime stage below installs git for cloning system repositories, so it has a RUN step and the arm64 build
+# needs docker/setup-qemu-action (publish.yml has it).
 FROM --platform=$BUILDPLATFORM mcr.microsoft.com/dotnet/sdk:10.0 AS builder
 
 ARG VERSION
@@ -39,6 +40,7 @@ WORKDIR /src
 # Copy project files and restore
 COPY Directory.Build.props Directory.Packages.props global.json .editorconfig .globalconfig ./
 COPY Source/Directory.Build.props ./Source/
+COPY Source/Configuration/Configuration.csproj ./Source/Configuration/
 COPY Source/Contracts/Contracts.csproj ./Source/Contracts/
 COPY Source/Storage/Storage.csproj ./Source/Storage/
 COPY Source/Workbench/Workbench.csproj ./Source/Workbench/
@@ -48,6 +50,7 @@ RUN dotnet restore ./Source/Receiver/Receiver.csproj -p:Configuration=Release
 
 # Copy source files and publish
 COPY README.md ./
+COPY Source/Configuration/ ./Source/Configuration/
 COPY Source/Contracts/ ./Source/Contracts/
 COPY Source/Storage/ ./Source/Storage/
 COPY Source/Workbench/ ./Source/Workbench/
@@ -66,6 +69,11 @@ RUN dotnet publish ./Source/Receiver/Receiver.csproj \
 # Stage 3: Runtime
 ####################################
 FROM mcr.microsoft.com/dotnet/aspnet:10.0
+
+# The Workbench clones the repositories systems live in with the git command line.
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends git \
+    && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
 COPY --from=builder /app/out ./
