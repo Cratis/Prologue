@@ -38,4 +38,23 @@ public record InterpreterSessionState(
     /// <returns>An <see cref="InterpreterSessionState"/> that has not started.</returns>
     public static InterpreterSessionState New(Guid prologueId) =>
         new(prologueId, InterpreterStatus.NotStarted, null, [], [], [], 0, string.Empty);
+
+    /// <summary>
+    /// Records the answer for one pending question. When every pending question is answered, the next
+    /// <see cref="IInterpreterSession.Proceed"/> continues the refinement with the answers.
+    /// </summary>
+    /// <param name="answer">The answer to record.</param>
+    /// <returns>The state after recording the answer.</returns>
+    /// <exception cref="QuestionNotPending">Thrown when the answer refers to a question that is not pending.</exception>
+    public InterpreterSessionState Answered(InterpreterAnswer answer)
+    {
+        var question = PendingQuestions.FirstOrDefault(pending => pending.Id == answer.QuestionId)
+            ?? throw new QuestionNotPending(answer.QuestionId);
+
+        return this with
+        {
+            PendingQuestions = [.. PendingQuestions.Where(pending => pending.Id != question.Id)],
+            AnsweredQuestions = [.. AnsweredQuestions, new AnsweredQuestion(question, answer.Value)]
+        };
+    }
 }

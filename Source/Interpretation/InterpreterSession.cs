@@ -58,19 +58,7 @@ public class InterpreterSession(
     }
 
     /// <inheritdoc/>
-    public InterpreterSessionState Answer(InterpreterAnswer answer)
-    {
-        var question = State.PendingQuestions.FirstOrDefault(pending => pending.Id == answer.QuestionId)
-            ?? throw new QuestionNotPending(answer.QuestionId);
-
-        State = State with
-        {
-            PendingQuestions = [.. State.PendingQuestions.Where(pending => pending.Id != question.Id)],
-            AnsweredQuestions = [.. State.AnsweredQuestions, new AnsweredQuestion(question, answer.Value)]
-        };
-
-        return State;
-    }
+    public InterpreterSessionState Answer(InterpreterAnswer answer) => State = State.Answered(answer);
 
     async Task<InterpreterSessionState> Start(CancellationToken cancellationToken)
     {
