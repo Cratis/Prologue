@@ -57,7 +57,7 @@ h3 { font-size: 15px; }
 .num { font-variant-numeric: tabular-nums; }
 
 /* Top bar */
-header.bar { background: var(--surface); border-bottom: 1px solid var(--line); padding: 10px 20px; display: flex; flex-wrap: wrap; gap: 12px 24px; align-items: center; }
+header.topbar { flex: none; background: var(--surface); border-bottom: 1px solid var(--line); padding: 10px 20px; display: flex; flex-wrap: wrap; gap: 12px 24px; align-items: center; }
 .brand { display: flex; align-items: baseline; gap: 10px; }
 .brand b { font-family: var(--display); font-size: 18px; }
 .brand span { color: var(--muted); font-size: 13px; }
@@ -236,12 +236,45 @@ tr.excluded td { opacity: .4; text-decoration: line-through; }
 .stamp { font-size: 12px; color: var(--muted); }
 .toast { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: var(--ink); color: var(--surface); padding: 8px 16px; border-radius: 6px; font-size: 13px; opacity: 0; pointer-events: none; transition: opacity .2s; z-index: 10; }
 .toast.on { opacity: 1; }
+/* Decisions, journeys, boundaries, rebuild */
+.decision { display:flex; gap:10px; align-items:center; flex-wrap:wrap; padding:8px 10px; border-radius:6px; background:var(--canvas); margin-bottom:12px; }
+.explain { margin:0 0 12px; padding:0; list-style:none; display:flex; flex-direction:column; gap:6px; counter-reset:x; }
+.explain li { display:grid; grid-template-columns:22px 1fr; gap:8px; font-size:13px; }
+.explain li::before { counter-increment:x; content:counter(x); width:20px; height:20px; border-radius:50%; background:var(--accent-soft); color:var(--accent); display:grid; place-items:center; font-size:11px; font-weight:600; }
+.explain .src { font-size:11px; color:var(--muted); display:block; }
+.journeys { display:flex; flex-direction:column; gap:10px; }
+.journey { display:grid; grid-template-columns:56px 1fr; gap:10px; align-items:center; }
+.journey .pct { font-family:var(--display); font-size:20px; font-variant-numeric:tabular-nums; }
+.path { display:flex; flex-wrap:wrap; gap:4px; align-items:center; }
+.path .arrow { color:var(--muted); font-size:12px; }
+.path .step { background:var(--evt-bg); border-radius:3px; padding:1px 8px; font-size:12px; }
+.path .step.end { background:var(--canvas); color:var(--muted); border:1px dashed var(--line); }
+.pipeline { display:flex; gap:2px; }
+.pipeline span { flex:1; min-width:56px; padding:2px 4px; font-size:11px; text-align:center; background:var(--canvas); color:var(--muted); }
+.pipeline span:first-child { border-radius:4px 0 0 4px; } .pipeline span:last-child { border-radius:0 4px 4px 0; }
+.pipeline span.on { background:var(--accent); color:#fff; }
+.pipeline span.cur { background:var(--accent-soft); color:var(--accent); font-weight:600; }
+.parity { display:flex; align-items:center; gap:8px; font-size:12px; white-space:nowrap; }
+.parity .bar { width:90px; }
+.parity .bar > i { background:var(--good); }
+.hist { display:flex; flex-direction:column; gap:0; }
+.hist .h { display:grid; grid-template-columns:96px 70px 1fr; gap:10px; padding:7px 0; border-bottom:1px solid var(--line); align-items:baseline; font-size:13px; }
+.hist .h .t { font-family:var(--mono); font-size:12px; color:var(--muted); }
+.src-tag { font-size:11px; padding:0 6px; border-radius:3px; text-align:center; }
+.src-tag.legacy { background:var(--canvas); border:1px solid var(--line); color:var(--muted); }
+.src-tag.new { background:var(--evt-bg); color:var(--evt); }
+.diverge { border:1px solid var(--line); border-radius:8px; display:grid; grid-template-columns:1fr 1fr; overflow:hidden; }
+.diverge > div { padding:10px 12px; font-size:13px; }
+.diverge > div:first-child { border-right:1px solid var(--line); }
+.diverge h4 { margin:0 0 4px; font-size:12px; color:var(--muted); font-weight:500; }
+.localpill { background:var(--accent-soft); color:var(--accent); }
 @media (max-width: 560px) { .boundary { grid-template-columns: 1fr; } .bar-row { grid-template-columns: 110px 1fr 44px; } main { padding: 12px; } }
 </style>
 </head>
 <body>
-<header class="bar">
+<header class="topbar">
   <div class="brand"><b>Prologue</b><span>Library system · capture “Lending baseline”</span></div>
+  <span id="localPill" class="status-pill localpill" title="Captures and interpretation stay inside your network">Local only</span>
   <span id="livePill" class="status-pill live"><span class="dot"></span><span id="liveText">Capturing · 00:41:12</span></span>
   <nav class="steps" id="steps" aria-label="Capture journey">
     <a href="#define" data-v="define" class="done"><span class="n">1</span>Define</a>
@@ -249,6 +282,7 @@ tr.excluded td { opacity: .4; text-decoration: line-through; }
     <a href="#explore" data-v="explore"><span class="n">3</span>Explore</a>
     <a href="#events" data-v="events"><span class="n">4</span>Events <span class="badge" id="qBadge">3</span></a>
     <a href="#model" data-v="model"><span class="n">5</span>Model</a>
+    <a href="#rebuild" data-v="rebuild"><span class="n">6</span>Rebuild</a>
   </nav>
 </header>
 
@@ -292,6 +326,7 @@ tr.excluded td { opacity: .4; text-decoration: line-through; }
             <header><b>Correlation &amp; output</b></header>
             <label class="f" for="win">Correlation window: <span id="winV" class="num">2000 ms</span><input type="range" id="win" min="250" max="5000" step="250" value="2000"></label>
             <div class="muted" style="font-size:12px">An HTTP command claims database transactions and spans seen within this window. Shared trace ids join regardless of time.</div>
+            <label class="f" for="llmKind">Interpretation runs on<select id="llmKind"><option value="Ollama">Ollama in your network (local only)</option><option value="Anthropic">Anthropic API (names and metadata leave the network)</option></select></label>
             <label class="f" for="outKind">Send captures to<select id="outKind"><option value="Api">Receiver → MongoDB (live view)</option><option value="Json">JSON files in ./captures</option></select></label>
           </div>
         </div>
@@ -373,6 +408,10 @@ tr.excluded td { opacity: .4; text-decoration: line-through; }
     <div class="suggest" id="askSuggest"></div>
     <div id="askOut"></div>
   </div>
+  <div class="panel">
+    <h3>Inferred journeys <small>Linked by ids in request paths and the allowlisted <code>library.member_id</code> attribute. Row values are never read.</small></h3>
+    <div class="journeys" id="journeys"></div>
+  </div>
   <div class="grid g-side">
     <div class="panel scroll-x">
       <h3>Command × table <small><span class="op I">I</span> insert <span class="op U">U</span> update <span class="op D">D</span> delete · faded = some runs</small></h3>
@@ -405,6 +444,10 @@ tr.excluded td { opacity: .4; text-decoration: line-through; }
         <div class="grid" style="gap:10px" id="qList"></div>
       </div>
       <div class="panel">
+        <h3>Consistency boundaries <small>Where each rule must hold at once</small></h3>
+        <div class="grid" style="gap:10px" id="bList"></div>
+      </div>
+      <div class="panel">
         <h3>Not events</h3>
         <ul class="review-list">
           <li><span class="chip">Inventory.AvailableCount</span><span class="muted">Changes with every loan and return. Derived state: becomes a read model, not an event property.</span></li>
@@ -435,6 +478,28 @@ tr.excluded td { opacity: .4; text-decoration: line-through; }
   <div class="grid g2">
     <div class="panel"><h3>Slice <small id="sliceMeta"></small></h3><div id="sliceDetail"></div></div>
     <div class="panel"><h3>Library.play <small>Generated from accepted suggestions</small></h3><pre class="code" id="playOut"></pre></div>
+  </div>
+</section>
+<!-- ============ 6. REBUILD ============ -->
+<section class="view" id="v-rebuild">
+  <div class="view-head">
+    <div>
+      <h2>Rebuild piece by piece</h2>
+      <p>Each slice moves from observed to cut over on its own. Before a route switches, the new slice replays the captured commands and its decisions are compared with what the legacy system decided.</p>
+    </div>
+    <div class="row"><span class="stamp" id="rbStats"></span></div>
+  </div>
+  <div class="panel scroll-x">
+    <h3>Slices <small>Parity is measured against captured legacy decisions</small></h3>
+    <table id="rbTable"></table>
+  </div>
+  <div class="grid g2">
+    <div class="panel"><h3>Where they disagree <small id="divMeta"></small></h3><div id="divDetail"></div></div>
+    <div class="panel"><h3>One history <small>Loan 4412 across the legacy system and the new one</small></h3><div class="hist" id="hist"></div></div>
+  </div>
+  <div class="panel">
+    <h3>The legacy system keeps changing <small>Prologue keeps capturing after the model is accepted</small></h3>
+    <table id="drift"></table>
   </div>
 </section>
 </main>
@@ -494,7 +559,7 @@ document.addEventListener("click", e => {
 });
 
 // ------------------------------------------------------------------ routing
-const VIEWS = ["define","capture","explore","events","model"];
+const VIEWS = ["define","capture","explore","events","model","rebuild"];
 function route(){
   const v = VIEWS.includes(location.hash.slice(1)) ? location.hash.slice(1) : "capture";
   VIEWS.forEach((name,i) => {
@@ -506,6 +571,7 @@ function route(){
   if (v==="explore") renderExplore();
   if (v==="events") renderEvents();
   if (v==="model") renderModel();
+  if (v==="rebuild") renderRebuild();
 }
 window.addEventListener("hashchange", route);
 
@@ -534,9 +600,11 @@ function renderDefine(){
     },
     ...(on("http") ? { reverseProxy: { routes: { commands: { clusterId:"monitored", match:{ path:"/api/{**catch-all}", methods:["POST","PUT","DELETE"] } } },
       clusters: { monitored: { destinations: { primary: { address: $("#httpTarget").value } } } } } } : {}),
-    llm: { enabled:true, kind:"Anthropic", modelId:"claude-sonnet-5-5", accessToken:"<from secret prologue/llm-key>" }
+    llm: $("#llmKind").value==="Ollama" ? { enabled:true, kind:"Ollama", endpoint:"http://llm:11434", modelId:"qwen3:32b" } : { enabled:true, kind:"Anthropic", modelId:"claude-sonnet-5-5", accessToken:"<from secret prologue/llm-key>" }
   };
   $("#cfgOut").textContent = JSON.stringify(cfg, null, 2);
+  const local = $("#llmKind").value==="Ollama" && $("#outKind").value==="Api";
+  $("#localPill").textContent = local ? "Local only" : "Leaves network"; $("#localPill").className = "status-pill " + (local ? "localpill" : "paused");
 }
 document.addEventListener("click", e => {
   const r = e.target.closest("[data-route]"), t = e.target.closest("[data-table]"), a = e.target.closest("[data-attr]");
@@ -544,7 +612,7 @@ document.addEventListener("click", e => {
   if (r) flip(state.routesOn, r.dataset.route); else if (t) flip(state.tablesOn, t.dataset.table); else if (a) flip(state.attrs, a.dataset.attr); else return;
   renderDefine();
 });
-["#t-http","#t-db","#t-otel","#dbKind","#outKind","#httpTarget","#otelSvc","#otelUp"].forEach(id => $(id).addEventListener("input", renderDefine));
+["#t-http","#t-db","#t-otel","#dbKind","#outKind","#llmKind","#httpTarget","#otelSvc","#otelUp"].forEach(id => $(id).addEventListener("input", renderDefine));
 $("#win").addEventListener("input", e => { $("#winV").textContent = e.target.value+" ms"; renderDefine(); });
 $("#addScen").addEventListener("click", () => { const v=$("#newScen").value.trim(); if(!v) return; state.scenarios.push(v); $("#newScen").value=""; renderDefine(); });
 
@@ -590,7 +658,13 @@ function selectCapture(id){
     <div class="window-note">${c.trace?`Spans joined by trace <code>${c.trace.slice(0,12)}…</code>. Database rows joined by time.`:`No trace id on the request. Everything joined by time, so this grouping is weaker.`}</div></div>`;
   const cols = c.tx.length ? `<table style="margin-top:12px"><tr><th>Table</th><th>Op</th><th>Columns changed</th></tr>${c.tx.map(x=>`<tr><td>${x.t}</td><td><span class="op ${x.op}">${x.op}</span></td><td class="mono">${x.cols.join(", ")}</td></tr>`).join("")}</table>`
     : `<p class="muted">No database writes. A ${c.status} response usually means a rule refused the command. That is evidence for a validation rule.</p>`;
-  $("#selDetail").innerHTML = lanes + cols;
+  const refused = c.status >= 400;
+  const why = EXPLAIN[c.shape.id]?.[refused ? "refused" : "accepted"];
+  const decision = `<div class="decision"><span class="chip ${refused?"bad":"ok"}">${refused?"Refused":"Accepted"}</span><b>${esc(c.shape.svc.replace("Controller",""))}</b><span class="muted" style="font-size:12px">a decision the legacy system made</span>${why?`<button class="btn small" id="explainBtn" style="margin-left:auto">Explain this decision</button>`:""}</div>`;
+  $("#selDetail").innerHTML = decision + `<div id="explainOut"></div>` + lanes + cols;
+  const eb = $("#explainBtn"); if (eb) eb.addEventListener("click", () => {
+    $("#explainOut").innerHTML = `<ol class="explain">${why.map(([t,src])=>`<li><span>${esc(t)}<span class="src">${esc(src)}</span></span></li>`).join("")}</ol>`; eb.remove();
+  });
 }
 $("#feed").addEventListener("click", e => { const n = e.target.closest("[data-cap]"); if (n) selectCapture(n.dataset.cap); });
 $("#feed").addEventListener("keydown", e => { const n = e.target.closest("[data-cap]"); if (n && (e.key==="Enter"||e.key===" ")) { e.preventDefault(); selectCapture(n.dataset.cap); } });
@@ -628,6 +702,26 @@ $("#markBtn").addEventListener("click", () => {
   if (v === "Report copies lost") setTimeout(()=>{ pushCapture(makeCapture(SHAPES.find(s=>s.id==="lost"))); renderCaptureStats(); }, 900);
 });
 
+const EXPLAIN = {
+  lend: {
+    accepted: [["A member asked to borrow a copy.","POST /api/loans → 201"],["The system recorded a loan for that member and book.","INSERT Loans (BookId, MemberId, LentOn)"],["It reduced the available copies by one, in the same transaction.","UPDATE Inventory.AvailableCount"],["If the member had reserved the book, the reservation was removed.","DELETE Reservations, seen in 18% of loans"]],
+    refused: [["A member asked to borrow a copy.","POST /api/loans → 409"],["Nothing was written. In all 72 refusals the last known AvailableCount for the book was 0.","No transaction in the window · Inventory history"],["Likely rule: a book can only be lent while a copy is available.","Candidate validation for LendBook"]]
+  },
+  "del-author": {
+    accepted: [["Staff removed an author.","DELETE /api/authors/{id} → 204"],["The author row was deleted. No books referenced the author.","DELETE Authors · schema FK Books.AuthorId"]],
+    refused: [["Staff tried to remove an author.","DELETE /api/authors/{id} → 409"],["Nothing was written. Every refused author had books in the catalog.","FK Books.AuthorId · earlier INSERT Books captures"],["Likely rule: an author with books cannot be removed.","Candidate validation for RemoveAuthor"]]
+  },
+  reserve: {
+    accepted: [["A member reserved a title.","POST /api/reservations → 201"],["A reservation row was added for the member and book.","INSERT Reservations (BookId, MemberId, ReservedOn)"]],
+    refused: [["A member tried to reserve a title.","POST /api/reservations → 409"],["Nothing was written. The member already held a reservation for the same book.","Unique index Reservations (BookId, MemberId)"],["Likely constraint: one reservation per member and book.","Candidate constraint"]]
+  },
+  "add-book": {
+    accepted: [["Staff added a book to the catalog.","POST /api/catalog/books → 201"],["A book row was added with its ISBN, title and author.","INSERT Books (Isbn, Title, AuthorId)"]],
+    refused: [["Staff tried to add a book.","POST /api/catalog/books → 400"],["Nothing was written. The ISBN already existed.","Unique index Books.Isbn"],["Likely constraint: one book per ISBN.","Candidate constraint"]]
+  },
+  return: { accepted: [["A member brought a copy back.","POST /api/loans/{id}/return → 200"],["The loan got a return date.","UPDATE Loans.ReturnedOn"],["Available copies went up by one.","UPDATE Inventory.AvailableCount"]] }
+};
+
 // ------------------------------------------------------------------ 3. explore
 function renderExplore(){
   const rows = SHAPES;
@@ -639,6 +733,7 @@ function renderExplore(){
     }).join("") +
     `<tr class="click${state.selShape==="orphan"?" sel":""}" data-shape="orphan"><td class="rowh"><span class="chip warn">no command</span> <span class="muted">standalone transactions</span></td><td class="num">${ORPHANS_BASE}</td>${TABLES.map(t=>`<td>${t==="Inventory"?`<span class="op U" title="UPDATE Inventory">U</span>`:""}</td>`).join("")}<td></td></tr></tbody>`;
   renderShape();
+  $("#journeys").innerHTML = JOURNEYS.map(j => `<div class="journey"><span class="pct">${j.pct}%</span><div><div class="path">${j.steps.map((st,i)=>`${i?'<span class="arrow">→</span>':""}<span class="step${st.startsWith("(")?" end":""}">${esc(st)}</span>`).join("")}</div><div class="muted" style="font-size:12px;margin-top:2px">${esc(j.note)}</div></div></div>`).join("");
   $("#askSuggest").innerHTML = ASKS.map((a,i)=>`<button class="btn small" data-ask="${i}">${esc(a.q)}</button>`).join("");
 }
 function renderShape(){
@@ -670,6 +765,12 @@ $("#shapeDetail").addEventListener("click", e => {
   const x = e.target.closest("[data-exclude]"); if (x) { state.excluded.has(x.dataset.exclude) ? state.excluded.delete(x.dataset.exclude) : state.excluded.add(x.dataset.exclude); renderExplore(); }
   if (e.target.id==="splitBtn") toast("Split into one shape per response status. The interpreter will treat each as its own candidate.");
 });
+const JOURNEYS = [
+  { pct:58, steps:["Member registered","Book lent","Book returned"], note:"312 members. Median 11 days between lending and return." },
+  { pct:19, steps:["Member registered","Book reserved","Book lent","Book returned"], note:"104 members. The reservation disappears at the moment of lending." },
+  { pct:14, steps:["Member registered","Book lent","(not returned yet)"], note:"75 members with an open loan. Some are older than 30 days: is there an overdue concept?" },
+  { pct:9, steps:["Member registered","Book reserved","(never lent)"], note:"47 reservations still waiting. No cancel route was seen. Do reservations expire?" }
+];
 const ASKS = [
   { q:"What happens when a book is lent?", m:/lend|lent|loan/i, a:"A loan inserts a row in Loans (BookId, MemberId, LentOn) and decrements Inventory.AvailableCount in the same transaction. In 165 of 902 loans it also deletes the member’s Reservation for that book. 72 loans were refused with 409 and wrote nothing; in every one AvailableCount was already 0.", cite:["lend","reserve"] },
   { q:"Which commands change Inventory?", m:/inventor|stock|available/i, a:"Four sources write Inventory: RegisterInventory (insert or update TotalCount and AvailableCount), Lend and Return (AvailableCount only), and 14 nightly transactions with no command. ReportLost should too, but it has not been captured yet.", cite:["stock","lend","return"] },
@@ -740,11 +841,19 @@ function renderEvents(){
   $("#qLeft").textContent = open ? open+" open" : "all answered";
   $("#qBadge").textContent = open; $("#qBadge").style.display = open ? "" : "none";
   $("#qList").innerHTML = QUESTIONS.map(q => `<div class="q${state.answers[q.id]?" answered":""}"><div>${esc(q.text)}</div><div class="muted" style="font-size:12px">Evidence: ${esc(q.evidence)}</div><div class="opts">${q.opts.map(([k,l])=>`<button aria-pressed="${state.answers[q.id]===k}" data-q="${q.id}" data-a="${k}">${esc(l)}</button>`).join("")}</div></div>`).join("");
+  $("#bList").innerHTML = BOUNDARIES.map(b => `<div class="q${state.answers[b.id]?" answered":""}"><div><b>${esc(b.rule)}</b></div><div class="muted" style="font-size:12px">${esc(b.evidence)}</div><div class="opts">${b.opts.map(([k,l],i)=>`<button aria-pressed="${state.answers[b.id]===k}" data-q="${b.id}" data-a="${k}">${esc(l)}${i===0?" <span class='chip ok'>suggested</span>":""}</button>`).join("")}</div></div>`).join("");
   const acc = EVENTS.filter(e=>e.status==="accepted").length;
   $("#evStats").textContent = `${acc} of ${EVENTS.length} accepted`;
 }
+const BOUNDARIES = [
+  { id:"b-lend", rule:"A copy can only be lent while one is available", evidence:"LendBook writes Loans and Inventory in one transaction. 72 refusals when AvailableCount was 0.",
+    opts:[["book","Decide on the Book stream: availability and lending together"],["dcb","Keep a Loan stream and check availability with a dynamic consistency boundary"]] },
+  { id:"b-author", rule:"An author with books cannot be removed", evidence:"RemoveAuthor reads Books before deleting. Author and Book are separate streams.",
+    opts:[["dcb","Check the author’s books across streams at append time"],["soft","Allow removal and keep books pointing at a retired author"]] }
+];
 function applyAnswer(q, a){
   state.answers[q] = a;
+  if (q.startsWith("b-")) { toast("Boundary decision recorded. It will appear in the Screenplay as a constraint or rule."); renderEvents(); return; }
   const set = (id, st) => { const e = EVENTS.find(x=>x.id===id); if (e) e.status = st; };
   if (q==="resv") set("ReservationFulfilled", a==="yes"?"accepted":a==="no"?"rejected":"question");
   if (q==="stock") { if (a==="yes") { set("BookStocked","accepted"); set("CopiesAdded","accepted"); } else { set("BookStocked","rejected"); set("CopiesAdded","accepted"); } }
@@ -848,6 +957,47 @@ $("#board").addEventListener("click", e => { const c = e.target.closest("[data-s
 $("#handoff").addEventListener("click", () => {
   const open = EVENTS.filter(e=>e.status==="suggested"||e.status==="question").length;
   toast(open ? `${open} suggestions are still open. They will be marked as drafts in the .play file.` : "Model handed to Screenplay for review.");
+});
+
+// ------------------------------------------------------------------ 6. rebuild
+const STAGES = ["Observed","Modeled","Built","Shadowing","Cut over"];
+const REBUILD = [
+  { slice:"RegisterAuthor", route:"POST /api/authors", stage:4, replayed:412, match:412 },
+  { slice:"RegisterMember", route:"POST /api/members", stage:4, replayed:538, match:538 },
+  { slice:"ReserveBook", route:"POST /api/reservations", stage:3, replayed:349, match:349 },
+  { slice:"LendBook", route:"POST /api/loans", stage:3, replayed:902, match:899, div:"lend" },
+  { slice:"ReturnBook", route:"POST /api/loans/{id}/return", stage:4, replayed:811, match:811 },
+  { slice:"AddBook", route:"POST /api/catalog/books", stage:2, replayed:0, match:0 },
+  { slice:"TagBook", route:"POST /api/catalog/books/{isbn}/tags", stage:1, replayed:0, match:0 },
+  { slice:"ReportLost", route:"POST /api/inventory/{isbn}/lost", stage:0, replayed:0, match:0, note:"No captures yet" }
+];
+function renderRebuild(){
+  $("#rbTable").innerHTML = `<tr><th>Slice</th><th>Legacy route</th><th style="min-width:340px">Progress</th><th>Parity</th><th></th></tr>` + REBUILD.map((r,i) => {
+    const pct = r.replayed ? r.match/r.replayed*100 : 0;
+    const parity = r.replayed ? `<span class="parity"><span class="bar"><i style="width:${pct}%;${pct<100?"background:var(--warn)":""}"></i></span><span class="num">${r.match}/${r.replayed}</span>${pct<100?`<button class="btn small" data-div="${i}">${r.replayed-r.match} differ</button>`:""}</span>` : `<span class="muted" style="font-size:12px">${r.note||"Not replayed yet"}</span>`;
+    const next = r.stage===2 ? "Start shadowing" : r.stage===3 ? (r.match===r.replayed ? "Cut over route" : "") : r.stage===1 ? "Mark built" : "";
+    return `<tr><td><b>${r.slice}</b></td><td class="mono">${esc(r.route)}</td><td><div class="pipeline">${STAGES.map((st,k)=>`<span class="${k<r.stage||r.stage===4?"on":k===r.stage?"cur":""}">${st}</span>`).join("")}</div></td><td>${parity}</td><td>${next?`<button class="btn small${next==="Cut over route"?" primary":""}" data-adv="${i}">${next}</button>`:""}</td></tr>`;
+  }).join("");
+  const cut = REBUILD.filter(r=>r.stage===4).length;
+  $("#rbStats").textContent = `${cut} of ${REBUILD.length} slices cut over`;
+  $("#divMeta").textContent = "LendBook · 3 of 902";
+  $("#divDetail").innerHTML = `<div class="diverge"><div><h4>Legacy decided</h4><span class="chip ok">Accepted</span><p style="margin:6px 0 0">Lent a copy at 02:01 while the nightly stock job was rewriting Inventory. AvailableCount went to −1.</p></div><div><h4>New slice decided</h4><span class="chip bad">Refused</span><p style="margin:6px 0 0">BookLent rejected: no copy available after the stock count was applied first.</p></div></div>
+    <p class="muted" style="font-size:12px">All three differences happen between 02:00 and 02:05, during the uncorrelated Inventory updates. The new slice is arguably right. Accept the difference, or keep the legacy behavior?</p>
+    <div class="row"><button class="btn small primary" id="accDiv">Accept new behavior</button><button class="btn small" id="keepDiv">Match legacy</button></div>`;
+  const H = [["Oct 28 09:14","legacy","Member 2210 reserved “The Left Hand of Darkness”","POST /api/reservations → INSERT Reservations"],["Oct 28 09:14","new","BookReserved","shadow · same decision"],["Oct 30 16:02","legacy","Loan 4412 created for member 2210","POST /api/loans → INSERT Loans, UPDATE Inventory, DELETE Reservations"],["Oct 30 16:02","new","BookLent · ReservationFulfilled","shadow · same decision"],["Nov 1 10:47","new","BookReturned","cut over · served by the new system"],["Nov 1 10:47","legacy","Inventory.AvailableCount +1","written back by the sync adapter"]];
+  $("#hist").innerHTML = H.map(([t,src,what,how])=>`<div class="h"><span class="t">${t}</span><span class="src-tag ${src}">${src}</span><span>${esc(what)}<span class="muted" style="display:block;font-size:12px">${esc(how)}</span></span></div>`).join("");
+  $("#drift").innerHTML = `<tr><th>Seen since the model was accepted</th><th>Captures</th><th>In the model?</th><th></th></tr>
+    <tr><td class="mono">PUT /api/members/{id} → UPDATE Members (LastName)</td><td class="num">37</td><td><span class="chip warn">No · new behavior</span></td><td><button class="btn small" data-drift="1">Suggest events</button></td></tr>
+    <tr><td class="mono">POST /api/loans → also UPDATE Members (LoanCount)</td><td class="num">121</td><td><span class="chip warn">Changed · new column written</span></td><td><button class="btn small" data-drift="2">Review LendBook</button></td></tr>
+    <tr><td class="mono">POST /api/catalog/books/{isbn}/tags</td><td class="num">0 this week</td><td><span class="chip">Quiet</span></td><td></td></tr>`;
+}
+$("#rbTable").addEventListener("click", e => {
+  const a = e.target.closest("[data-adv]"); if (a) { const r = REBUILD[+a.dataset.adv]; r.stage++; if (r.stage===3 && !r.replayed) { r.replayed = COUNTS[r.slice==="AddBook"?"add-book":"tag-book"]||300; r.match = r.replayed; } toast(r.stage===4 ? `${r.route} now goes to the new ${r.slice} slice` : `${r.slice} moved to ${STAGES[r.stage]}`); renderRebuild(); }
+  if (e.target.closest("[data-div]")) $("#divDetail").scrollIntoView({behavior:"smooth", block:"center"});
+});
+document.addEventListener("click", e => {
+  if (e.target.id==="accDiv" || e.target.id==="keepDiv") { const r = REBUILD.find(x=>x.slice==="LendBook"); r.match = r.replayed; toast(e.target.id==="accDiv" ? "Difference accepted and recorded as a decision on LendBook" : "LendBook will be changed to match legacy"); renderRebuild(); }
+  const d = e.target.closest("[data-drift]"); if (d) toast(d.dataset.drift==="1" ? "Suggested MemberRenamed. Review it in Events." : "LendBook flagged for review: legacy now also counts loans per member.");
 });
 
 // ------------------------------------------------------------------ boot
