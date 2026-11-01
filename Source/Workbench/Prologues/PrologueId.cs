@@ -15,6 +15,11 @@ public record PrologueId(Guid Value) : EventSourceId<Guid>(Value)
     public static readonly PrologueId NotSet = new(Guid.Empty);
 
     /// <summary>
+    /// Gets the well-known identity captures belong to when the Extractor was not configured with a prologue.
+    /// </summary>
+    public static readonly PrologueId Unassigned = new(new Guid("00000000-0000-0000-0000-00000000c0de"));
+
+    /// <summary>
     /// Implicitly converts a <see cref="Guid"/> to a <see cref="PrologueId"/>.
     /// </summary>
     /// <param name="value">The value to convert.</param>

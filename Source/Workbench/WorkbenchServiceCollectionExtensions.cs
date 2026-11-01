@@ -4,6 +4,7 @@
 using Cratis.AI.Configuration;
 using Cratis.Chronicle.Connections;
 using Cratis.Prologue.Workbench.AI;
+using Cratis.Prologue.Workbench.Captures;
 using Cratis.Prologue.Workbench.Identity;
 using Cratis.Prologue.Workbench.Repositories;
 using Microsoft.AspNetCore.Builder;
@@ -57,6 +58,7 @@ public static class WorkbenchServiceCollectionExtensions
         builder.Services.PostConfigure<ChronicleClientOptions>(options => options.EventStore = EventStore);
 
         builder.AddRepositories();
+        builder.AddCaptures();
 
         return builder;
     }
