@@ -1,0 +1,38 @@
+/* Copyright (c) Cratis. All rights reserved.
+ * Licensed under the MIT license. See LICENSE file in the project root for full license information. */
+
+.stamp { font-size: 12px; color: var(--muted); }
+.pipeline { display: flex; gap: 2px; }
+.pipeline span { flex: 1; min-width: 56px; height: 24px; line-height: 24px; padding: 0 4px; font-size: 11px; font-weight: 600; text-align: center; background: var(--slate-bg); color: var(--muted); }
+.pipeline span:first-child { border-radius: 4px 0 0 4px; }
+.pipeline span:last-child { border-radius: 0 4px 4px 0; }
+.pipeline span.on { background: var(--green-bg); color: var(--green); }
+.pipeline span.cur { background: var(--sky-bg); color: var(--sky); box-shadow: inset 0 -2px 0 var(--sky); }
+.parity { display: flex; align-items: center; gap: 8px; font-size: 12px; white-space: nowrap; }
+.parity .bar { width: 90px; }
+.parity .bar > i { background: var(--green); }
+.parity .bar.partial > i { background: var(--lime); }
+.slice-actions { display: flex; gap: 6px; justify-content: flex-end; flex-wrap: wrap; }
+.add-slice { display: grid; grid-template-columns: minmax(160px, 220px) minmax(0, 1fr) auto; gap: 12px; align-items: end; }
+.shape-picks { display: flex; flex-wrap: wrap; gap: 6px; }
+.shape-picks .btn { font-family: var(--mono); font-size: 12px; }
+.shape-picks .btn[aria-pressed='true'] { background: var(--primary-soft); border-color: var(--primary-edge); color: var(--accent); }
+@media (max-width: 800px) { .add-slice { grid-template-columns: 1fr; } }
+.diverge { border: 1px solid var(--line); border-radius: var(--r-card); display: grid; grid-template-columns: 1fr 1fr; overflow: hidden; margin-bottom: 10px; }
+.diverge > div { padding: 10px 12px; font-size: 13px; }
+.diverge > div:first-child { border-right: 1px solid var(--line); }
+.diverge h4 { margin: 0 0 4px; font-size: 12px; color: var(--muted); font-weight: 500; }
+.difference { padding: 10px 0; border-bottom: 1px solid var(--line); }
+.difference:last-child { border-bottom: 0; }
+.difference .where { font-size: 12px; margin: 0 0 8px; display: block; }
+.hist { display: flex; flex-direction: column; }
+.hist .h { display: grid; grid-template-columns: 110px 70px 1fr; gap: 10px; padding: 7px 0; border-bottom: 1px solid var(--line); align-items: baseline; font-size: 13px; }
+.hist .h .t { font-family: var(--mono); font-size: 12px; color: var(--muted); }
+.hist .h .how { display: block; font-size: 12px; color: var(--muted); }
+.src-tag { font-size: 11px; padding: 0 6px; border-radius: var(--r-pill); text-align: center; }
+.src-tag.legacy { background: var(--slate-bg); color: var(--silver); }
+.src-tag.new { background: var(--sky-bg); color: var(--sky); }
+.history-lookup { display: flex; gap: 8px; align-items: end; margin-bottom: 10px; }
+.history-lookup .field { flex: 1; }
+.stack { display: flex; flex-direction: column; gap: 12px; }
+.parity + .small-text { display: block; margin-top: 2px; }
