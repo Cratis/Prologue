@@ -18,5 +18,6 @@
     <ItemGroup>
         <ProjectReference Include="../Contracts/Contracts.csproj" />
         <ProjectReference Include="../Storage/Storage.csproj" />
+        <ProjectReference Include="../Workbench/Workbench.csproj" />
     </ItemGroup>
 </Project>

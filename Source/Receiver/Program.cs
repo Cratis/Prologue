@@ -3,6 +3,7 @@
 
 using System.Globalization;
 using Cratis.Prologue.Storage;
+using Cratis.Prologue.Workbench;
 
 // Force invariant culture for the backend
 CultureInfo.DefaultThreadCurrentCulture = CultureInfo.InvariantCulture;
@@ -12,12 +13,20 @@ CultureInfo.CurrentUICulture = CultureInfo.InvariantCulture;
 
 var builder = WebApplication.CreateBuilder(args);
 
+// The Workbench: Cratis.AI, then Arc with Chronicle (event store "Prologue") and MongoDB read models.
+builder.AddWorkbench();
+
 builder.Services.AddPrologueCaptureStorage(builder.Configuration);
 
 // Match the Prologue Extractor's transport serialization so concepts and polymorphic payloads round-trip.
 builder.Services.ConfigureHttpJsonOptions(options => CaptureSerialization.AddConverters(options.SerializerOptions));
 
 var app = builder.Build();
+
+// Serve the Workbench frontend built into wwwroot.
+app.UseDefaultFiles();
+app.UseStaticFiles();
+app.UseCratis();
 
 // Public-facing endpoint the Prologue Extractor posts correlated captures to when it is not associated with a Prologue.
 app.MapPost("/captures", async (Capture capture, ICaptureStore store, CancellationToken cancellationToken) =>
@@ -33,5 +42,8 @@ app.MapPost("/prologues/{prologueId:guid}/captures", async (Guid prologueId, Cap
     await store.Store(capture with { PrologueId = prologueId }, cancellationToken);
     return Results.Accepted();
 });
+
+// Any other path that is not a file belongs to the Workbench's client-side router.
+app.MapFallbackToFile("/index.html");
 
 await app.RunAsync();

@@ -5,7 +5,15 @@
   </PropertyGroup>
   <ItemGroup>
     <!-- Cratis -->
-    <PackageVersion Include="Cratis.Fundamentals" Version="7.27.0" />
+    <PackageVersion Include="Cratis.Fundamentals" Version="7.30.2" />
+    <PackageVersion Include="Cratis" Version="22.153.1" />
+    <PackageVersion Include="Cratis.Arc.Core" Version="22.153.1" />
+    <PackageVersion Include="Cratis.Arc.MongoDB" Version="22.153.1" />
+    <PackageVersion Include="Cratis.Arc.ProxyGenerator.Build" Version="22.153.1" />
+    <PackageVersion Include="Cratis.AI" Version="7.126.0" />
+    <PackageVersion Include="Cratis.Chronicle" Version="19.114.0" />
+    <PackageVersion Include="Cratis.Chronicle.Contracts" Version="19.114.0" />
+    <PackageVersion Include="Cratis.Chronicle.CodeAnalysis" Version="19.114.0" />
     <PackageVersion Include="Cratis.Screenplay" Version="4.249.0" />
     <!-- AI -->
     <PackageVersion Include="Anthropic" Version="13.3.0" />
