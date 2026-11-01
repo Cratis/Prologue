@@ -5,6 +5,7 @@ using System.Globalization;
 using Cratis.Prologue.Storage;
 using Cratis.Prologue.Workbench;
 using Cratis.Prologue.Workbench.Captures.Recording;
+using Cratis.Prologue.Workbench.Model.Export;
 using Cratis.Prologue.Workbench.Rebuild.Parity;
 
 // Force invariant culture for the backend
@@ -59,6 +60,9 @@ app.MapPost("/prologues/{prologueId:guid}/parity", async (Guid prologueId, Parit
     await recorder.Record(prologueId, observation, cancellationToken);
     return Results.Accepted();
 });
+
+// The Screenplay of the prologue's accepted model, as a download.
+app.MapModelScreenplay();
 
 // Any other path that is not a file belongs to the Workbench's client-side router.
 app.MapFallbackToFile("/index.html");

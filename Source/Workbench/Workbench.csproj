@@ -48,6 +48,7 @@
         <ProjectReference Include="../Contracts/Contracts.csproj" />
         <ProjectReference Include="../Interpretation/Interpretation.csproj" />
         <ProjectReference Include="../Interpreter.Contracts/Interpreter.Contracts.csproj" />
+        <ProjectReference Include="../Screenplay/Screenplay.csproj" />
         <ProjectReference Include="../Storage/Storage.csproj" />
     </ItemGroup>
 

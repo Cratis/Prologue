@@ -10,6 +10,7 @@ using Cratis.Prologue.Workbench.Captures;
 using Cratis.Prologue.Workbench.Discover;
 using Cratis.Prologue.Workbench.Events;
 using Cratis.Prologue.Workbench.Identity;
+using Cratis.Prologue.Workbench.Model;
 using Cratis.Prologue.Workbench.Rebuild;
 using Cratis.Prologue.Workbench.Repositories;
 using Microsoft.AspNetCore.Builder;
@@ -68,6 +69,7 @@ public static class WorkbenchServiceCollectionExtensions
         builder.AddDiscover();
         builder.AddEvents();
         builder.AddRebuild();
+        builder.AddModel();
 
         return builder;
     }
