@@ -4,10 +4,14 @@
         <AssemblyName>Cratis.Prologue.Workbench</AssemblyName>
         <RootNamespace>Cratis.Prologue.Workbench</RootNamespace>
         <Description>The Prologue Workbench: backend slices and their frontend, hosted by the Receiver.</Description>
+        <!-- A library in Release; Debug is an executable only because the specs are (see Source/Directory.Build.props). -->
+        <OutputType Condition="'$(Configuration)' == 'Release'">Library</OutputType>
         <!-- Prologue models with Screenplay elsewhere; there are no .play documents for Arc to embed. -->
         <CratisEmbeddedScreenplayEnabled>false</CratisEmbeddedScreenplayEnabled>
+    </PropertyGroup>
 
-        <!-- Arc proxies are generated next to the C# on Debug builds. -->
+    <!-- Arc proxies are generated next to the C# on Debug builds only; they are committed. -->
+    <PropertyGroup Condition="'$(Configuration)' == 'Debug'">
         <CratisProxiesOutputPath>$(MSBuildThisFileDirectory)</CratisProxiesOutputPath>
         <CratisProxiesSegmentsToSkip>1</CratisProxiesSegmentsToSkip>
         <CratisProxiesSkipOutputDeletion>true</CratisProxiesSkipOutputDeletion>
