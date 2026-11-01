@@ -1,0 +1,22 @@
+{
+    "private": true,
+    "name": "prologue",
+    "workspaces": [
+        "Source/Workbench"
+    ],
+    "engines": {
+        "node": ">=20.0.0"
+    },
+    "scripts": {
+        "dev": "yarn workspace prologue-workbench dev",
+        "build": "yarn workspace prologue-workbench build",
+        "lint": "yarn workspace prologue-workbench lint:ci",
+        "lint:fix": "yarn workspace prologue-workbench lint",
+        "compile": "yarn workspace prologue-workbench compile",
+        "test": "yarn workspace prologue-workbench test"
+    },
+    "resolutions": {
+        "@cratis/fundamentals": "7.30.0"
+    },
+    "packageManager": "yarn@4.17.1"
+}

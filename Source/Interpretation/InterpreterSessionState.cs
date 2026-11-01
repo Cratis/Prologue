@@ -19,6 +19,7 @@ namespace Cratis.Prologue.Interpretation;
 /// <param name="Transcript">The language-model conversation so far — replayed to the stateless model on resume.</param>
 /// <param name="QuestionRounds">The number of completed ask-and-answer rounds.</param>
 /// <param name="Error">What went wrong; empty unless <paramref name="Status"/> is <see cref="InterpreterStatus.Failed"/>.</param>
+/// <param name="Renames">The renames the language model's last refinement applied, from the provisional (mechanical) name to the refined one; <see langword="null"/> when the model was not refined. Lets a host relate the refined model back to the heuristic model it came from.</param>
 public record InterpreterSessionState(
     Guid PrologueId,
     InterpreterStatus Status,
@@ -27,7 +28,8 @@ public record InterpreterSessionState(
     IReadOnlyList<AnsweredQuestion> AnsweredQuestions,
     IReadOnlyList<SessionChatMessage> Transcript,
     int QuestionRounds,
-    string Error)
+    string Error,
+    IReadOnlyDictionary<string, string>? Renames = null)
 {
     /// <summary>
     /// Creates the initial state for a new session.
@@ -36,4 +38,23 @@ public record InterpreterSessionState(
     /// <returns>An <see cref="InterpreterSessionState"/> that has not started.</returns>
     public static InterpreterSessionState New(Guid prologueId) =>
         new(prologueId, InterpreterStatus.NotStarted, null, [], [], [], 0, string.Empty);
+
+    /// <summary>
+    /// Records the answer for one pending question. When every pending question is answered, the next
+    /// <see cref="IInterpreterSession.Proceed"/> continues the refinement with the answers.
+    /// </summary>
+    /// <param name="answer">The answer to record.</param>
+    /// <returns>The state after recording the answer.</returns>
+    /// <exception cref="QuestionNotPending">Thrown when the answer refers to a question that is not pending.</exception>
+    public InterpreterSessionState Answered(InterpreterAnswer answer)
+    {
+        var question = PendingQuestions.FirstOrDefault(pending => pending.Id == answer.QuestionId)
+            ?? throw new QuestionNotPending(answer.QuestionId);
+
+        return this with
+        {
+            PendingQuestions = [.. PendingQuestions.Where(pending => pending.Id != question.Id)],
+            AnsweredQuestions = [.. AnsweredQuestions, new AnsweredQuestion(question, answer.Value)]
+        };
+    }
 }

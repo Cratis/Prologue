@@ -35,7 +35,15 @@ public class CorrelationWorker(
         {
             await foreach (var observation in channel.ReadAll(stoppingToken))
             {
-                correlator.Add(observation);
+                try
+                {
+                    correlator.Add(observation);
+                }
+                catch (Exception exception) when (exception is not OperationCanceledException)
+                {
+                    // One observation the correlator cannot take must not end ingesting, or the host with it.
+                    CorrelationWorkerLog.ObservationFailed(logger, exception);
+                }
             }
         }
         catch (OperationCanceledException) when (stoppingToken.IsCancellationRequested)
@@ -55,8 +63,16 @@ public class CorrelationWorker(
             {
                 foreach (var capture in correlator.Drain(DateTimeOffset.UtcNow))
                 {
-                    await store.Store(capture, stoppingToken);
-                    CorrelationWorkerLog.CaptureStored(logger, capture.Id, capture.Entries.Count);
+                    try
+                    {
+                        await store.Store(capture, stoppingToken);
+                        CorrelationWorkerLog.CaptureStored(logger, capture.Id, capture.Entries.Count);
+                    }
+                    catch (Exception exception) when (exception is not OperationCanceledException)
+                    {
+                        // A capture that cannot be stored is lost, and said so; the next one must still be stored and the host must stay up.
+                        CorrelationWorkerLog.StoreFailed(logger, capture.Id, exception);
+                    }
                 }
             }
         }

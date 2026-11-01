@@ -20,6 +20,27 @@ binds `prologue.mongo`.
   `Prologue__Mongo__ConnectionString`, `Prologue__Mongo__Database`, and `Prologue__Mongo__Collection`.
 - A missing `cratis-prologue.json` is allowed; type defaults and environment variables still apply.
 
+## Secret placeholders
+
+Any string value in the configuration can hold a placeholder of the form `${secret:<name>}`. The Extractor and the Interpreter expand it when they start, so the file can name a secret without containing it. This is how the [Workbench](../guides/running-the-workbench.md) writes database connection strings:
+
+```json
+{
+    "prologue": {
+        "sqlServer": [
+            { "name": "lending", "connectionString": "${secret:library-db/connection}" }
+        ]
+    }
+}
+```
+
+A secret is looked up in this order, and the first non-empty value wins:
+
+1. The configuration key `Prologue:Secrets:<name>`, for example `Prologue:Secrets:library-db/connection`.
+2. The environment variable `PROLOGUE_SECRET_` followed by the name with every character that is not an ASCII letter or digit replaced by an underscore, in upper case: `PROLOGUE_SECRET_LIBRARY_DB_CONNECTION`.
+
+A placeholder can sit inside a longer value (`Host=db;Password=${secret:billing/db}`). Names are 1 to 64 letters, digits, `_`, `.`, `/` or `-`. If a secret cannot be resolved, the tool fails at startup with a message that names the secret and the two places to set it; it never prints a value, and it does not start with a half-expanded connection string. The Receiver resolves repository connection tokens with the same lookup, see [How secrets are resolved](receiver-configuration.md#how-secrets-are-resolved).
+
 ## Root shape
 
 | Property | Type | Purpose |
@@ -39,6 +60,7 @@ binds `prologue.mongo`.
 | `postgres` | array of [`PostgresOptions`](#prologuepostgres) | `[]` | PostgreSQL databases of the default service to watch via logical replication |
 | `openTelemetry` | [`OpenTelemetryOptions`](#prologueopentelemetry) | — | OTLP proxy configuration, shared by every service |
 | `services` | map of service name to [`ServiceOptions`](#prologueservices) | `{}` | Named services of a system made of several services |
+| `shadowing` | array of [shadowing rules](shadowing.md) | `[]` | Commands the Extractor mirrors to a new system to compare decisions; requires `prologueId` and the `Api` output |
 | `mongo` | [`MongoOptions`](#prologuemongo) | — | Capture and service-session storage used by the Receiver and service Interpreter |
 
 ### `prologue.output`
@@ -46,7 +68,7 @@ binds `prologue.mongo`.
 | Property | Type | Default | Purpose |
 |---|---|---|---|
 | `kind` | `"Api"` \| `"Json"` | `"Api"` | Whether captures are posted to a [Receiver](receiver.md) or written to JSON files |
-| `api.endpoint` | `string` | `"http://localhost:5005"` | Receiver base address, used when `kind` is `"Api"` |
+| `api.endpoint` | `string` | `"http://localhost:5005"` | Receiver base address, used when `kind` is `"Api"`. The configuration the Workbench generates sets it to the address you opened the Workbench at |
 | `json.directory` | `string` | `"./captures"` | Folder to write rolling `.jsonl` capture files to, used when `kind` is `"Json"` |
 | `json.maxEntriesPerFile` | `int` | `10000` | Entries per file before the Extractor rolls to a new one |
 

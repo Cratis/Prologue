@@ -1,0 +1,49 @@
+/* Copyright (c) Cratis. All rights reserved.
+ * Licensed under the MIT license. See LICENSE file in the project root for full license information. */
+
+/* Small text helpers the Systems step and the panels in it share. */
+.small-text { font-size: 12px; }
+.block { display: block; }
+.nowrap { white-space: nowrap; flex-wrap: nowrap; }
+.good { color: var(--green); }
+.bad { color: var(--red); }
+.note { margin: 10px 0 0; }
+.chips { gap: 4px; }
+.actions { gap: 4px; justify-content: flex-end; }
+.panel-actions { margin-top: 12px; }
+.aside-column { align-content: start; }
+.new-prologue { max-width: 480px; }
+
+/* Repository host mark */
+.prov { display: inline-grid; place-items: center; width: 26px; height: 26px; border-radius: 7px; font-size: 11px; font-weight: 800; flex: none; background: var(--navy); color: var(--accent); }
+.prov.gh { background: var(--control); color: var(--strong); }
+.prov.ado { background: var(--primary-soft); color: var(--accent); }
+.prov.gl { background: var(--orange-bg); color: var(--orange); }
+.prov.fs { background: var(--slate-bg); color: var(--silver); }
+
+/* Repository connections */
+.conn { display: flex; align-items: center; gap: 12px; min-height: 52px; padding: 8px 0; border-top: 1px solid var(--line); }
+.conn:first-child { border-top: 0; }
+.conn .grow { flex: 1; min-width: 0; }
+.conn small { display: block; color: var(--muted); font-size: 12px; overflow-wrap: anywhere; }
+.conn .chip, .conn .btn { flex: none; }
+
+/* A form that opens under a table or a list */
+.addsys { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 10px; margin-top: 12px; padding: 14px; border-radius: var(--r-card); background: var(--sunken); }
+.addsys .form-actions { align-self: end; }
+
+/* Runtime sources */
+.src { border: 1px solid var(--line); background: var(--card-sunken); border-radius: var(--r-card); padding: 16px; display: flex; flex-direction: column; gap: 12px; }
+.src header { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+
+/* Evidence steps */
+.scen { display: flex; flex-direction: column; gap: 6px; }
+.scen-item { display: flex; gap: 12px; align-items: center; min-height: 44px; padding: 0 12px; border-top: 1px solid var(--line); }
+.scen-item .grow { flex: 1; }
+
+/* Capture boundary and generated configuration */
+.boundary { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.boundary ul { margin: 6px 0 0; padding-left: 18px; }
+.boundary li { margin: 2px 0; }
+pre.code { background: var(--sunken); border: 1px solid var(--line); border-radius: var(--r-ctl); padding: 14px; overflow: auto; font: 12px/1.6 var(--mono); max-height: 420px; margin: 0; color: var(--silver); }
+@media (max-width: 560px) { .boundary { grid-template-columns: 1fr; } }

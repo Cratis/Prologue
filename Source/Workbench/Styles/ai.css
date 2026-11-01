@@ -1,0 +1,39 @@
+/* Copyright (c) Cratis. All rights reserved.
+ * Licensed under the MIT license. See LICENSE file in the project root for full license information. */
+
+/* The AI panel: Cratis.AI providers, pools and agents. */
+.ai-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 16px; }
+.ai-sub { font-size: 11px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); margin: 4px 0 8px; display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+.ai-grid .note { margin: 0 0 8px; font-size: 12px; }
+.ai-grid .small-text { font-size: 12px; }
+.ai-grid .mono { font-family: var(--mono); }
+.ai-grid .stack { gap: 10px; }
+.ai-grid select, .ai-grid input:not([type='checkbox']) { border: 1px solid var(--line-strong); background: var(--sunken); border-radius: var(--r-sm); min-height: 32px; padding: 0 8px; font-size: 12px; color: var(--ink); max-width: 100%; }
+
+.prow-wrap { border-top: 1px solid var(--line-faint); }
+.prow-wrap:first-of-type { border-top: 0; }
+.prow { display: grid; grid-template-columns: 30px minmax(0, 1fr) auto; gap: 12px; align-items: center; padding: 10px 0; }
+.prow small { display: block; color: var(--muted); font-size: 12px; }
+.prow small.caution { color: var(--orange); }
+.prow .capbar { margin-top: 6px; max-width: 220px; }
+.vmark { width: 30px; height: 30px; border-radius: 8px; display: grid; place-items: center; font-size: 11px; font-weight: 800; background: var(--navy); color: var(--accent); }
+.vmark.local { background: var(--green-bg); color: var(--green); }
+.inside { color: var(--green); }
+.capbar { height: 6px; border-radius: 3px; background: var(--track); overflow: hidden; }
+.capbar i { display: block; height: 100%; background: var(--accent); }
+
+.manage { display: flex; flex-direction: column; gap: 10px; padding: 0 0 12px 42px; }
+.manage-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; }
+.manage .actions, .addprov .actions { margin-top: 4px; }
+
+.addprov { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 10px; margin-top: 10px; padding: 14px; border-radius: var(--r-card); background: var(--sunken); }
+.addprov .note, .addprov .actions { grid-column: 1 / -1; margin: 0; }
+
+.poolcard { border: 1px solid var(--line); border-radius: var(--r-card); padding: 12px 14px; background: var(--card-sunken); display: flex; flex-direction: column; gap: 10px; }
+.poolcard header { display: flex; justify-content: space-between; align-items: center; gap: 8px; flex-wrap: wrap; }
+.member { display: grid; grid-template-columns: 22px minmax(0, 1fr) auto; gap: 10px; align-items: center; font-size: 13px; }
+.member .ord { width: 22px; height: 22px; border-radius: 6px; background: var(--slate-bg); display: grid; place-items: center; font-size: 11px; font-weight: 700; }
+.member .mv { display: flex; gap: 2px; }
+.member .mv .btn { min-height: 26px; min-width: 26px; padding: 0; }
+.agent { display: flex; align-items: center; gap: 10px; font-size: 13px; }
+.agent .av { width: 28px; height: 28px; border-radius: 8px; display: grid; place-items: center; font-size: 11px; font-weight: 800; background: var(--sky-bg); color: var(--sky); flex: none; }

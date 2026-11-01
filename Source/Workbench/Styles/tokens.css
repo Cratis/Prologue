@@ -1,0 +1,81 @@
+/* Copyright (c) Cratis. All rights reserved.
+ * Licensed under the MIT license. See LICENSE file in the project root for full license information. */
+
+/*
+ * The Cratis design tokens. This is the only file that defines a color; everything else reads these custom properties.
+ * Single dark theme: deep navy surfaces, a blue primary gradient, a sky accent and Inter at heavy weights.
+ */
+:root {
+  /* Palette */
+  --ground: #0f172a;
+  --sunken: #0b1224;
+  --sidebar: #0d1528;
+  --surface: #172133; /* the card color composited on the ground, solid for sticky cells */
+  --card: rgba(30, 41, 59, 0.55);
+  --card-sunken: rgba(13, 21, 40, 0.6);
+  --ink: #e2e8f0;
+  --strong: #f8fafc;
+  --muted: #94a3b8;
+  --silver: #cbd5e1;
+  --on-primary: #fff;
+  --on-status: var(--sunken);
+  --navy: #1e3a5f;
+  --raised: #1e293b;
+
+  /* Lines and fills */
+  --line: rgba(255, 255, 255, 0.07);
+  --line-strong: rgba(255, 255, 255, 0.1);
+  --line-faint: rgba(255, 255, 255, 0.05);
+  --line-accent: rgba(126, 200, 240, 0.12);
+  --line-dashed: rgba(148, 163, 184, 0.4);
+  --hover: rgba(148, 163, 184, 0.08);
+  --hover-control: rgba(255, 255, 255, 0.11);
+  --control: rgba(255, 255, 255, 0.07);
+  --track: rgba(148, 163, 184, 0.3);
+
+  /* Brand */
+  --primary: #2563eb;
+  --primary-strong: #1d4ed8;
+  --primary-gradient: linear-gradient(135deg, #2563eb, #1d4ed8);
+  --primary-soft: rgba(37, 99, 235, 0.2);
+  --primary-edge: rgba(37, 99, 235, 0.5);
+  --primary-glow: rgba(37, 99, 235, 0.4);
+  --accent: #7ec8f0;
+  --accent-hover: #bae6fd;
+  --accent-soft: rgba(37, 99, 235, 0.18);
+
+  /* Status */
+  --green: #34d399;
+  --green-bg: rgba(16, 185, 129, 0.14);
+  --orange: #f0a050;
+  --orange-bg: rgba(240, 160, 80, 0.14);
+  --orange-edge: rgba(240, 160, 80, 0.25);
+  --orange-ink: #fcd9b6;
+  --lime: #b8d63b;
+  --lime-bg: rgba(184, 214, 59, 0.14);
+  --red: #fca5a5;
+  --red-bg: rgba(248, 113, 113, 0.14);
+  --purple: #c4b5fd;
+  --purple-bg: rgba(196, 181, 253, 0.14);
+  --sky: var(--accent);
+  --sky-bg: rgba(126, 200, 240, 0.14);
+  --slate-bg: rgba(148, 163, 184, 0.14);
+
+  /* Shape */
+  --r-card: 14px;
+  --r-ctl: 10px;
+  --r-sm: 8px;
+  --r-pill: 999px;
+
+  /* Type */
+  --display: Inter, system-ui, -apple-system, sans-serif;
+  --body: Inter, system-ui, -apple-system, sans-serif;
+  --mono: 'JetBrains Mono', ui-monospace, monospace;
+
+  /* Elevation and atmosphere */
+  --shadow-toast: 0 8px 24px rgba(0, 0, 0, 0.4);
+  --glow-from: #1e3a5f;
+  --page-glow: radial-gradient(1200px 600px at 70% -10%, var(--glow-from) 0%, rgba(15, 23, 42, 0) 60%);
+
+  color-scheme: dark;
+}

@@ -290,7 +290,6 @@ dist
 wwwroot
 out
 
-yarn.lock
 .pnp.*
 .yarn/*
 !.yarn/patches

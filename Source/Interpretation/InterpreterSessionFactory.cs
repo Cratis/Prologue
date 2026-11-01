@@ -23,8 +23,9 @@ public class InterpreterSessionFactory(
         IReadOnlyList<Capture> captures,
         LlmOptions llmOptions,
         Action<InterpreterStatus>? statusChanged = null,
-        int maxQuestionRounds = IInterpreterSessionFactory.DefaultMaxQuestionRounds) =>
-        new InterpreterSession(InterpreterSessionState.New(prologueId), captures, llmOptions, heuristics, chatClients, logger, statusChanged, maxQuestionRounds);
+        int maxQuestionRounds = IInterpreterSessionFactory.DefaultMaxQuestionRounds,
+        string additionalEvidence = "") =>
+        new InterpreterSession(InterpreterSessionState.New(prologueId), captures, llmOptions, heuristics, chatClients, logger, statusChanged, maxQuestionRounds, additionalEvidence);
 
     /// <inheritdoc/>
     public IInterpreterSession Resume(

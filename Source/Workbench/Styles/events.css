@@ -1,0 +1,58 @@
+/* Copyright (c) Cratis. All rights reserved.
+ * Licensed under the MIT license. See LICENSE file in the project root for full license information. */
+
+/* The Events step */
+.events { margin-top: 16px; align-items: start; }
+.events .column { display: flex; flex-direction: column; gap: 12px; align-content: start; }
+.run-bar { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; justify-content: space-between; }
+.run-bar .status { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; font-size: 13px; color: var(--muted); }
+.run-bar .status.failed { color: var(--red); }
+
+.filters { display: flex; gap: 6px; flex-wrap: wrap; }
+.filters button { border: 1px solid var(--line-strong); background: transparent; color: var(--muted); min-height: 32px; padding: 0 12px; border-radius: var(--r-pill); font-size: 13px; font-weight: 600; }
+.filters button[aria-pressed="true"] { background: var(--primary-soft); color: var(--strong); border-color: var(--primary-edge); }
+
+.evcards { display: flex; flex-direction: column; gap: 10px; }
+.ev { border: 1px solid var(--line); border-left: 4px solid var(--orange); border-radius: var(--r-card); padding: 16px 18px; background: var(--card); display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 8px 16px; }
+.ev.accepted { border-left-color: var(--green); }
+.ev.rejected { opacity: 0.55; border-left-color: var(--line); }
+.ev.question { border-left-color: var(--lime); }
+.ev.withdrawn { border-left-style: dashed; }
+.ev > div { min-width: 0; }
+.ev .name { font-size: 17px; font-weight: 800; color: var(--strong); overflow-wrap: anywhere; }
+.ev .name input { font: inherit; border: 1px solid var(--accent); border-radius: 4px; padding: 0 4px; background: var(--ground); color: var(--strong); min-width: 220px; }
+.ev .mech { color: var(--muted); font-family: var(--mono); font-size: 12px; text-decoration: line-through; }
+.ev .advice { grid-column: 1 / -1; font-size: 12px; color: var(--lime); }
+.props { display: flex; flex-wrap: wrap; align-items: flex-start; gap: 4px; margin-top: 6px; }
+.prop { font-family: var(--mono); font-size: 12px; background: var(--orange-bg); color: var(--ink); padding: 2px 8px; border-radius: var(--r-pill); white-space: nowrap; max-width: 100%; overflow: hidden; text-overflow: ellipsis; }
+.prop i { color: var(--muted); font-style: normal; }
+.ev .evidence { grid-column: 1 / -1; font-size: 12px; color: var(--muted); display: flex; flex-wrap: wrap; gap: 6px 14px; }
+.ev .evidence a { color: var(--accent); }
+.ev .notes { grid-column: 1 / -1; display: flex; flex-direction: column; gap: 6px; }
+.ev .note { font-size: 13px; background: var(--orange-bg); color: var(--orange-ink); border: 1px solid var(--orange-edge); border-radius: var(--r-ctl); padding: 8px 12px; }
+.ev .actions { display: flex; gap: 6px; align-items: flex-start; flex-wrap: wrap; justify-content: flex-end; }
+.conf { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; color: var(--muted); }
+.conf .meter { width: 48px; height: 6px; background: var(--ground); border-radius: 3px; overflow: hidden; }
+.conf .meter i { display: block; height: 100%; background: var(--green); }
+.conf .meter i.low { background: var(--orange); }
+
+@media (max-width: 560px) {
+    .ev { grid-template-columns: minmax(0, 1fr); }
+    .ev .actions { justify-content: flex-start; align-items: center; }
+    .ev .name input { min-width: 0; width: 100%; }
+}
+
+.q { border: 1px solid var(--line); background: var(--card-sunken); border-radius: var(--r-card); padding: 14px; display: flex; flex-direction: column; gap: 8px; }
+.q.answered { opacity: 0.7; }
+.q .opts { display: flex; flex-direction: column; gap: 6px; }
+.q .opts button { text-align: left; border: 1px solid var(--line-strong); background: var(--control); color: var(--ink); border-radius: var(--r-ctl); min-height: 44px; padding: 8px 12px; }
+.q .opts button[aria-pressed="true"] { border-color: var(--accent); background: var(--sky-bg); }
+.q .opts button:disabled { opacity: 0.5; cursor: not-allowed; }
+.q .free { display: flex; gap: 6px; }
+.q .free input { flex: 1; min-width: 0; border: 1px solid var(--line-strong); background: var(--sunken); border-radius: var(--r-ctl); min-height: 36px; padding: 0 10px; color: var(--ink); }
+.q .small-print { font-size: 12px; }
+
+.review-list { display: flex; flex-direction: column; gap: 6px; padding: 0; margin: 0; }
+.review-list li { list-style: none; display: flex; gap: 8px; align-items: baseline; flex-wrap: wrap; }
+
+

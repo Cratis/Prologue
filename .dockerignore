@@ -1,0 +1,6 @@
+**/.git
+**/.ai-work
+**/node_modules
+**/bin
+**/obj
+**/wwwroot
