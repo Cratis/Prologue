@@ -8,6 +8,8 @@
         <OutputType Condition="'$(Configuration)' == 'Release'">Library</OutputType>
         <!-- Prologue models with Screenplay elsewhere; there are no .play documents for Arc to embed. -->
         <CratisEmbeddedScreenplayEnabled>false</CratisEmbeddedScreenplayEnabled>
+        <!-- Hosted by the Receiver, never shipped as a package; the release packs the whole solution. -->
+        <WarnOnPackingNonPackableProject>false</WarnOnPackingNonPackableProject>
     </PropertyGroup>
 
     <!-- Arc proxies are generated next to the C# on Debug builds only; they are committed. -->
