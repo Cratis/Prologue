@@ -11,9 +11,11 @@ export interface ProviderCapacityProps {
 export const ProviderCapacity = ({ provider }: ProviderCapacityProps) => {
     const [result] = CapacityFor.use({ providerId: provider.id });
     const capacity = result.data;
-    if (!result.hasData || !capacity || capacity.windows.length === 0) return null;
+    // A provider with no metering has a capacity document without windows.
+    const windows = capacity?.windows ?? [];
+    if (!result.hasData || !capacity || windows.length === 0) return null;
 
-    const tightest = capacity.windows.reduce((narrowest, window) => window.remaining < narrowest.remaining ? window : narrowest);
+    const tightest = windows.reduce((narrowest, window) => window.remaining < narrowest.remaining ? window : narrowest);
     const left = Math.round(capacity.headroom * 100);
     return (
         <>

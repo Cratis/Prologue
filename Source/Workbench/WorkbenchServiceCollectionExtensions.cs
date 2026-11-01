@@ -48,7 +48,7 @@ public static class WorkbenchServiceCollectionExtensions
                 options.GeneratedApis.IncludeCommandNameInRoute = false;
                 options.GeneratedApis.SegmentsToSkipForRoute = 1;
             },
-            configureArcBuilder: arc => arc.WithMongoDB(),
+            configureArcBuilder: arc => arc.WithMongoDB(configureMongoDB: mongo => Cratis.Arc.MongoDB.MongoDBBuilderExtensions.WithCamelCaseNamingPolicy(mongo, pluralizeReadModels: true)),
             configureChronicleOptions: options =>
             {
                 options.EventStore = EventStore;

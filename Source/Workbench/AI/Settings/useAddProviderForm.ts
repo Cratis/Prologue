@@ -38,7 +38,8 @@ export const useAddProviderForm = (onAdded: () => void) => {
         const command = new vendor.add();
         command.name = draft.name.trim();
         if (vendor.endpoint) command.endpoint = draft.endpoint.trim();
-        if (vendor.apiKey && draft.apiKey) command.apiKey = draft.apiKey;
+        // The proxy marks the key as required; an empty key (a model in the network that needs none) is a value, undefined is not.
+        if (vendor.apiKey) command.apiKey = draft.apiKey;
         command.maxConcurrentJobs = draft.maxConcurrentJobs;
         const added = await run('add-provider', command, `${draft.name.trim()} added. Add it to a pool to use it.`);
         setDraft(previous => ({ ...previous, apiKey: '' }));
