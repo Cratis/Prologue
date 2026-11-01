@@ -1,22 +1,19 @@
-# Runs the Prologue Workbench with everything it needs: the Chronicle kernel, MongoDB and the Receiver.
+# Runs the Prologue Workbench with everything it needs: the Chronicle kernel (with its MongoDB) and the Receiver.
 #
 #   docker compose -f Source/Receiver/docker-compose.yml up --build
 #
 # Open http://localhost:8080 for the Workbench. Captures are accepted on POST /captures and
 # POST /prologues/{prologueId}/captures.
+#
+# The Receiver reads its read models from the same MongoDB that Chronicle writes them to, so both use one database
+# server. The development image of Chronicle bundles a MongoDB replica set for exactly this; for a durable setup run
+# Chronicle against your own MongoDB replica set and point the Receiver's Cratis:MongoDB and Prologue:Mongo at it too.
 name: prologue
 
 services:
-  mongo:
-    image: mongo:8
-    restart: unless-stopped
-    volumes:
-      - mongo-data:/data/db
-
   chronicle:
     image: cratis/chronicle:latest-development
     restart: unless-stopped
-    # The development image bundles the MongoDB Chronicle stores its events in.
     ports:
       - "35000:35000"
 
@@ -26,18 +23,20 @@ services:
       dockerfile: Source/Receiver/Dockerfile
     restart: unless-stopped
     depends_on:
-      - mongo
       - chronicle
     environment:
       # Chronicle connection string; development client credentials of the development image.
       Cratis__Chronicle__ConnectionString: chronicle://chronicle-dev-client:chronicle-dev-secret@chronicle:35000
-      Cratis__MongoDB__Server: mongodb://mongo:27017
+      Cratis__MongoDB__Server: mongodb://chronicle:27017/?directConnection=true
       Cratis__MongoDB__Database: Prologue
-      Prologue__Mongo__ConnectionString: mongodb://mongo:27017
+      Prologue__Mongo__ConnectionString: mongodb://chronicle:27017/?directConnection=true
       Prologue__Mongo__Database: Prologue
       Prologue__Mongo__Collection: captures
+      Prologue__Repositories__CloneDirectory: /var/prologue/repos
+    volumes:
+      - repositories:/var/prologue/repos
     ports:
       - "8080:8080"
 
 volumes:
-  mongo-data:
+  repositories:
