@@ -4,6 +4,7 @@
 using Cratis.AI.Configuration;
 using Cratis.Chronicle.Connections;
 using Cratis.Prologue.Workbench.AI;
+using Cratis.Prologue.Workbench.AI.Asking;
 using Cratis.Prologue.Workbench.Captures;
 using Cratis.Prologue.Workbench.Identity;
 using Cratis.Prologue.Workbench.Repositories;
@@ -59,6 +60,7 @@ public static class WorkbenchServiceCollectionExtensions
 
         builder.AddRepositories();
         builder.AddCaptures();
+        builder.AddAsking();
 
         return builder;
     }
