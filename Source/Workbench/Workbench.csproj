@@ -31,6 +31,12 @@
         <PackageReference Include="Cratis.Fundamentals" />
     </ItemGroup>
 
+    <!-- Command and read model specs run the real Arc and Chronicle pipelines in process. -->
+    <ItemGroup Condition="'$(Configuration)' == 'Debug'">
+        <PackageReference Include="Cratis.Arc.Chronicle.Testing" />
+        <PackageReference Include="Cratis.Chronicle.Testing" />
+    </ItemGroup>
+
     <ItemGroup>
         <ProjectReference Include="../Configuration/Configuration.csproj" />
         <ProjectReference Include="../Contracts/Contracts.csproj" />

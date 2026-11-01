@@ -49,7 +49,7 @@ public class a_cloner : Specification, IDisposable
         _git = new RecordingGitRunner();
         _secrets = Substitute.For<ISecretResolver>();
         _secrets.Resolve(Arg.Any<SecretName>()).Returns(Token);
-        _cloner = new RepositoryCloner(_git, _secrets, Options.Create(new RepositoryOptions { CloneDirectory = _root }), NullLogger<RepositoryCloner>.Instance);
+        _cloner = new RepositoryCloner(_git, _secrets, Options.Create(new RepositoryOptions { CloneDirectory = _root }), Microsoft.Extensions.Logging.Abstractions.NullLogger<RepositoryCloner>.Instance);
     }
 }
 #endif
