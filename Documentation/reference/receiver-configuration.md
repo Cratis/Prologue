@@ -46,11 +46,15 @@ The image installs the `git` command line, which cloning needs. Mount `CloneDire
 A repository connection stores only the *name* of a secret, such as `github/prologue-read`. When a clone needs the token, the Receiver looks the name up in this order and uses the first non-empty value:
 
 1. The configuration key `Prologue:Secrets:<name>`, for example `Prologue:Secrets:github/prologue-read`.
-2. An environment variable named after the secret: every character that is not an ASCII letter or digit becomes an underscore, and the result is upper case. `github/prologue-read` is `GITHUB_PROLOGUE_READ`.
+2. An environment variable named `PROLOGUE_SECRET_` followed by the secret's name, where every character that is not an ASCII letter or digit becomes an underscore and the result is upper case. `github/prologue-read` is `PROLOGUE_SECRET_GITHUB_PROLOGUE_READ`.
+
+A secret never resolves from an arbitrary environment variable. The fixed prefix means a name typed into the Workbench cannot read a connection string or API key that was meant for the Receiver itself. A secret name is 1 to 64 letters, digits, `_`, `.`, `/` or `-`; anything else, and anything that looks like a token, is refused when you enter it.
 
 If neither is set the clone fails with the message `The secret '<name>' is not configured on the Receiver`. The token is passed to `git` through its process environment and is removed from any failure message. It is never stored, logged or returned to the browser.
 
-Environment variable names cannot contain `/` or `-`, which is why a secret named `github/prologue-read` is easiest to supply as `GITHUB_PROLOGUE_READ`.
+Environment variable names cannot contain `/` or `-`, which is why a secret named `github/prologue-read` is easiest to supply as `PROLOGUE_SECRET_GITHUB_PROLOGUE_READ`.
+
+The same lookup expands `${secret:<name>}` placeholders in `cratis-prologue.json` for the Extractor and the Interpreter. See [Secret placeholders](configuration.md#secret-placeholders).
 
 ## Other settings
 

@@ -82,9 +82,11 @@ Run the interpretation. The Interpreter proposes past-tense events from the evid
 *Needs:* accepted events.
 *Produces:* the provisional event model and its Screenplay.
 
-Accepted events are laid out as slices along the story of the system. Dashed outlines are still open. Select a slice to see its evidence and the Screenplay it produces. The model can be copied or downloaded as a `.play` file, and `GET /prologues/{prologueId}/model.play` returns it (see the [Receiver API](../reference/receiver.md#endpoints)).
+Accepted events are laid out as slices along the story of the system. Dashed outlines are still open. Select a slice to see its evidence and the Screenplay it produces. The model can be copied or downloaded as a `.play` file, and `GET /prologues/{prologueId}/model.play` returns the same text (see the [Receiver API](../reference/receiver.md#endpoints)).
 
-**Accept model for rebuild** hands the model to the Rebuild step: it creates Rebuild slices from the model and gives drift detection the accepted model to compare new captures with.
+The file holds accepted slices and the slices that still have open suggestions. A slice with open suggestions is marked as a draft: its description starts with `Draft: not yet accepted.` followed by the names of the open suggestions, so a reader of the `.play` file can tell what is settled. The download is served as `text/plain; charset=utf-8` with `Content-Disposition: attachment; filename="model.play"` and `Cache-Control: no-store`, so it always reflects the current model. When nothing is accepted or open yet, the response is still `200` with an empty body.
+
+**Accept model for rebuild** hands the model to the Rebuild step. It creates a Rebuild slice for each accepted slice that replaces at least one captured command (the slice's command shapes), and holds back slices that still have open suggestions, so nothing half-decided becomes work to cut over. A slice that Rebuild already tracks by name is left alone, so accepting again creates nothing twice. It also gives drift detection the accepted model to compare new captures with.
 
 ## 7. Rebuild
 

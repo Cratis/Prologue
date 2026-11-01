@@ -12,7 +12,7 @@ The Receiver is the service the Extractor posts captures to directly instead of 
 | `POST /captures` | Stores a capture with no Prologue association |
 | `POST /prologues/{prologueId}/captures` | Stores a capture stamped with the given Prologue id, overriding whatever id the Extractor sent |
 | `POST /prologues/{prologueId}/parity` | Takes a parity observation from an Extractor that is [shadowing](shadowing.md) commands |
-| `GET /prologues/{prologueId}/model.play` | Returns the prologue's accepted model as a Screenplay `.play` file. Provided by the Model step |
+| `GET /prologues/{prologueId}/model.play` | Returns the prologue's model as a Screenplay `.play` file, the same text the Model step copies and downloads. The response is `200` with `Content-Type: text/plain; charset=utf-8`, `Content-Disposition: attachment; filename="model.play"` and `Cache-Control: no-store`. Slices with open suggestions are included and marked as drafts (`Draft: not yet accepted.` at the start of their description). The body is empty when nothing is accepted or open yet |
 
 Both capture endpoints accept a single `Capture` (the shape defined in `Cratis.Prologue.Contracts`) and respond `202 Accepted` once it's stored. After storing, the Receiver records a summary of the capture for the [Workbench](../guides/running-the-workbench.md); a failure to record it is logged and does not change the response. A capture posted without a prologue is collected under an unassigned prologue.
 
