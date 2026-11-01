@@ -1,5 +1,5 @@
 # syntax=docker/dockerfile:1
-# Prologue Receiver — the public-facing service the Prologue Extractor (run in the customer's environment)
+# Prologue Receiver — also hosts the Workbench (Arc + Chronicle + the React frontend). It is the public-facing service the Prologue Extractor (run in the customer's environment)
 # posts correlated captures to when not capturing to file. It persists captures to the shared Prologue MongoDB;
 # the Interpreter later analyzes them into an event model.
 
@@ -7,7 +7,24 @@ ARG VERSION=0.0.0-dev
 ARG COMMIT=dev
 
 ####################################
-# Stage 1: Build
+# Stage 1: Workbench frontend
+####################################
+# Builds the React frontend into Source/Receiver/wwwroot (the Vite outDir), where the Receiver serves it from.
+FROM --platform=$BUILDPLATFORM node:22-slim AS frontend
+
+WORKDIR /src
+
+RUN corepack enable
+
+COPY package.json .yarnrc.yml ./
+COPY Source/Workbench/package.json ./Source/Workbench/
+RUN yarn install
+
+COPY Source/Workbench/ ./Source/Workbench/
+RUN yarn build
+
+####################################
+# Stage 2: Build
 ####################################
 # The build stage runs on the builder's own platform and publishes portable, framework-dependent output, so
 # one build serves every target platform without emulation. Only the runtime stage below is per-platform.
@@ -24,6 +41,7 @@ COPY Directory.Build.props Directory.Packages.props global.json .editorconfig .g
 COPY Source/Directory.Build.props ./Source/
 COPY Source/Contracts/Contracts.csproj ./Source/Contracts/
 COPY Source/Storage/Storage.csproj ./Source/Storage/
+COPY Source/Workbench/Workbench.csproj ./Source/Workbench/
 COPY Source/Receiver/Receiver.csproj ./Source/Receiver/
 
 RUN dotnet restore ./Source/Receiver/Receiver.csproj -p:Configuration=Release
@@ -32,7 +50,9 @@ RUN dotnet restore ./Source/Receiver/Receiver.csproj -p:Configuration=Release
 COPY README.md ./
 COPY Source/Contracts/ ./Source/Contracts/
 COPY Source/Storage/ ./Source/Storage/
+COPY Source/Workbench/ ./Source/Workbench/
 COPY Source/Receiver/ ./Source/Receiver/
+COPY --from=frontend /src/Source/Receiver/wwwroot ./Source/Receiver/wwwroot
 
 RUN dotnet publish ./Source/Receiver/Receiver.csproj \
     -c Release \
@@ -43,7 +63,7 @@ RUN dotnet publish ./Source/Receiver/Receiver.csproj \
     -o /app/out
 
 ####################################
-# Stage 2: Runtime
+# Stage 3: Runtime
 ####################################
 FROM mcr.microsoft.com/dotnet/aspnet:10.0
 

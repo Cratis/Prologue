@@ -19,6 +19,8 @@ on:
       - "Directory.Packages.props"
       - ".github/workflows/dotnet-build.yml"
       - ".github/scripts/**"
+      - "package.json"
+      - ".yarnrc.yml"
 
 jobs:
   build:
@@ -29,10 +31,31 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
       - name: Setup .Net
         uses: actions/setup-dotnet@v4
         with:
           dotnet-version: ${{ env.DOTNET_VERSION }}
+
+      # The Workbench frontend. Corepack provides the Yarn version pinned in package.json.
+      - name: Enable Corepack
+        run: corepack enable
+
+      - name: Install frontend dependencies
+        run: yarn install
+
+      - name: Lint frontend
+        run: yarn lint
+
+      - name: Type-check frontend
+        run: yarn compile
+
+      - name: Build frontend
+        run: yarn build
 
       # Release is the warnings-as-errors gate. It also strips the inline specs (see
       # Source/Directory.Build.targets), so it builds only — the specs are run below.
@@ -56,6 +79,12 @@ jobs:
 
       - name: Run Extractor specs
         run: python3 .github/scripts/run-specs.py Source/Extractor/Extractor.csproj --specifications -trait- Category=Integration
+
+      - name: Run Storage specs
+        run: python3 .github/scripts/run-specs.py Source/Storage/Storage.csproj -trait- Category=Integration
+
+      - name: Run Workbench specs
+        run: python3 .github/scripts/run-specs.py Source/Workbench/Workbench.csproj -trait- Category=Integration
 
       - name: Run Interpretation specs
         run: python3 .github/scripts/run-specs.py Source/Interpretation/Interpretation.csproj -trait- Category=Integration
