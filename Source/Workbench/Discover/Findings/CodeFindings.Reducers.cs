@@ -16,7 +16,7 @@ public partial record CodeFindings
     /// <returns>The new state.</returns>
     public static CodeFindings Reduce(CapabilityMapped @event, CodeFindings? current, EventContext context)
     {
-        var state = current ?? Empty(new PrologueId(Guid.Parse(context.EventSourceId.Value)));
+        var state = current ?? NoFindings.For(new PrologueId(Guid.Parse(context.EventSourceId.Value)));
         var key = FindingKeys.Capability(@event.Module, @event.Capability);
         var mapped = new MappedCapability(@event.Subject, @event.Module, @event.Capability, [.. @event.Shapes], @event.File);
         return state with { Capabilities = [.. state.Capabilities.Where(_ => !Same(_, @event.Subject, key)), mapped] };
@@ -43,7 +43,7 @@ public partial record CodeFindings
     /// <returns>The new state.</returns>
     public static CodeFindings Reduce(DecisionPointFound @event, CodeFindings? current, EventContext context)
     {
-        var state = current ?? Empty(new PrologueId(Guid.Parse(context.EventSourceId.Value)));
+        var state = current ?? NoFindings.For(new PrologueId(Guid.Parse(context.EventSourceId.Value)));
         var key = FindingKeys.DecisionPoint(@event.Rule, @event.File);
         var found = new MappedDecisionPoint(@event.Subject, @event.Rule, @event.File, @event.Line, @event.Shape, @event.Kind);
         return state with { DecisionPoints = [.. state.DecisionPoints.Where(_ => !Same(_, @event.Subject, key)), found] };
@@ -70,7 +70,7 @@ public partial record CodeFindings
     /// <returns>The new state.</returns>
     public static CodeFindings Reduce(DependencyFound @event, CodeFindings? current, EventContext context)
     {
-        var state = current ?? Empty(new PrologueId(Guid.Parse(context.EventSourceId.Value)));
+        var state = current ?? NoFindings.For(new PrologueId(Guid.Parse(context.EventSourceId.Value)));
         var key = FindingKeys.Dependency(@event.Target, @event.Kind);
         var found = new MappedDependency(@event.Subject, @event.Target, @event.Kind, @event.Detail);
         return state with { Dependencies = [.. state.Dependencies.Where(_ => !Same(_, @event.Subject, key)), found] };
@@ -97,7 +97,7 @@ public partial record CodeFindings
     /// <returns>The new state.</returns>
     public static CodeFindings Reduce(CodeAnalysisCompleted @event, CodeFindings? current, EventContext context)
     {
-        var state = current ?? Empty(new PrologueId(Guid.Parse(context.EventSourceId.Value)));
+        var state = current ?? NoFindings.For(new PrologueId(Guid.Parse(context.EventSourceId.Value)));
         var run = new AnalysisRun(@event.Subject, @event.Name, @event.Source, @event.Files, null, context.Occurred);
         return state with { Runs = [.. state.Runs.Where(_ => _.Subject != @event.Subject), run] };
     }
@@ -111,7 +111,7 @@ public partial record CodeFindings
     /// <returns>The new state.</returns>
     public static CodeFindings Reduce(CodeAnalysisFailed @event, CodeFindings? current, EventContext context)
     {
-        var state = current ?? Empty(new PrologueId(Guid.Parse(context.EventSourceId.Value)));
+        var state = current ?? NoFindings.For(new PrologueId(Guid.Parse(context.EventSourceId.Value)));
         var previous = state.RunOf(@event.Subject);
         var run = new AnalysisRun(@event.Subject, @event.Name, previous?.Source, previous?.Files ?? new(0), @event.Reason, context.Occurred);
         return state with { Runs = [.. state.Runs.Where(_ => _.Subject != @event.Subject), run] };

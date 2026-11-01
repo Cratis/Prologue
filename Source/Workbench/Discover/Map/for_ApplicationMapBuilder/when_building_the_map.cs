@@ -31,8 +31,8 @@ public class when_building_the_map : Specification
         var evidence = new RuntimeEvidence([new(new RouteShape("POST /api/loans"), [new(200, 902), new(409, 72)])], 0);
 
         _map = ApplicationMapBuilder.Build(findings, null, evidence);
-        _decisions = CodeDecisionPoint.Build(findings, null, evidence);
-        _dependencies = CodeDependency.Build(findings, null);
+        _decisions = DecisionPointViews.Build(findings, null, evidence);
+        _dependencies = DependencyViews.Build(findings, null);
     }
 
     [Fact] void should_group_capabilities_by_system_and_module() => _map.Systems.Single().Modules.Select(_ => _.Name.Value).ShouldContainOnly("Jobs", "Loans");

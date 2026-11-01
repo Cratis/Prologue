@@ -44,22 +44,5 @@ public record CodeDecisionPoint(
     /// <returns>The decision points, ordered by file and line.</returns>
     public static ISubject<IEnumerable<CodeDecisionPoint>> ObserveDecisionPoints(PrologueId prologue, IReadModels readModels, IRuntimeShapes runtime) =>
         new DerivedSubject<IEnumerable<CodeDecisionPoint>>(
-            ApplicationMap.Findings(prologue, readModels).CombineLatest(ApplicationMap.Definition(prologue, readModels), runtime.Observe(prologue), Build));
-
-    /// <summary>
-    /// Matches the decision points in the findings to the runtime evidence.
-    /// </summary>
-    /// <param name="findings">What the analyses found.</param>
-    /// <param name="definition">The prologue, which names the systems.</param>
-    /// <param name="evidence">What was captured.</param>
-    /// <returns>The decision points, ordered by file and line.</returns>
-    public static IEnumerable<CodeDecisionPoint> Build(CodeFindings findings, PrologueDefinition? definition, RuntimeEvidence evidence) =>
-        [.. findings.DecisionPoints
-            .OrderBy(_ => _.File.Value, StringComparer.OrdinalIgnoreCase)
-            .ThenBy(_ => _.Line.Value)
-            .Select(point =>
-            {
-                var match = RuntimeMatching.Match(point.Kind, point.Shape, evidence);
-                return new CodeDecisionPoint(point.Subject, SystemNames.Of(point.Subject, definition, findings), point.Rule, point.File, point.Line, point.Shape, point.Kind, match.Happened, match.Status, match.Runtime);
-            })];
+            ApplicationMap.Findings(prologue, readModels).CombineLatest(ApplicationMap.Definition(prologue, readModels), runtime.Observe(prologue), DecisionPointViews.Build));
 }

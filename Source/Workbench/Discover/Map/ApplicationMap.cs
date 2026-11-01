@@ -36,7 +36,7 @@ public record ApplicationMap(PrologueId Id, IEnumerable<MapSystem> Systems, int 
             Findings(prologue, readModels).CombineLatest(Definition(prologue, readModels), runtime.Observe(prologue), ApplicationMapBuilder.Build));
 
     internal static IObservable<CodeFindings> Findings(PrologueId prologue, IReadModels readModels) =>
-        readModels.Observe<CodeFindings>(findings => findings.Id == prologue).Select(found => found.FirstOrDefault() ?? CodeFindings.Empty(prologue));
+        readModels.Observe<CodeFindings>(findings => findings.Id == prologue).Select(found => found.FirstOrDefault() ?? NoFindings.For(prologue));
 
     internal static IObservable<PrologueDefinition?> Definition(PrologueId prologue, IReadModels readModels) =>
         readModels.Observe<PrologueDefinition>(definition => definition.Id == prologue).Select(found => found.FirstOrDefault());

@@ -41,6 +41,9 @@ public static class WorkbenchServiceCollectionExtensions
         // Cratis.AI's provider pools ask the host which work a provider has been given; without an answer no agent can be called.
         builder.Services.AddScoped<IRecordedAgentSessions, RecordedAgentSessions>();
 
+        // Every provider client of Cratis.AI asks for the untyped IHttpClientFactory client; without it no vendor call can be made.
+        builder.Services.AddHttpClient(Microsoft.Extensions.Options.Options.DefaultName).ConfigureHttpClient(client => client.Timeout = TimeSpan.FromSeconds(150));
+
         builder.AddCratis(
             options =>
             {

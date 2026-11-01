@@ -24,13 +24,6 @@ public partial record CodeFindings(
     IEnumerable<AnalysisRun> Runs)
 {
     /// <summary>
-    /// Gets the findings of a prologue nothing was found for.
-    /// </summary>
-    /// <param name="id">The prologue.</param>
-    /// <returns>The empty findings.</returns>
-    public static CodeFindings Empty(PrologueId id) => new(id, [], [], [], []);
-
-    /// <summary>
     /// Gets the run of a system or folder.
     /// </summary>
     /// <param name="subject">The system or folder.</param>

@@ -27,14 +27,5 @@ public record CodeDependency(AnalysisSubjectId Subject, SubjectName From, Depend
     /// <returns>The dependencies.</returns>
     public static ISubject<IEnumerable<CodeDependency>> ObserveDependencies(PrologueId prologue, IReadModels readModels) =>
         new DerivedSubject<IEnumerable<CodeDependency>>(
-            ApplicationMap.Findings(prologue, readModels).CombineLatest(ApplicationMap.Definition(prologue, readModels), Build));
-
-    /// <summary>
-    /// Names the dependencies in the findings.
-    /// </summary>
-    /// <param name="findings">What the analyses found.</param>
-    /// <param name="definition">The prologue, which names the systems.</param>
-    /// <returns>The dependencies.</returns>
-    public static IEnumerable<CodeDependency> Build(CodeFindings findings, PrologueDefinition? definition) =>
-        [.. findings.Dependencies.Select(_ => new CodeDependency(_.Subject, SystemNames.Of(_.Subject, definition, findings), _.Target, _.Kind, _.Detail))];
+            ApplicationMap.Findings(prologue, readModels).CombineLatest(ApplicationMap.Definition(prologue, readModels), DependencyViews.Build));
 }

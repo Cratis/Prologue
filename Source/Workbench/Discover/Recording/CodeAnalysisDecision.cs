@@ -19,7 +19,7 @@ public static class CodeAnalysisDecision
     /// <returns>The events to append, in order; none when nothing changed.</returns>
     public static IEnumerable<object> Decide(AnalysisOutcome outcome, CodeFindings? current)
     {
-        var known = current ?? CodeFindings.Empty(new(Guid.Empty));
+        var known = current ?? NoFindings.For(new(Guid.Empty));
         var subject = outcome.Subject;
         var complete = outcome.Failure is null;
         var events = new List<object>();

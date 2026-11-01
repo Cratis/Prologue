@@ -31,7 +31,7 @@ public static class Sample
     {
         var id = new Prologues.PrologueId(Guid.Parse("22222222-2222-2222-2222-222222222222"));
         var context = EventContext.EmptyWithEventSourceId(id);
-        var state = CodeFindings.Empty(id);
+        var state = NoFindings.For(id);
         foreach (var @event in events)
         {
             state = @event switch
