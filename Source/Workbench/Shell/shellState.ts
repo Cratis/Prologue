@@ -2,12 +2,15 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 import { createContext, useContext } from 'react';
+import { PrologueDefinition } from '../Prologues/PrologueDefinition';
 import { StepId } from './steps';
 
 /** A prologue as the switcher shows it. */
 export interface PrologueSummary {
     readonly id: string;
     readonly name: string;
+
+    /** The names of the prologue's systems, for the line under its name. */
     readonly system: string;
 }
 
@@ -15,39 +18,52 @@ export interface PrologueSummary {
 export type OptionalStepState = Readonly<Partial<Record<StepId, boolean>>>;
 
 export interface ShellState {
+    /** False until the first answer about which prologues exist has arrived. */
+    readonly loaded: boolean;
     readonly prologues: readonly PrologueSummary[];
+
+    /** The selected prologue's full definition: its systems, evidence steps, correlation and output. Undefined when there is none. */
+    readonly definition?: PrologueDefinition;
     readonly selectedId: string;
     readonly selectPrologue: (id: string) => void;
+
+    /** True while the user is defining a new prologue, even when others exist. */
+    readonly creating: boolean;
+    readonly setCreating: (creating: boolean) => void;
     readonly optionalOn: OptionalStepState;
     readonly setOptionalStep: (id: StepId, on: boolean) => void;
 }
 
-/**
- * Temporary in-memory defaults for the shell. Wave 2 replaces the provider that fills these (the prologue list and
- * which optional steps are on) with Arc queries and commands; the hooks below keep their signatures.
- */
-export const defaultPrologues: readonly PrologueSummary[] = [
-    { id: 'lending-baseline', name: 'Lending baseline', system: 'Library system' }
-];
+/** What the switcher and the page eyebrows show while no prologue exists yet. */
+export const noPrologue: PrologueSummary = { id: '', name: 'No prologue yet', system: '' };
 
 export const defaultOptionalOn: OptionalStepState = { discover: true, capture: true, rebuild: true };
 
 export const ShellStateContext = createContext<ShellState>({
-    prologues: defaultPrologues,
-    selectedId: defaultPrologues[0].id,
+    loaded: false,
+    prologues: [],
+    selectedId: '',
     selectPrologue: () => undefined,
+    creating: false,
+    setCreating: () => undefined,
     optionalOn: defaultOptionalOn,
     setOptionalStep: () => undefined
 });
 
 /** The prologues to choose from and the selected one; feeds the sidebar switcher and every page eyebrow. */
 export const usePrologues = () => {
-    const { prologues, selectedId, selectPrologue } = useContext(ShellStateContext);
-    const current = prologues.find(prologue => prologue.id === selectedId) ?? prologues[0];
-    return { prologues, current, selectPrologue };
+    const { prologues, selectedId, selectPrologue, loaded, creating, setCreating } = useContext(ShellStateContext);
+    const current = prologues.find(prologue => prologue.id === selectedId) ?? prologues[0] ?? noPrologue;
+    return { prologues, current, selectPrologue, loaded, hasPrologue: prologues.length > 0, creating, setCreating };
 };
 
-/** Whether optional steps are on for the selected prologue, and the means to change that. */
+/**
+ * The selected prologue's definition: its `id`, `name`, `systems` (each with its `location` of host, repository, branch and sub path),
+ * `steps`, `correlation` and `output`. Undefined while loading or when no prologue exists. Pages that work per system read it from here.
+ */
+export const useCurrentPrologue = (): PrologueDefinition | undefined => useContext(ShellStateContext).definition;
+
+/** Whether optional steps are on for the selected prologue, and the means to change that. A refusal is shown to the user as a toast. */
 export const useOptionalSteps = () => {
     const { optionalOn, setOptionalStep } = useContext(ShellStateContext);
     const isOn = (id: StepId) => optionalOn[id] ?? true;

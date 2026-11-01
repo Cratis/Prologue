@@ -6,6 +6,7 @@ import { OffBanner } from './OffBanner';
 import { pages } from './pages';
 import { useRouter } from './Router';
 import { Sidebar } from './Sidebar';
+import { usePrologues } from './shellState';
 import { defaultStep, stepForPath } from './steps';
 import { TabBar } from './TabBar';
 
@@ -13,10 +14,16 @@ import { TabBar } from './TabBar';
 export const Shell = () => {
     const { path, navigate } = useRouter();
     const step = stepForPath(path);
+    const { loaded, hasPrologue } = usePrologues();
 
     useEffect(() => {
         if (!step) navigate(defaultStep.path);
     }, [step, navigate]);
+
+    // Every step but the first works on a prologue, so with none the first is where to start.
+    useEffect(() => {
+        if (step && loaded && !hasPrologue && step.id !== 'systems') navigate('/systems');
+    }, [step, loaded, hasPrologue, navigate]);
 
     const current = step ?? defaultStep;
     const Page = pages[current.id];
