@@ -4,7 +4,7 @@
 import { Agent, ConfigureAgent, Effort, Harness } from '@cratis/ai';
 import { Guid } from '@cratis/fundamentals';
 import { ModelTier } from '../Providers/ModelTier';
-import { useAICommands } from '../useAICommands';
+import { useCommandRunner } from '../../Shell/useCommandRunner';
 import { PrologueAgentInfo } from './agents';
 
 /**
@@ -13,7 +13,7 @@ import { PrologueAgentInfo } from './agents';
  * @returns The actions and which of them are running.
  */
 export const useAgentActions = () => {
-    const { run, isBusy } = useAICommands();
+    const { run, isBusy } = useCommandRunner();
 
     const configure = (info: PrologueAgentInfo, agent: Agent | undefined, change: { poolId?: string; harness?: Harness }) => {
         const command = new ConfigureAgent();

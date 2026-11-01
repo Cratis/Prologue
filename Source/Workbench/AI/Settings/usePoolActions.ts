@@ -6,7 +6,7 @@ import { Guid } from '@cratis/fundamentals';
 import { ModelTier } from '../Providers/ModelTier';
 import { ArrangePool } from '../Pools/Arranging/ArrangePool';
 import { moveMember } from '../poolOrder';
-import { useAICommands } from '../useAICommands';
+import { useCommandRunner } from '../../Shell/useCommandRunner';
 import { PoolView } from '../useAISetup';
 
 /**
@@ -15,7 +15,7 @@ import { PoolView } from '../useAISetup';
  * @returns The actions and which of them are running.
  */
 export const usePoolActions = () => {
-    const { run, isBusy } = useAICommands();
+    const { run, isBusy } = useCommandRunner();
 
     const arrange = (view: PoolView, change: Partial<{ tier: ModelTier; ordering: number; fallback: number; order: readonly string[] }>) => {
         const command = new ArrangePool();

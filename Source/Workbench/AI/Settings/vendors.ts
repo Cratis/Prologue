@@ -9,7 +9,7 @@ import {
     StartCopilotSignIn, StartOpenAISubscriptionSignIn
 } from '@cratis/ai';
 import { Guid } from '@cratis/fundamentals';
-import { Runnable } from '../useAICommands';
+import { Runnable } from '../../Shell/useCommandRunner';
 
 /** The values every vendor's add command shares, whatever else it carries. */
 export interface AddProviderValues {

@@ -4,7 +4,7 @@
 import { useState } from 'react';
 import { AIProvider, RemoveAIProvider, SetAIProviderConcurrency, SetAIProviderUsageCapacity } from '@cratis/ai';
 import { MarkProviderAsInsideNetwork, MarkProviderAsOutsideNetwork } from '../Network/MarkingProviders/MarkingProviders';
-import { useAICommands } from '../useAICommands';
+import { useCommandRunner } from '../../Shell/useCommandRunner';
 import { vendorOf } from './vendors';
 
 /**
@@ -14,7 +14,7 @@ import { vendorOf } from './vendors';
  * @returns The drafts, the actions and which of them are running.
  */
 export const useProviderManage = (provider: AIProvider) => {
-    const { run, isBusy } = useAICommands();
+    const { run, isBusy } = useCommandRunner();
     const [concurrency, setConcurrency] = useState(provider.maxConcurrentJobs ?? 0);
     const [capacity, setCapacity] = useState(provider.usageCapacity ?? 0);
     const [confirmingRemove, setConfirmingRemove] = useState(false);

@@ -3,7 +3,7 @@
 
 import { FormEvent, useState } from 'react';
 import { AIProviderType } from '@cratis/ai';
-import { useAICommands } from '../useAICommands';
+import { useCommandRunner } from '../../Shell/useCommandRunner';
 import { Vendor, vendorOf, vendors } from './vendors';
 
 interface Draft {
@@ -29,7 +29,7 @@ const draftFor = (vendor: Vendor): Draft => ({
  * @returns The vendor, the draft, how to change them, and the submit.
  */
 export const useAddProviderForm = (onAdded: () => void) => {
-    const { run, isBusy } = useAICommands();
+    const { run, isBusy } = useCommandRunner();
     const [draft, setDraft] = useState(() => draftFor(vendors[0]));
     const vendor = vendorOf(draft.type) ?? vendors[0];
 
