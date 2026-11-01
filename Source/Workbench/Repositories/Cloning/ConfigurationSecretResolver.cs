@@ -2,6 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Cratis.DependencyInjection;
+using Cratis.Prologue.Configuration;
 using Cratis.Prologue.Workbench.Common;
 using Microsoft.Extensions.Configuration;
 
@@ -15,29 +16,10 @@ namespace Cratis.Prologue.Workbench.Repositories.Cloning;
 [Singleton]
 public class ConfigurationSecretResolver(IConfiguration configuration) : ISecretResolver
 {
-    /// <summary>
-    /// Gets the environment variable a secret name resolves to.
-    /// </summary>
-    /// <param name="name">The name of the secret.</param>
-    /// <returns>The variable's name.</returns>
-    public static string EnvironmentName(string name) => new string([.. name.Select(character => char.IsAsciiLetterOrDigit(character) ? character : '_')]).ToUpperInvariant();
-
     /// <inheritdoc/>
     public string? Resolve(SecretName name)
     {
-        var key = name.Value.Trim();
-        if (key.Length == 0)
-        {
-            return null;
-        }
-
-        var configured = configuration[$"{RepositoryOptions.SecretsSectionName}:{key}"];
-        if (!string.IsNullOrEmpty(configured))
-        {
-            return configured;
-        }
-
-        var environment = Environment.GetEnvironmentVariable(EnvironmentName(key));
-        return string.IsNullOrEmpty(environment) ? null : environment;
+        var key = name.Value;
+        return SecretPlaceholders.Resolve(configuration, key);
     }
 }

@@ -9,21 +9,25 @@ namespace Cratis.Prologue.Workbench.Repositories.Cloning.for_ConfigurationSecret
 
 public class when_resolving_a_secret : Specification, IDisposable
 {
-    const string Variable = "ADO_PROLOGUE_READ_SPEC";
+    const string Variable = "PROLOGUE_SECRET_ADO_PROLOGUE_READ_SPEC";
 
     string _fromConfiguration;
     string _fromEnvironment;
     string _missing;
+    string _unprefixed;
+    string _invalid;
 
     public void Dispose()
     {
         Environment.SetEnvironmentVariable(Variable, null);
+        Environment.SetEnvironmentVariable("ADO_UNPREFIXED_SPEC", null);
         GC.SuppressFinalize(this);
     }
 
     void Because()
     {
         Environment.SetEnvironmentVariable(Variable, "from-the-environment");
+        Environment.SetEnvironmentVariable("ADO_UNPREFIXED_SPEC", "must-not-be-read");
         var configuration = new ConfigurationBuilder()
             .AddInMemoryCollection(new Dictionary<string, string?> { ["Prologue:Secrets:github/prologue-read"] = "from-configuration" })
             .Build();
@@ -31,11 +35,15 @@ public class when_resolving_a_secret : Specification, IDisposable
 
         _fromConfiguration = resolver.Resolve(new SecretName("github/prologue-read"));
         _fromEnvironment = resolver.Resolve(new SecretName("ado/prologue-read-spec"));
+        _unprefixed = resolver.Resolve(new SecretName("ado/unprefixed-spec"));
+        _invalid = resolver.Resolve(new SecretName("github prologue-read"));
         _missing = resolver.Resolve(new SecretName("not/configured"));
     }
 
     [Fact] void should_resolve_from_configuration_by_name() => _fromConfiguration.ShouldEqual("from-configuration");
     [Fact] void should_resolve_from_the_environment_by_the_normalized_name() => _fromEnvironment.ShouldEqual("from-the-environment");
+    [Fact] void should_not_read_an_environment_variable_without_the_prefix() => _unprefixed.ShouldBeNull();
+    [Fact] void should_resolve_nothing_for_an_invalid_name() => _invalid.ShouldBeNull();
     [Fact] void should_resolve_nothing_for_an_unknown_name() => _missing.ShouldBeNull();
 }
 #endif

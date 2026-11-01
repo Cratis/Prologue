@@ -1,6 +1,7 @@
 // Copyright (c) Cratis. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using Cratis.Prologue.Configuration;
 using Cratis.Prologue.Workbench.Common;
 
 namespace Cratis.Prologue.Workbench.Repositories.Connecting;
@@ -43,9 +44,14 @@ public static class ConnectionRules
             return ValidationResult.Error("Name the secret that holds the access token");
         }
 
-        return LooksLikeCredential(value)
-            ? ValidationResult.Error("That looks like the token itself. Enter the name of the secret that holds it; the token is never stored.")
-            : null;
+        if (LooksLikeCredential(value))
+        {
+            return ValidationResult.Error("That looks like the token itself. Enter the name of the secret that holds it; the token is never stored.");
+        }
+
+        return SecretPlaceholders.IsValidName(value)
+            ? null
+            : ValidationResult.Error("A secret name is 1 to 64 letters, digits, underscores, dots, slashes or hyphens.");
     }
 
     /// <summary>

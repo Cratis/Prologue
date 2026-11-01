@@ -3,6 +3,7 @@
 
 using Cratis.Prologue.Workbench.Common;
 using Cratis.Prologue.Workbench.Prologues;
+using Cratis.Prologue.Workbench.Repositories.Connecting;
 
 namespace Cratis.Prologue.Workbench.Systems.RuntimeSources;
 
@@ -32,6 +33,11 @@ public record SetDatabaseSources(PrologueId Prologue, SystemId Id, IEnumerable<D
         if (Sources.Any(source => string.IsNullOrWhiteSpace(source.ConnectionString.Value)))
         {
             return ValidationResult.Error("Name the secret that holds the connection string");
+        }
+
+        if (Sources.Select(source => ConnectionRules.RefuseSecretName(new SecretName(source.ConnectionString.Value.Trim()))).FirstOrDefault(refusal => refusal is not null) is { } invalid)
+        {
+            return invalid;
         }
 
         var sources = Sources

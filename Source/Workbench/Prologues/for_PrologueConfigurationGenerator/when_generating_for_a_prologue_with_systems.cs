@@ -18,8 +18,11 @@ public class when_generating_for_a_prologue_with_systems : a_prologue, IDisposab
     string _json;
     PrologueOptions _bound;
 
+    const string SecretVariable = "PROLOGUE_SECRET_LIBRARY_DB_CONNECTION";
+
     public void Dispose()
     {
+        Environment.SetEnvironmentVariable(SecretVariable, null);
         if (Directory.Exists(_directory))
         {
             Directory.Delete(_directory, recursive: true);
@@ -30,6 +33,7 @@ public class when_generating_for_a_prologue_with_systems : a_prologue, IDisposab
 
     void Because()
     {
+        Environment.SetEnvironmentVariable(SecretVariable, "Server=db;Database=library");
         var withClusters = PrologueDefinition.Reduce(new SystemHttpClustersSet(_lending, [new ClusterName("lending-api")]), _prologue);
         var withDatabase = PrologueDefinition.Reduce(
             new SystemDatabaseSourcesSet(_lending, [new DatabaseSource(DatabaseEngine.SqlServer, new SecretName("library-db/connection"), [new TableName("Loans")])]),
@@ -50,7 +54,9 @@ public class when_generating_for_a_prologue_with_systems : a_prologue, IDisposab
     [Fact] void should_bind_the_telemetry_service_names_of_a_service() => _bound.Services["Lending"].TelemetryServiceNames.Single().ShouldEqual("Lending.Api");
     [Fact] void should_allow_only_the_listed_tables() => _bound.Services["Lending"].SqlServer.Single().Tables.Single().ShouldEqual("Loans");
     [Fact] void should_allowlist_the_attribute_keys() => _bound.OpenTelemetry.AttributeKeys.Single().ShouldEqual("http.route");
-    [Fact] void should_name_the_secret_for_the_connection_string() => _bound.Services["Lending"].SqlServer.Single().ConnectionString.ShouldEqual("${secret:library-db/connection}");
+    [Fact] void should_name_the_secret_for_the_connection_string() => _json.ShouldContain("${secret:library-db/connection}");
+    [Fact] void should_not_write_the_secret_value_into_the_file() => _json.ShouldNotContain("Server=db");
+    [Fact] void should_expand_the_secret_when_bound() => _bound.Services["Lending"].SqlServer.Single().ConnectionString.ShouldEqual("Server=db;Database=library");
     [Fact] void should_leave_a_system_without_sources_empty() => _bound.Services["Search"].SqlServer.ShouldBeEmpty();
 }
 #endif

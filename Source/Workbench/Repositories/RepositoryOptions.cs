@@ -16,7 +16,7 @@ public class RepositoryOptions
     /// <summary>
     /// The configuration section secrets are looked up in, by name, when a clone needs a credential.
     /// </summary>
-    public const string SecretsSectionName = "Prologue:Secrets";
+    public const string SecretsSectionName = Cratis.Prologue.Configuration.SecretPlaceholders.SectionName;
 
     /// <summary>
     /// Gets or sets the directory repositories are cloned into.
