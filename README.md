@@ -33,9 +33,20 @@ metadata can still be sensitive: HTTP observations include query strings, teleme
 names, and explicitly allowlisted OpenTelemetry attributes include their values. Minimize and review the capture
 configuration, and protect capture files and persisted observations accordingly.
 
-Prologue has no dependency on Studio. The Extractor, Receiver, and batch Interpreter run without Orleans. The
-Interpreter's optional resumable service mode embeds an Orleans silo for persisted session grains; consumers that
-only need file-based interpretation do not use that mode.
+Prologue has no dependency on Studio. The **Receiver** hosts the **Prologue Workbench**, a web interface that takes a
+system from a definition of its code and evidence to a provisional event model and a piece-by-piece rebuild; it stores
+its decisions in a Chronicle kernel and its read models in MongoDB. The Extractor and batch Interpreter need neither
+Chronicle nor Orleans. The Interpreter's optional resumable service mode embeds an Orleans silo for persisted session
+grains; consumers that only need file-based interpretation do not use that mode.
+
+To run the Workbench:
+
+```shell
+docker compose -f Source/Receiver/docker-compose.yml up --build   # then open http://localhost:8080
+```
+
+See [Running the Workbench](Documentation/guides/running-the-workbench.md) and the
+[walkthrough](Documentation/guides/workbench-walkthrough.md).
 
 ## 📜 Why "Prologue"?
 
@@ -62,7 +73,8 @@ the Interpreter reads those captures back into an event model:
 flowchart LR
     Sys["🗄️ existing system"] --> Ext{{"📜 Extractor<br/>DB · HTTP · OTel — selected metadata"}}
     Ext -->|"capture .jsonl files"| Folder[["📁 mounted folder"]]
-    Ext -.->|"HTTP"| Rcv["📥 Receiver"] --> Mongo[("🍃 MongoDB")]
+    Ext -.->|"HTTP"| Rcv["📥 Receiver + Workbench"] --> Mongo[("🍃 MongoDB")]
+    Rcv <-.-> Chron["📚 Chronicle"]
     Folder --> Interp{{"🧠 Interpreter<br/>(+ optional LLM)"}}
     Interp -->|"extraction-result.json + .play"| Model["📄 provisional event model<br/>→ review · continue authoring"]
 ```
@@ -96,13 +108,14 @@ its own module. A single service needs no extra configuration; see
 | `Source/Interpretation` | `Cratis.Prologue.Interpretation` (NuGet) | Deterministic heuristic model construction plus optional language-model refinement. |
 | `Source/Screenplay` | `Cratis.Prologue.Screenplay` (NuGet) | Converts an `ExtractionResult` into a Screenplay syntax tree and `.play` document. |
 | `Source/Interpreter` | `cratis/prologue-interpreter` (Docker) | Batch interpretation from capture files, or an optional Orleans-backed resumable HTTP service using MongoDB. |
-| `Source/Receiver` | `cratis/prologue-receiver` (Docker) | HTTP endpoint the Extractor can post captures to directly, instead of capturing to file. |
+| `Source/Receiver` | `cratis/prologue-receiver` (Docker) | HTTP endpoint the Extractor can post captures to directly, instead of capturing to file. Hosts the Workbench, so it also needs a Chronicle kernel. |
+| `Source/Workbench` | Part of the Receiver | The Workbench: its backend slices and the React frontend served by the Receiver. |
 
 ## ⚙️ Configuration — `cratis-prologue.json`
 
 The Extractor and Interpreter use a dedicated `cratis-prologue.json` file. The
 `Cratis.Prologue.Configuration` package contains their configuration types and loading helpers, so a consumer can
-write the format those tools expect. The Receiver uses standard ASP.NET configuration for its MongoDB settings.
+write the format those tools expect. The Receiver uses standard ASP.NET configuration for its Chronicle and MongoDB settings; see [Receiver configuration](Documentation/reference/receiver-configuration.md).
 
 ```json
 {
@@ -142,7 +155,8 @@ write the format those tools expect. The Receiver uses standard ASP.NET configur
 
 ```text
 Extractor ──(capture .jsonl files)──▶ mounted folder ──▶ Interpreter ──▶ extraction result .json
-    └──────(HTTP)──▶ Receiver ──▶ MongoDB
+    └──────(HTTP)──▶ Receiver (Workbench) ──▶ MongoDB
+                          └──▶ Chronicle ──▶ MongoDB (read models)
 ```
 
 The Extractor emits one `CapturedEntry` per line (JSON lines), partitioned per source kind. The Interpreter
