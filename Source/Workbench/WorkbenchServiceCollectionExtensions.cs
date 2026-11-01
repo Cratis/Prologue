@@ -2,6 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Cratis.AI.Configuration;
+using Cratis.Chronicle.Connections;
 using Cratis.Prologue.Workbench.AI;
 using Cratis.Prologue.Workbench.Identity;
 using Cratis.Prologue.Workbench.Repositories;
@@ -35,6 +36,13 @@ public static class WorkbenchServiceCollectionExtensions
         builder.Services.AddCratisAI(ai => ai.WithAgents<PrologueAIAgents>());
 
         builder.AddCratis(
+            options =>
+            {
+                // The generated proxies (Workbench.csproj, CratisProxies*) build their routes the same way: /api/<feature>/<slice>.
+                options.GeneratedApis.RoutePrefix = "api";
+                options.GeneratedApis.IncludeCommandNameInRoute = false;
+                options.GeneratedApis.SegmentsToSkipForRoute = 3;
+            },
             configureArcBuilder: arc => arc.WithMongoDB(),
             configureChronicleOptions: options =>
             {
@@ -43,6 +51,10 @@ public static class WorkbenchServiceCollectionExtensions
                 options.ConnectTimeout = 30;
             },
             configureChronicleBuilder: chronicle => chronicle.WithCamelCaseNamingPolicy().WithIdentityProvider(identityProvider));
+
+        // Arc's read protection and the scoped IEventStore resolve the event store from the client options, which the
+        // configureChronicleOptions callback above does not reach: without this they ask for an event store with no name.
+        builder.Services.PostConfigure<ChronicleClientOptions>(options => options.EventStore = EventStore);
 
         builder.AddRepositories();
 
