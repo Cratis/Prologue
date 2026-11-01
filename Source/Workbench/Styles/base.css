@@ -23,7 +23,7 @@ h3 { font-size: 17px; font-weight: 700; }
 .grid > * { min-width: 0; }
 .grid-halves { grid-template-columns: repeat(auto-fit, minmax(380px, 1fr)); }
 .grid-aside { grid-template-columns: minmax(0, 1fr) 380px; }
-.scroll-x { overflow-x: auto; }
+.scroll-x { position: relative; overflow-x: auto; max-width: 100%; }
 .visually-hidden { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
 .skip-link { position: fixed; left: 8px; top: -60px; z-index: 20; padding: 10px 14px; border-radius: var(--r-ctl); background: var(--primary); color: var(--on-primary); }
 .skip-link:focus { top: 8px; }

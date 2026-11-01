@@ -10,6 +10,7 @@
 .ask input { flex: 1; min-width: 0; border: 1px solid var(--line-strong); background: var(--sunken); border-radius: var(--r-ctl); min-height: 44px; padding: 0 14px; color: var(--ink); }
 .ask input:disabled { opacity: 0.6; }
 .suggest { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+.suggest > * { max-width: 100%; white-space: normal; text-align: left; }
 .answer { margin-top: 12px; border-left: 3px solid var(--accent); padding: 10px 14px; background: var(--accent-soft); border-radius: 0 var(--r-ctl) var(--r-ctl) 0; }
 .answer.muted { border-left-color: var(--line-dashed); background: var(--card-sunken); }
 .answer .cite { margin-top: 8px; display: flex; flex-wrap: wrap; gap: 4px; }
@@ -18,12 +19,12 @@
 
 /* Journeys */
 .journeys { display: flex; flex-direction: column; gap: 12px; }
-.journey { display: grid; grid-template-columns: 56px 1fr; gap: 10px; align-items: center; }
+.journey { display: grid; grid-template-columns: 64px minmax(0, 1fr); gap: 10px; align-items: center; }
 .journey .pct { font-family: var(--display); font-size: 20px; font-variant-numeric: tabular-nums; }
 .path { display: flex; flex-wrap: wrap; gap: 4px; align-items: center; }
-.path-item { display: inline-flex; gap: 4px; align-items: center; }
+.path-item { display: inline-flex; gap: 4px; align-items: center; min-width: 0; max-width: 100%; }
 .path .arrow { color: var(--muted); font-size: 12px; }
-.path .step { background: var(--sky-bg); border-radius: 4px; padding: 1px 8px; font-size: 12px; }
+.path .step { background: var(--sky-bg); border-radius: 4px; padding: 1px 8px; font-size: 12px; overflow-wrap: anywhere; }
 .path .step.end { background: var(--card-sunken); color: var(--muted); border: 1px dashed var(--line-dashed); }
 
 /* Matrix */

@@ -10,7 +10,7 @@
 .btn:disabled { opacity: 0.5; cursor: not-allowed; }
 
 /* Panel */
-.panel { background: var(--card); border: 1px solid var(--line); border-radius: var(--r-card); padding: 18px 20px; }
+.panel { min-width: 0; background: var(--card); border: 1px solid var(--line); border-radius: var(--r-card); padding: 18px 20px; }
 .panel > h3 { margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center; gap: 8px; flex-wrap: wrap; }
 .panel > h3 small { font-family: var(--body); font-weight: 500; color: var(--muted); font-size: 13px; }
 

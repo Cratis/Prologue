@@ -18,12 +18,13 @@
 .ev.rejected { opacity: 0.55; border-left-color: var(--line); }
 .ev.question { border-left-color: var(--lime); }
 .ev.withdrawn { border-left-style: dashed; }
-.ev .name { font-size: 17px; font-weight: 800; color: var(--strong); }
+.ev > div { min-width: 0; }
+.ev .name { font-size: 17px; font-weight: 800; color: var(--strong); overflow-wrap: anywhere; }
 .ev .name input { font: inherit; border: 1px solid var(--accent); border-radius: 4px; padding: 0 4px; background: var(--ground); color: var(--strong); min-width: 220px; }
 .ev .mech { color: var(--muted); font-family: var(--mono); font-size: 12px; text-decoration: line-through; }
 .ev .advice { grid-column: 1 / -1; font-size: 12px; color: var(--lime); }
-.props { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 6px; }
-.prop { font-family: var(--mono); font-size: 12px; background: var(--orange-bg); color: var(--ink); padding: 2px 8px; border-radius: var(--r-pill); }
+.props { display: flex; flex-wrap: wrap; align-items: flex-start; gap: 4px; margin-top: 6px; }
+.prop { font-family: var(--mono); font-size: 12px; background: var(--orange-bg); color: var(--ink); padding: 2px 8px; border-radius: var(--r-pill); white-space: nowrap; max-width: 100%; overflow: hidden; text-overflow: ellipsis; }
 .prop i { color: var(--muted); font-style: normal; }
 .ev .evidence { grid-column: 1 / -1; font-size: 12px; color: var(--muted); display: flex; flex-wrap: wrap; gap: 6px 14px; }
 .ev .evidence a { color: var(--accent); }
@@ -34,6 +35,12 @@
 .conf .meter { width: 48px; height: 6px; background: var(--ground); border-radius: 3px; overflow: hidden; }
 .conf .meter i { display: block; height: 100%; background: var(--green); }
 .conf .meter i.low { background: var(--orange); }
+
+@media (max-width: 560px) {
+    .ev { grid-template-columns: minmax(0, 1fr); }
+    .ev .actions { justify-content: flex-start; align-items: center; }
+    .ev .name input { min-width: 0; width: 100%; }
+}
 
 .q { border: 1px solid var(--line); background: var(--card-sunken); border-radius: var(--r-card); padding: 14px; display: flex; flex-direction: column; gap: 8px; }
 .q.answered { opacity: 0.7; }
