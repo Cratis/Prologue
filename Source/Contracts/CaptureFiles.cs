@@ -7,7 +7,7 @@ namespace Cratis.Prologue.Contracts;
 
 /// <summary>
 /// The canonical capture-file format — rolling JSON-lines files with one <see cref="CapturedEntry"/> per line,
-/// partitioned per <see cref="SourceKind"/>. The Extractor writes this format; the Interpreter and any other
+/// partitioned per <see cref="ServiceName"/> and <see cref="SourceKind"/>. The Extractor writes this format; the Interpreter and any other
 /// consumer read it back through this type, so all sides agree byte for byte.
 /// </summary>
 public static class CaptureFiles
@@ -29,11 +29,29 @@ public static class CaptureFiles
     /// <param name="sourceKind">The source kind the file holds entries for.</param>
     /// <param name="index">The rolling index.</param>
     /// <returns>The file name.</returns>
-    public static string FileNameFor(string sourceKind, int index)
-    {
-        var safeKind = string.Concat(sourceKind.Select(character => char.IsLetterOrDigit(character) ? character : '-'));
-        return $"prologue-{safeKind}-{index:D5}{Extension}";
-    }
+    public static string FileNameFor(string sourceKind, int index) => FileNameFor(ServiceName.Default, sourceKind, index);
+
+    /// <summary>
+    /// Builds the file name for a given service, source kind and rolling index. The default service keeps the
+    /// original <c language="csharp">prologue-{kind}-{index}</c> name; a named service adds its name as
+    /// <c language="csharp">prologue-{service}-{kind}-{index}</c>.
+    /// </summary>
+    /// <param name="service">The service the file holds entries for.</param>
+    /// <param name="sourceKind">The source kind the file holds entries for.</param>
+    /// <param name="index">The rolling index.</param>
+    /// <returns>The file name.</returns>
+    public static string FileNameFor(ServiceName service, string sourceKind, int index) =>
+        $"{FilePrefixFor(service, sourceKind)}{index:D5}{Extension}";
+
+    /// <summary>
+    /// Builds the search pattern matching exactly the rolling files of a given service and source kind — not the
+    /// files of another service whose name happens to share a prefix.
+    /// </summary>
+    /// <param name="service">The service the files hold entries for.</param>
+    /// <param name="sourceKind">The source kind the files hold entries for.</param>
+    /// <returns>The search pattern.</returns>
+    public static string SearchPatternFor(ServiceName service, string sourceKind) =>
+        $"{FilePrefixFor(service, sourceKind)}?????{Extension}";
 
     /// <summary>
     /// Serializes a single <see cref="CapturedEntry"/> to its JSON-line representation.
@@ -57,7 +75,8 @@ public static class CaptureFiles
 
     /// <summary>
     /// Reconstructs correlated captures from the contents of one or more capture files, grouping entries by their
-    /// capture id, ordering observations by occurrence and stamping each capture with the Prologue it belongs to.
+    /// capture id, ordering observations by occurrence and stamping each capture with the Prologue and the service
+    /// it belongs to.
     /// </summary>
     /// <param name="files">The contents of the capture files.</param>
     /// <param name="prologueId">The Prologue the captures belong to.</param>
@@ -70,7 +89,8 @@ public static class CaptureFiles
             .Select(group =>
             {
                 var ordered = group.OrderBy(entry => entry.Occurred).ToList();
-                return new Capture(group.Key, ordered[0].Occurred, [.. ordered.Select(entry => new Observation(entry.Source, entry.Occurred, entry.Payload))], prologueId);
+                var observations = ordered.Select(entry => new Observation(entry.Source, entry.Occurred, entry.Payload) { Service = entry.Service });
+                return new Capture(group.Key, ordered[0].Occurred, [.. observations], prologueId) { Service = ordered[0].Service };
             })
     ];
 
@@ -90,4 +110,11 @@ public static class CaptureFiles
 
         return ToCaptures(files, prologueId);
     }
+
+    static string FilePrefixFor(ServiceName service, string sourceKind) =>
+        service.IsDefault
+            ? $"prologue-{Safe(sourceKind)}-"
+            : $"prologue-{Safe(service.Value)}-{Safe(sourceKind)}-";
+
+    static string Safe(string value) => string.Concat(value.Select(character => char.IsLetterOrDigit(character) ? character : '-'));
 }

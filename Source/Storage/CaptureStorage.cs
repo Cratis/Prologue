@@ -24,6 +24,7 @@ public static class CaptureStorage
     {
         BsonSerializer.TryRegisterSerializer(new GuidSerializer(GuidRepresentation.Standard));
         BsonSerializer.TryRegisterSerializer(new SourceKindSerializer());
+        BsonSerializer.TryRegisterSerializer(new ServiceNameSerializer());
 
         // The capture contract carries no MongoDB attributes; register the polymorphic payload discriminators here.
         if (!BsonClassMap.IsClassMapRegistered(typeof(ObservationPayload)))

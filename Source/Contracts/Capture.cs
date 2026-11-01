@@ -11,4 +11,12 @@ namespace Cratis.Prologue.Contracts;
 /// <param name="Occurred">The moment the capture is anchored to (the earliest correlated observation).</param>
 /// <param name="Entries">The correlated observations that make up the capture.</param>
 /// <param name="PrologueId">The Prologue the capture belongs to; <see cref="Guid.Empty"/> when not associated with one.</param>
-public record Capture(Guid Id, DateTimeOffset Occurred, IReadOnlyList<Observation> Entries, Guid PrologueId = default);
+public record Capture(Guid Id, DateTimeOffset Occurred, IReadOnlyList<Observation> Entries, Guid PrologueId = default)
+{
+    /// <summary>
+    /// Gets the service the capture was correlated within. Observations from different services are never
+    /// correlated into the same capture. <see cref="ServiceName.Default"/> when the system is captured as a single
+    /// service.
+    /// </summary>
+    public ServiceName Service { get; init; } = ServiceName.Default;
+}

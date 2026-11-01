@@ -10,4 +10,11 @@ namespace Cratis.Prologue.Contracts;
 /// <param name="Source">The kind of source the observation came from.</param>
 /// <param name="Occurred">The moment the observed thing happened.</param>
 /// <param name="Payload">The source-specific metadata.</param>
-public record Observation(SourceKind Source, DateTimeOffset Occurred, ObservationPayload Payload);
+public record Observation(SourceKind Source, DateTimeOffset Occurred, ObservationPayload Payload)
+{
+    /// <summary>
+    /// Gets the service the observation was captured from; <see cref="ServiceName.Default"/> when the system is
+    /// captured as a single service.
+    /// </summary>
+    public ServiceName Service { get; init; } = ServiceName.Default;
+}
