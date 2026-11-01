@@ -2,6 +2,8 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 import { createContext, useContext } from 'react';
+import { Posture } from '../AI/networkPosture';
+import { useAIPosture } from '../AI/useAIPosture';
 import { StepId } from './steps';
 
 /** A prologue as the switcher shows it. */
@@ -61,7 +63,13 @@ export interface CaptureStatus {
     readonly capturing: boolean;
     readonly elapsed: string;
     readonly localOnly: boolean;
+
+    /** How far the AI work leaves the customer's network. */
+    readonly posture: Posture;
 }
 
 /** The status pills at the bottom of the sidebar. */
-export const useCaptureStatus = (): CaptureStatus => ({ capturing: false, elapsed: '', localOnly: true });
+export const useCaptureStatus = (): CaptureStatus => {
+    const posture = useAIPosture();
+    return { capturing: false, elapsed: '', localOnly: posture === 'localOnly', posture };
+};
