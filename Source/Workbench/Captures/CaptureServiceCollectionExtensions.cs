@@ -15,13 +15,15 @@ namespace Cratis.Prologue.Workbench.Captures;
 public static class CaptureServiceCollectionExtensions
 {
     /// <summary>
-    /// Adds the capture recorder and, unless Discover has supplied its own, a source of decision reasons with no decision points.
+    /// Adds the capture recorder, the queue and worker that record stored captures in the background, and, unless Discover has supplied its own, a source of decision reasons with no decision points.
     /// </summary>
     /// <param name="builder">The <see cref="WebApplicationBuilder"/> to add to.</param>
     /// <returns>The builder for continuation.</returns>
     public static WebApplicationBuilder AddCaptures(this WebApplicationBuilder builder)
     {
         builder.Services.AddScoped<ICaptureRecorder, CaptureRecorder>();
+        builder.Services.AddSingleton<ICaptureRecordingQueue, CaptureRecordingQueue>();
+        builder.Services.AddHostedService<CaptureRecordingWorker>();
         builder.Services.TryAddSingleton<IDecisionReasons, NoDecisionReasons>();
         return builder;
     }

@@ -35,22 +35,22 @@ app.UseWebSockets();
 app.UseCratis();
 
 // Public-facing endpoint the Prologue Extractor posts correlated captures to when it is not associated with a Prologue.
-app.MapPost("/captures", async (Capture capture, ICaptureStore store, ICaptureRecorder recorder, CancellationToken cancellationToken) =>
+app.MapPost("/captures", async (Capture capture, ICaptureStore store, ICaptureRecordingQueue recordings, CancellationToken cancellationToken) =>
 {
     await store.Store(capture, cancellationToken);
 
-    // The capture is stored; recording it for the Workbench logs a failure instead of losing the capture or the 202.
-    await recorder.Record(capture, cancellationToken);
+    // The capture is stored; recording it for the Workbench happens in the background, so the answer never waits for the event store.
+    recordings.TryEnqueue(capture);
     return Results.Accepted();
 });
 
 // Endpoint the Prologue Extractor posts to when configured with the Prologue it captures for, so captures are
 // associated with that Prologue and can later be analyzed on their own by the interpreter.
-app.MapPost("/prologues/{prologueId:guid}/captures", async (Guid prologueId, Capture capture, ICaptureStore store, ICaptureRecorder recorder, CancellationToken cancellationToken) =>
+app.MapPost("/prologues/{prologueId:guid}/captures", async (Guid prologueId, Capture capture, ICaptureStore store, ICaptureRecordingQueue recordings, CancellationToken cancellationToken) =>
 {
     var associated = capture with { PrologueId = prologueId };
     await store.Store(associated, cancellationToken);
-    await recorder.Record(associated, cancellationToken);
+    recordings.TryEnqueue(associated);
     return Results.Accepted();
 });
 
