@@ -23,18 +23,19 @@ files and persisted observations.
 flowchart LR
     Sys["Existing system"] --> Ext{{"Extractor\nDB · HTTP · OTel — selected metadata"}}
     Ext -->|"capture .jsonl files"| Folder[["Mounted folder"]]
-    Ext -.->|"HTTP"| Rcv["Receiver"] --> Mongo[("MongoDB")]
+    Ext -.->|"HTTP"| Rcv["Receiver + Workbench"] --> Mongo[("MongoDB")]
+    Rcv <-.-> Chron["Chronicle"]
     Folder --> Interp{{"Interpreter\n(+ optional LLM)"}}
     Interp -->|"extraction-result.json + .play"| Model["Provisional event model\nreview · continue authoring"]
 ```
 
 The **Extractor** watches the system through database change capture, an HTTP reverse proxy, and an OpenTelemetry
 proxy. It correlates observations into **captures** using trace identifiers where available and a time window
-otherwise. It writes captures to a mounted folder or posts them to the **Receiver**, which stores them in MongoDB.
+otherwise. It writes captures to a mounted folder or posts them to the **Receiver**, which stores them in MongoDB and hosts the **Workbench**, a web interface that records your decisions as events in Chronicle.
 The **Interpreter** analyzes those captures heuristically, can optionally refine names and descriptions with a
 language model, and produces an `ExtractionResult` plus a generated [Screenplay](/screenplay/) `.play` file.
 
-Prologue has no dependency on Studio. The Extractor, Receiver, and batch Interpreter run without Orleans. The
+Prologue has no dependency on Studio. The Extractor and batch Interpreter need neither Orleans nor Chronicle; the Receiver needs Chronicle only to host the Workbench. The
 Interpreter's optional resumable service mode embeds an Orleans silo for persisted interpretation sessions.
 
 ## The cast
@@ -43,7 +44,7 @@ Interpreter's optional resumable service mode embeds an Orleans silo for persist
 |---|---|---|
 | Extractor | Watches the system: SQL Server CDC, Postgres logical replication, an HTTP reverse proxy, and an OTLP proxy | `cratis/prologue-extractor` (Docker) |
 | Interpreter | Reads captures and interprets them into an event model and a Screenplay | `cratis/prologue-interpreter` (Docker) |
-| Receiver | An HTTP endpoint the Extractor can post captures to directly, storing them in MongoDB | `cratis/prologue-receiver` (Docker) |
+| Receiver | Takes the captures the Extractor posts, stores them in MongoDB, and hosts the Workbench (with Chronicle and Cratis.AI) | `cratis/prologue-receiver` (Docker) |
 | `Cratis.Prologue.Contracts` | The capture contract and canonical JSON/capture-file formats | NuGet |
 | `Cratis.Prologue.Configuration` | Typed `cratis-prologue.json` configuration for the Extractor and Interpreter | NuGet |
 | `Cratis.Prologue.Storage` | MongoDB persistence for captures, used by the Receiver and by Studio | NuGet |
@@ -58,6 +59,7 @@ See [Architecture](architecture.md) for how these pieces compose and deploy.
 1. **[Getting started](getting-started.md)** — run the bundled sample system, watch Prologue capture it end to end, then turn a folder of captures into a `.play` file you can run.
 2. **[Why Prologue](why-prologue.md)** — the problem it solves, and when it's the wrong tool for the job.
 3. **[How Prologue works](concepts.md)** — the capture, correlation, and interpretation pipeline in depth.
-4. **[Point Prologue at your system](guides/point-prologue-at-your-system.md)** — the practical checklist for your own system, not the sample.
+4. **[Running the Workbench](guides/running-the-workbench.md)** — start the web interface and walk a system from definition to rebuild.
+5. **[Point Prologue at your system](guides/point-prologue-at-your-system.md)** — the practical checklist for your own system, not the sample.
 
 Prefer driving it from a terminal? The [Cratis CLI](/cli/reference/prologue/) wraps the wizard and the Interpreter in two commands: `cratis prologue start` and `cratis prologue interpret`.
