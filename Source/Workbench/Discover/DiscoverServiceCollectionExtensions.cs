@@ -18,13 +18,14 @@ namespace Cratis.Prologue.Workbench.Discover;
 public static class DiscoverServiceCollectionExtensions
 {
     /// <summary>
-    /// Adds the analysis pipeline. <see cref="IRuntimeShapes"/> defaults to no evidence; register another to feed Discover from captures.
+    /// Adds the analysis pipeline, fed with what the captures say the running system did.
     /// </summary>
     /// <param name="builder">The <see cref="WebApplicationBuilder"/> to add to.</param>
     /// <returns>The builder for continuation.</returns>
     public static WebApplicationBuilder AddDiscover(this WebApplicationBuilder builder)
     {
-        builder.Services.TryAddSingleton<IRuntimeShapes, NoRuntimeShapes>();
+        // What the captures say the running system did, replacing the default of no evidence.
+        builder.Services.Replace(ServiceDescriptor.Scoped<IRuntimeShapes, CapturedRuntimeShapes>());
 
         // What Discover found in the code explains the decisions Capture shows, replacing the default of no reasons.
         builder.Services.Replace(ServiceDescriptor.Scoped<IDecisionReasons, FindingsDecisionReasons>());
