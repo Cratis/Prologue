@@ -15,9 +15,9 @@ public record ServerUrl(string Value) : ConceptAs<string>(Value)
     public static readonly ServerUrl GitHub = new("https://github.com");
 
     /// <summary>
-    /// Gets a value indicating whether this is an absolute http or https address.
+    /// Gets a value indicating whether this is an absolute http or https address; a file address is never a server.
     /// </summary>
-    public bool IsValid => Uri.TryCreate(Value, UriKind.Absolute, out var uri) && (uri.Scheme == Uri.UriSchemeHttp || uri.Scheme == Uri.UriSchemeHttps || uri.Scheme == Uri.UriSchemeFile);
+    public bool IsValid => Uri.TryCreate(Value, UriKind.Absolute, out var uri) && (uri.Scheme == Uri.UriSchemeHttp || uri.Scheme == Uri.UriSchemeHttps);
 
     /// <summary>
     /// Implicitly converts a <see cref="string"/> to a <see cref="ServerUrl"/>.

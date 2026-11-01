@@ -13,6 +13,18 @@ namespace Cratis.Prologue.Workbench.Repositories.Cloning;
 [Singleton]
 public class GitRunner : IGitRunner
 {
+    /// <summary>
+    /// Gets the environment every git process gets: https is the only transport (credentials are only ever sent that way),
+    /// git never prompts, and neither the system nor the user configuration of the Receiver's host can change what git does.
+    /// </summary>
+    public static readonly IReadOnlyDictionary<string, string> Hardening = new Dictionary<string, string>
+    {
+        ["GIT_ALLOW_PROTOCOL"] = "https",
+        ["GIT_TERMINAL_PROMPT"] = "0",
+        ["GIT_CONFIG_NOSYSTEM"] = "1",
+        ["GIT_CONFIG_GLOBAL"] = "/dev/null"
+    };
+
     static readonly TimeSpan _timeout = TimeSpan.FromMinutes(10);
 
     /// <inheritdoc/>
@@ -36,7 +48,11 @@ public class GitRunner : IGitRunner
             info.ArgumentList.Add(argument);
         }
 
-        info.Environment["GIT_TERMINAL_PROMPT"] = "0";
+        foreach (var (name, value) in Hardening)
+        {
+            info.Environment[name] = value;
+        }
+
         foreach (var (name, value) in environment)
         {
             info.Environment[name] = value;

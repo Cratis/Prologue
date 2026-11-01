@@ -36,20 +36,30 @@ public class RepositoryCloner(IGitRunner git, ISecretResolver secrets, IOptions<
             return await Local(request, cancellationToken);
         }
 
+        var url = CloneUrl.For(request);
+        if (url is null)
+        {
+            return CloneResult.Failed($"Connect {request.Host} before cloning from it");
+        }
+
+        if (CloneUrl.Refusal(request, url) is { } refusal)
+        {
+            return CloneResult.Failed(refusal);
+        }
+
         string? token = null;
         if (request.Secret is { } secret)
         {
+            if (!CloneUrl.MayCarryToken(request, url))
+            {
+                return CloneResult.Failed($"The repository address is not on the server of the {request.Host} connection, so its access token is not sent there");
+            }
+
             token = secrets.Resolve(secret);
             if (token is null)
             {
                 return CloneResult.Failed($"The secret '{secret.Value}' is not configured on the Receiver");
             }
-        }
-
-        var url = CloneUrl.For(request);
-        if (url is null)
-        {
-            return CloneResult.Failed($"Connect {request.Host} before cloning from it");
         }
 
         var directory = CloneDirectories.For(options.Value.CloneDirectory, request);

@@ -22,6 +22,8 @@ public class when_cloning_a_monorepo_with_git : Specification, IDisposable
         ["GIT_COMMITTER_EMAIL"] = "prologue@example.com"
     };
 
+    const string HostAddress = "https://git.example.test";
+
     readonly GitRunner _git = new();
 
     string _directory;
@@ -64,8 +66,8 @@ public class when_cloning_a_monorepo_with_git : Specification, IDisposable
         Write("services/billing/Invoices.cs");
         _firstCommit = await Commit("first");
 
-        var server = new ServerUrl(new Uri(Path.Combine(_directory, "host")).AbsoluteUri.TrimEnd('/'));
-        var cloner = new RepositoryCloner(_git, new NoSecrets(), Options.Create(new RepositoryOptions { CloneDirectory = Path.Combine(_directory, "clones") }), Microsoft.Extensions.Logging.Abstractions.NullLogger<RepositoryCloner>.Instance);
+        var server = new ServerUrl(HostAddress);
+        var cloner = new RepositoryCloner(new HostOnDisk(_git, HostAddress, new Uri(Path.Combine(_directory, "host")).AbsoluteUri.TrimEnd('/')), new NoSecrets(), Options.Create(new RepositoryOptions { CloneDirectory = Path.Combine(_directory, "clones") }), Microsoft.Extensions.Logging.Abstractions.NullLogger<RepositoryCloner>.Instance);
 
         _core = Request(server, "services/core", "services/search");
         _search = Request(server, "services/search", "services/core");
@@ -111,6 +113,23 @@ public class when_cloning_a_monorepo_with_git : Specification, IDisposable
         var path = Path.Combine(_source, relativePath);
         Directory.CreateDirectory(Path.GetDirectoryName(path)!);
         File.WriteAllText(path, "// code");
+    }
+
+    /// <summary>
+    /// Stands in for the network: the cloner only clones over https, so the address of the host is pointed at the folder
+    /// that plays the host, and git is allowed to read it.
+    /// </summary>
+    /// <param name="inner">The real git.</param>
+    /// <param name="address">The address the cloner clones from.</param>
+    /// <param name="folder">The folder that plays the host, as a file address.</param>
+    sealed class HostOnDisk(IGitRunner inner, string address, string folder) : IGitRunner
+    {
+        public Task<GitResult> Run(IEnumerable<string> arguments, string? workingDirectory, IReadOnlyDictionary<string, string> environment, CancellationToken cancellationToken) =>
+            inner.Run(
+                [.. arguments.Select(argument => argument.StartsWith(address, StringComparison.Ordinal) ? folder + argument[address.Length..] : argument)],
+                workingDirectory,
+                new Dictionary<string, string>(environment) { ["GIT_ALLOW_PROTOCOL"] = "file" },
+                cancellationToken);
     }
 
     sealed class NoSecrets : ISecretResolver
