@@ -32,7 +32,7 @@ export const AgentsSection = ({ setup }: AgentsSectionProps) => {
                         <div key={info.purpose} className="poolcard">
                             <div className="agent">
                                 <span className="av" aria-hidden="true">{info.mark}</span>
-                                <span><b>{info.name}</b> <Chip>{info.mode === 'job' ? 'Job · worker container' : 'Chat'}</Chip></span>
+                                <span><b>{info.name}</b> <Chip>{info.mode === 'job' ? 'Job · runs in the Receiver' : 'Chat'}</Chip></span>
                             </div>
                             <span className="muted small-text">{info.summary}</span>
                             <div className="row">
