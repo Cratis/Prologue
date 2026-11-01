@@ -3,21 +3,22 @@
 
 using System.Globalization;
 using Cratis.Prologue.Configuration;
+using Cratis.Prologue.Extractor.Capturing;
 using OpenTelemetry.Proto.Common.V1;
 
 namespace Cratis.Prologue.Extractor.Sources.OpenTelemetry;
 
 /// <summary>
-/// Applies the configured capture policy to OTLP telemetry — which services are captured and which attribute
-/// values may be recorded. Shared by the span, metric, and log observation factories so all three signals honor
+/// Applies the configured capture policy to OTLP telemetry — which services are captured, which captured service
+/// the telemetry belongs to, and which attribute values may be recorded. Shared by the span, metric, and log observation factories so all three signals honor
 /// the same privacy rules: attribute names are always captured, attribute values only when allowlisted.
 /// </summary>
-/// <param name="options">The OpenTelemetry options carrying the service-name filter and attribute allowlist.</param>
-public sealed class OtlpCaptureFilter(OpenTelemetryOptions options)
+/// <param name="options">The OpenTelemetry options carrying the attribute allowlist.</param>
+/// <param name="services">The services captured from, resolving which service telemetry belongs to.</param>
+public sealed class OtlpCaptureFilter(OpenTelemetryOptions options, CaptureServices services)
 {
     const string ServiceNameAttribute = "service.name";
 
-    readonly HashSet<string> _serviceNames = new(options.ServiceNames, StringComparer.OrdinalIgnoreCase);
     readonly HashSet<string> _attributeKeys = new(options.AttributeKeys, StringComparer.OrdinalIgnoreCase);
 
     /// <summary>
@@ -55,12 +56,13 @@ public sealed class OtlpCaptureFilter(OpenTelemetryOptions options)
         [.. attributes.Select(attribute => attribute.Key).Distinct(StringComparer.Ordinal)];
 
     /// <summary>
-    /// Determines whether telemetry from the given service is captured.
+    /// Determines whether telemetry from the given service is captured, and which captured service it belongs to.
     /// </summary>
-    /// <param name="serviceName">The name of the service that produced the telemetry.</param>
-    /// <returns>True when the service passes the filter; an empty filter captures every service.</returns>
-    public bool CapturesService(string serviceName) =>
-        _serviceNames.Count == 0 || _serviceNames.Contains(serviceName);
+    /// <param name="serviceName">The <c language="csharp">service.name</c> the telemetry was reported under.</param>
+    /// <param name="service">The captured service the telemetry belongs to.</param>
+    /// <returns>True when the telemetry is captured.</returns>
+    public bool CapturesService(string serviceName, out ServiceName service) =>
+        services.TryResolveTelemetry(serviceName, out service);
 
     /// <summary>
     /// Selects the values of the allowlisted attributes only. Values outside the allowlist are never captured.

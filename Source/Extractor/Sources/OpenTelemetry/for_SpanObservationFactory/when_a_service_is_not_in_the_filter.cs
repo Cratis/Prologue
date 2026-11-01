@@ -20,7 +20,8 @@ public class when_a_service_is_not_in_the_filter : Specification
 
     void Establish()
     {
-        _factory = new SpanObservationFactory(new OpenTelemetryOptions { ServiceNames = ["billing"] });
+        var options = new OpenTelemetryOptions { ServiceNames = ["billing"] };
+        _factory = new SpanObservationFactory(options, CaptureServices.From(new PrologueOptions { OpenTelemetry = options }));
         _request = new ExportTraceServiceRequest
         {
             ResourceSpans =

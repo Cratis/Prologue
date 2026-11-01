@@ -2,6 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Cratis.Prologue.Configuration;
+using Cratis.Prologue.Extractor.Capturing;
 using OpenTelemetry.Proto.Collector.Metrics.V1;
 using OpenTelemetry.Proto.Common.V1;
 using OpenTelemetry.Proto.Metrics.V1;
@@ -12,10 +13,11 @@ namespace Cratis.Prologue.Extractor.Sources.OpenTelemetry;
 /// Maps OTLP metric export requests into <see cref="Observation"/>s, capturing metric metadata only — what the
 /// system measures about itself, never the measured values. Applies the configured service-name filter.
 /// </summary>
-/// <param name="options">The OpenTelemetry options carrying the service-name filter and attribute allowlist.</param>
-public class MetricObservationFactory(OpenTelemetryOptions options)
+/// <param name="options">The OpenTelemetry options carrying the attribute allowlist.</param>
+/// <param name="services">The services captured from, resolving which service the telemetry belongs to.</param>
+public class MetricObservationFactory(OpenTelemetryOptions options, CaptureServices services)
 {
-    readonly OtlpCaptureFilter _filter = new(options);
+    readonly OtlpCaptureFilter _filter = new(options, services);
 
     /// <summary>
     /// Produces observations for every captured metric in an OTLP metric export request.
@@ -28,14 +30,14 @@ public class MetricObservationFactory(OpenTelemetryOptions options)
         {
             var serviceName = OtlpCaptureFilter.ServiceNameOf(resourceMetrics.Resource?.Attributes);
 
-            if (!_filter.CapturesService(serviceName))
+            if (!_filter.CapturesService(serviceName, out var service))
             {
                 continue;
             }
 
             foreach (var metric in resourceMetrics.ScopeMetrics.SelectMany(scopeMetrics => scopeMetrics.Metrics))
             {
-                yield return ToObservation(metric, serviceName);
+                yield return ToObservation(metric, serviceName) with { Service = service };
             }
         }
     }

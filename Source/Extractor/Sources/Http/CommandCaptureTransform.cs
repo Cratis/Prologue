@@ -10,10 +10,12 @@ namespace Cratis.Prologue.Extractor.Sources.Http;
 /// <summary>
 /// Represents a YARP transform provider that observes state-changing HTTP commands (<c language="csharp">POST</c>, <c language="csharp">PUT</c>,
 /// <c language="csharp">DELETE</c>) flowing through the reverse proxy and publishes them as observations. Only metadata is captured —
-/// method, path, and the proxied response status — never the request or response body.
+/// method, path, and the proxied response status — never the request or response body. Each command is attributed
+/// to the service owning the reverse-proxy cluster its route sends it to.
 /// </summary>
 /// <param name="channel">The channel observations are published to.</param>
-public class CommandCaptureTransform(IObservationChannel channel) : ITransformProvider
+/// <param name="services">The services captured from, resolving which service a cluster belongs to.</param>
+public class CommandCaptureTransform(IObservationChannel channel, CaptureServices services) : ITransformProvider
 {
     const string OccurredKey = "prologue.occurred";
 
@@ -30,6 +32,8 @@ public class CommandCaptureTransform(IObservationChannel channel) : ITransformPr
     /// <inheritdoc/>
     public void Apply(TransformBuilderContext context)
     {
+        var service = services.ForCluster(context.Route.ClusterId ?? context.Cluster?.ClusterId);
+
         context.AddRequestTransform(requestContext =>
         {
             requestContext.HttpContext.Items[OccurredKey] = DateTimeOffset.UtcNow;
@@ -49,7 +53,7 @@ public class CommandCaptureTransform(IObservationChannel channel) : ITransformPr
             var path = $"{http.Request.Path}{http.Request.QueryString}";
             var traceId = TraceIdFrom(http.Request.Headers.TraceParent.ToString());
             var payload = new HttpCommandObserved(method, path, http.Response.StatusCode, traceId);
-            await channel.Publish(new Observation(SourceKind.Http, occurred, payload), http.RequestAborted);
+            await channel.Publish(new Observation(SourceKind.Http, occurred, payload) { Service = service }, http.RequestAborted);
         });
     }
 

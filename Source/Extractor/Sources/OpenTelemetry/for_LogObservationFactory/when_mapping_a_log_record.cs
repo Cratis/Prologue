@@ -21,7 +21,8 @@ public class when_mapping_a_log_record : Specification
 
     void Establish()
     {
-        _factory = new LogObservationFactory(new OpenTelemetryOptions { AttributeKeys = ["http.route"] });
+        var options = new OpenTelemetryOptions { AttributeKeys = ["http.route"] };
+        _factory = new LogObservationFactory(options, CaptureServices.From(new PrologueOptions { OpenTelemetry = options }));
 
         var record = new LogRecord
         {

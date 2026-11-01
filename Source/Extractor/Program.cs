@@ -41,6 +41,11 @@ builder.Services.AddHostedService<CorrelationWorker>();
 // Output pipeline — captures are enqueued into a buffer and drained by a background worker so output I/O never
 // blocks capture (like an async logging sink). The configured output is either the Prologue API or rolling JSON files.
 var prologue = builder.Configuration.GetSection(PrologueOptions.SectionName).Get<PrologueOptions>() ?? new PrologueOptions();
+
+// The services captured from — the default service plus any named services. Every observation is attributed to one
+// of them, and observations are only ever correlated within a service.
+var services = CaptureServices.From(prologue);
+builder.Services.AddSingleton(services);
 builder.Services.AddSingleton<CaptureBuffer>();
 builder.Services.AddSingleton<ICaptureStore, BufferedCaptureStore>();
 builder.Services.AddHostedService<CaptureOutputWorker>();
@@ -61,14 +66,15 @@ else
 builder.Services.AddReverseProxy().LoadFromConfig(builder.Configuration.GetSection("ReverseProxy"));
 builder.Services.AddSingleton<ITransformProvider, CommandCaptureTransform>();
 
-// Database change sources — one hosted service per configured database. Each source prepares its own database
-// for capture (enabling CDC, checking logical replication) so the system being captured never has to know
-// Prologue is watching it, and captures the database's schema once as structural evidence when capture starts.
-foreach (var sqlServer in prologue.SqlServer)
+// Database change sources — one hosted service per configured database, in every service. Each source prepares its
+// own database for capture (enabling CDC, checking logical replication) so the system being captured never has to
+// know Prologue is watching it, and captures the database's schema once as structural evidence when capture starts.
+// Each source publishes through a channel that attributes its observations to the service the database belongs to.
+foreach (var (service, sqlServer) in services.All.SelectMany(captureService => captureService.SqlServer.Select(sqlServer => (captureService.Name, sqlServer))))
 {
     builder.Services.AddSingleton<IHostedService>(serviceProvider => new SqlServerChangeSource(
         sqlServer,
-        serviceProvider.GetRequiredService<IObservationChannel>(),
+        new ServiceObservationChannel(serviceProvider.GetRequiredService<IObservationChannel>(), service),
         new SqlServerChangeCapturePreparer(
             sqlServer,
             serviceProvider.GetRequiredService<ILogger<SqlServerChangeCapturePreparer>>()),
@@ -78,11 +84,11 @@ foreach (var sqlServer in prologue.SqlServer)
         serviceProvider.GetRequiredService<ILogger<SqlServerChangeSource>>()));
 }
 
-foreach (var postgres in prologue.Postgres)
+foreach (var (service, postgres) in services.All.SelectMany(captureService => captureService.Postgres.Select(postgres => (captureService.Name, postgres))))
 {
     builder.Services.AddSingleton<IHostedService>(serviceProvider => new PostgresChangeSource(
         postgres,
-        serviceProvider.GetRequiredService<IObservationChannel>(),
+        new ServiceObservationChannel(serviceProvider.GetRequiredService<IObservationChannel>(), service),
         new PostgresReplicationPreparer(
             postgres,
             serviceProvider.GetRequiredService<ILogger<PostgresReplicationPreparer>>()),
@@ -98,9 +104,9 @@ foreach (var postgres in prologue.Postgres)
 if (prologue.OpenTelemetry.Enabled)
 {
     builder.Services.AddGrpc();
-    builder.Services.AddSingleton(new SpanObservationFactory(prologue.OpenTelemetry));
-    builder.Services.AddSingleton(new MetricObservationFactory(prologue.OpenTelemetry));
-    builder.Services.AddSingleton(new LogObservationFactory(prologue.OpenTelemetry));
+    builder.Services.AddSingleton(new SpanObservationFactory(prologue.OpenTelemetry, services));
+    builder.Services.AddSingleton(new MetricObservationFactory(prologue.OpenTelemetry, services));
+    builder.Services.AddSingleton(new LogObservationFactory(prologue.OpenTelemetry, services));
     builder.Services.AddSingleton<OtlpUpstreamChannel>();
     builder.Services.AddSingleton<GrpcTraceForwarder>();
     builder.Services.AddSingleton<GrpcMetricsForwarder>();

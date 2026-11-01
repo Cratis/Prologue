@@ -20,7 +20,8 @@ public class when_mapping_a_metric : Specification
 
     void Establish()
     {
-        _factory = new MetricObservationFactory(new OpenTelemetryOptions { AttributeKeys = ["http.route"] });
+        var options = new OpenTelemetryOptions { AttributeKeys = ["http.route"] };
+        _factory = new MetricObservationFactory(options, CaptureServices.From(new PrologueOptions { OpenTelemetry = options }));
 
         var first = new NumberDataPoint { AsDouble = 42, TimeUnixNano = 1_000_000_000 };
         first.Attributes.Add(new KeyValue { Key = "http.route", Value = new AnyValue { StringValue = "/api/authors" } });

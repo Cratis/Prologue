@@ -2,6 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Cratis.Prologue.Configuration;
+using Cratis.Prologue.Extractor.Capturing;
 using OpenTelemetry.Proto.Collector.Trace.V1;
 using OpenTelemetry.Proto.Trace.V1;
 
@@ -11,10 +12,11 @@ namespace Cratis.Prologue.Extractor.Sources.OpenTelemetry;
 /// Maps OTLP trace export requests into <see cref="Observation"/>s, capturing span metadata only — plus the values
 /// of an allowlisted set of attributes. Applies the configured service-name filter.
 /// </summary>
-/// <param name="options">The OpenTelemetry options carrying the service-name filter and attribute allowlist.</param>
-public class SpanObservationFactory(OpenTelemetryOptions options)
+/// <param name="options">The OpenTelemetry options carrying the attribute allowlist.</param>
+/// <param name="services">The services captured from, resolving which service the telemetry belongs to.</param>
+public class SpanObservationFactory(OpenTelemetryOptions options, CaptureServices services)
 {
-    readonly OtlpCaptureFilter _filter = new(options);
+    readonly OtlpCaptureFilter _filter = new(options, services);
 
     /// <summary>
     /// Produces observations for every captured span in an OTLP trace export request.
@@ -27,14 +29,14 @@ public class SpanObservationFactory(OpenTelemetryOptions options)
         {
             var serviceName = OtlpCaptureFilter.ServiceNameOf(resourceSpans.Resource?.Attributes);
 
-            if (!_filter.CapturesService(serviceName))
+            if (!_filter.CapturesService(serviceName, out var service))
             {
                 continue;
             }
 
             foreach (var span in resourceSpans.ScopeSpans.SelectMany(scopeSpans => scopeSpans.Spans))
             {
-                yield return ToObservation(span, serviceName);
+                yield return ToObservation(span, serviceName) with { Service = service };
             }
         }
     }
