@@ -4,9 +4,10 @@
 import { useState } from 'react';
 import { AIProvider, PendingSubscriptionSignIn } from '@cratis/ai';
 import { Button } from '../../Components';
-import { useAICommands } from '../useAICommands';
+import { useCommandRunner } from '../../Shell/useCommandRunner';
 import { ProviderCapacity } from './ProviderCapacity';
 import { ProviderManage } from './ProviderManage';
+import { isHttpsUrl } from './safeLink';
 import { vendorOf } from './vendors';
 
 export interface ProviderRowProps {
@@ -26,7 +27,7 @@ const connectionLine = (provider: AIProvider, pending: boolean): string | undefi
 /** One configured provider: its mark, name, where it runs, how much is left and the buttons that act on it. */
 export const ProviderRow = ({ provider, inside, pendingSignIn }: ProviderRowProps) => {
     const [managing, setManaging] = useState(false);
-    const { run, isBusy } = useAICommands();
+    const { run, isBusy } = useCommandRunner();
     const vendor = vendorOf(provider.type);
     const connection = connectionLine(provider, pendingSignIn !== undefined);
     const needsConnect = vendor?.deviceSignIn !== undefined && !provider.isSubscription && pendingSignIn === undefined;
@@ -52,7 +53,9 @@ export const ProviderRow = ({ provider, inside, pendingSignIn }: ProviderRowProp
                     </small>
                     {provider.rateLimitedUntil && <small className="caution">Rate limited until {provider.rateLimitedUntil.toLocaleString()}</small>}
                     {pendingSignIn && (
-                        <small>Enter code <b className="mono">{pendingSignIn.userCode}</b> at <a href={pendingSignIn.verificationUrl} target="_blank" rel="noreferrer">{pendingSignIn.verificationUrl}</a></small>
+                        <small>Enter code <b className="mono">{pendingSignIn.userCode}</b> at {isHttpsUrl(pendingSignIn.verificationUrl)
+                            ? <a href={pendingSignIn.verificationUrl} target="_blank" rel="noreferrer">{pendingSignIn.verificationUrl}</a>
+                            : <span className="mono">{pendingSignIn.verificationUrl}</span>}</small>
                     )}
                     <ProviderCapacity provider={provider} />
                 </span>
