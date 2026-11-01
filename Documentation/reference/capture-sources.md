@@ -44,7 +44,7 @@ identifiers, names, and explicitly allowlisted OpenTelemetry attribute values. S
 |---|---|
 | Enabled by | `prologue.openTelemetry.enabled: true` |
 | Mechanism | An OTLP proxy (HTTP and gRPC). Telemetry is captured, then forwarded on to `upstream.http`/`upstream.grpc` unchanged — or nowhere, if you leave both empty, making the Extractor a terminal collector |
-| Captures | Span, metric, and log names and identifiers; every observed attribute key; values only for configured `attributeKeys`; service names matching `serviceNames`, or all services when empty |
+| Captures | Span, metric, and log names and identifiers; every observed attribute key; values only for configured `attributeKeys`; telemetry claimed by a [named service](configuration.md#prologueservices), plus service names matching `serviceNames`, or all other services when empty |
 | Never captures | Log bodies, metric measurements, or values for attributes not in `attributeKeys` |
 | Config | `enabled`, `serviceNames`, `attributeKeys`, `upstream.http`, `upstream.grpc` — see [Configuration](configuration.md#prologueopentelemetry) |
 

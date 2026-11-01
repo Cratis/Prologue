@@ -10,21 +10,32 @@ namespace Cratis.Prologue.Interpretation;
 /// Represents an <see cref="IBuildHeuristicModel"/> that analyzes every capture into provisional slices and
 /// aggregates the drafts that describe the same behavior into a single module → feature → slice tree. Any
 /// <see cref="DatabaseSchemaObserved"/> observations among the captures are indexed first so the analysis can
-/// join the observed schema to the transactions it governs.
+/// join the observed schema to the transactions it governs. Captures of a named service are analyzed against that
+/// service's own schema and become a module named after the service, so two services never merge into one module.
 /// </summary>
 public class HeuristicModelBuilder : IBuildHeuristicModel
 {
     /// <inheritdoc/>
     public ExtractionResult Build(Guid prologueId, IReadOnlyList<Capture> captures)
     {
-        var schema = SchemaIndex.From(captures);
-        var drafts = captures.SelectMany(capture => CaptureAnalyzer.Analyze(capture, schema)).ToList();
+        var drafts = captures
+            .GroupBy(capture => capture.Service)
+            .SelectMany(service => AnalyzeService(service.Key, [.. service]))
+            .ToList();
         var modules = drafts
             .GroupBy(draft => draft.Module)
             .Select(moduleGroup => new ExtractedModule(moduleGroup.Key, BuildFeatures(moduleGroup)))
             .ToList();
 
         return new ExtractionResult(prologueId, modules);
+    }
+
+    static IEnumerable<SliceDraft> AnalyzeService(ServiceName service, IReadOnlyList<Capture> captures)
+    {
+        var schema = SchemaIndex.From(captures);
+        var drafts = captures.SelectMany(capture => CaptureAnalyzer.Analyze(capture, schema));
+
+        return service.IsDefault ? drafts : drafts.Select(draft => draft with { Module = Naming.Pascalize(service.Value) });
     }
 
     static IReadOnlyList<ExtractedFeature> BuildFeatures(IEnumerable<SliceDraft> moduleDrafts) =>

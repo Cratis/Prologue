@@ -21,7 +21,8 @@ public class when_mapping_a_span : Specification
 
     void Establish()
     {
-        _factory = new SpanObservationFactory(new OpenTelemetryOptions { AttributeKeys = ["command.type"] });
+        var options = new OpenTelemetryOptions { AttributeKeys = ["command.type"] };
+        _factory = new SpanObservationFactory(options, CaptureServices.From(new PrologueOptions { OpenTelemetry = options }));
 
         var span = new Span
         {

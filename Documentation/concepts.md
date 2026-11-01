@@ -50,6 +50,12 @@ A single command rarely tells the whole story on its own. The Extractor therefor
 - Other settled observations, including standalone database transactions, metrics, and the schema captured when a
   database source starts, become individual captures.
 
+Correlation never crosses a service boundary. When the system is captured as several
+[named services](reference/configuration.md#prologueservices), each observation belongs to one service — the
+service its database, reverse-proxy cluster or telemetry `service.name` is assigned to — and only observations of
+the same service are associated into a capture. A system captured as one service uses the default service for
+everything.
+
 Normal periodic drains wait for observations to settle beyond the configured window. Pending observations remain
 in process memory, so this is a correlation heuristic rather than a cross-process losslessness guarantee.
 
@@ -57,7 +63,9 @@ in process memory, so this is a correlation heuristic rather than a cross-proces
 
 The Interpreter reads a folder of JSON files in batch mode or MongoDB in service mode and analyzes the captures
 to propose an `ExtractionResult`: modules, features, and slices carrying candidate commands, events, read models,
-projections, and constraints. See [The extraction result](reference/extraction-result.md) for the exact shape.
+projections, and constraints. Captures of a named service become a module named after that service and are
+analyzed against that service's own database schema, so two services never merge into one module. See
+[The extraction result](reference/extraction-result.md) for the exact shape.
 
 Heuristics produce a provisional model with mechanical names that must be reviewed. Point the `llm` section of
 `cratis-prologue.json` at Ollama, OpenAI, Azure OpenAI, an OpenAI-compatible endpoint, or Anthropic to refine names

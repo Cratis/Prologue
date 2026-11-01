@@ -31,17 +31,26 @@ public class PrologueOptions
     public CorrelationOptions Correlation { get; set; } = new();
 
     /// <summary>
-    /// Gets or sets the SQL Server change-capture sources.
+    /// Gets or sets the SQL Server change-capture sources of the default service.
     /// </summary>
     public IList<SqlServerOptions> SqlServer { get; set; } = [];
 
     /// <summary>
-    /// Gets or sets the PostgreSQL change-capture sources.
+    /// Gets or sets the PostgreSQL change-capture sources of the default service.
     /// </summary>
     public IList<PostgresOptions> Postgres { get; set; } = [];
 
     /// <summary>
-    /// Gets or sets the OpenTelemetry OTLP proxy capture source.
+    /// Gets or sets the OpenTelemetry OTLP proxy capture source. The proxy is shared by every service; its
+    /// <see cref="OpenTelemetryOptions.ServiceNames"/> filter applies to the default service only.
     /// </summary>
     public OpenTelemetryOptions OpenTelemetry { get; set; } = new();
+
+    /// <summary>
+    /// Gets or sets the named services of a system made of several services, keyed by service name. Everything
+    /// configured outside this section — the top-level databases, every reverse-proxy cluster no named service
+    /// claims, and telemetry no named service claims — belongs to the default service, so a system captured as a
+    /// single service needs no services at all.
+    /// </summary>
+    public IDictionary<string, ServiceOptions> Services { get; set; } = new Dictionary<string, ServiceOptions>(StringComparer.OrdinalIgnoreCase);
 }

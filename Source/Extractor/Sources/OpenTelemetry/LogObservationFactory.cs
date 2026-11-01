@@ -2,6 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Cratis.Prologue.Configuration;
+using Cratis.Prologue.Extractor.Capturing;
 using OpenTelemetry.Proto.Collector.Logs.V1;
 using OpenTelemetry.Proto.Logs.V1;
 
@@ -12,10 +13,11 @@ namespace Cratis.Prologue.Extractor.Sources.OpenTelemetry;
 /// never captured — it is free text that routinely carries payload data and personal information. Applies the
 /// configured service-name filter.
 /// </summary>
-/// <param name="options">The OpenTelemetry options carrying the service-name filter and attribute allowlist.</param>
-public class LogObservationFactory(OpenTelemetryOptions options)
+/// <param name="options">The OpenTelemetry options carrying the attribute allowlist.</param>
+/// <param name="services">The services captured from, resolving which service the telemetry belongs to.</param>
+public class LogObservationFactory(OpenTelemetryOptions options, CaptureServices services)
 {
-    readonly OtlpCaptureFilter _filter = new(options);
+    readonly OtlpCaptureFilter _filter = new(options, services);
 
     /// <summary>
     /// Produces observations for every captured log record in an OTLP log export request.
@@ -28,7 +30,7 @@ public class LogObservationFactory(OpenTelemetryOptions options)
         {
             var serviceName = OtlpCaptureFilter.ServiceNameOf(resourceLogs.Resource?.Attributes);
 
-            if (!_filter.CapturesService(serviceName))
+            if (!_filter.CapturesService(serviceName, out var service))
             {
                 continue;
             }
@@ -39,7 +41,7 @@ public class LogObservationFactory(OpenTelemetryOptions options)
 
                 foreach (var record in scopeLogs.LogRecords)
                 {
-                    yield return ToObservation(record, serviceName, scopeName);
+                    yield return ToObservation(record, serviceName, scopeName) with { Service = service };
                 }
             }
         }

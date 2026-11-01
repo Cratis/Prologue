@@ -8,7 +8,7 @@ namespace Cratis.Prologue.Extractor.Capturing;
 
 /// <summary>
 /// Represents an <see cref="ICaptureOutput"/> that appends captured observations to rolling JSON-lines files,
-/// partitioned per <see cref="SourceKind"/>. Each file holds at most <see cref="JsonFileOptions.MaxEntriesPerFile"/>
+/// partitioned per <see cref="ServiceName"/> and <see cref="SourceKind"/>. Each file holds at most <see cref="JsonFileOptions.MaxEntriesPerFile"/>
 /// entries before rolling to the next index. Only the single output worker calls <see cref="Write"/>, so no locking
 /// is required.
 /// </summary>
@@ -16,7 +16,7 @@ public sealed class JsonFileCaptureOutput : ICaptureOutput, IDisposable
 {
     readonly JsonFileOptions _options;
     readonly ILogger<JsonFileCaptureOutput> _logger;
-    readonly Dictionary<string, RollingWriter> _writers = [];
+    readonly Dictionary<(ServiceName Service, string SourceKind), RollingWriter> _writers = [];
 
     /// <summary>
     /// Initializes a new instance of the <see cref="JsonFileCaptureOutput"/> class.
@@ -38,6 +38,15 @@ public sealed class JsonFileCaptureOutput : ICaptureOutput, IDisposable
     /// <returns>The file name.</returns>
     public static string FileName(string sourceKind, int index) => CaptureFiles.FileNameFor(sourceKind, index);
 
+    /// <summary>
+    /// Builds the file name for a given service, source kind and rolling index.
+    /// </summary>
+    /// <param name="service">The service the file holds entries for.</param>
+    /// <param name="sourceKind">The source kind the file holds entries for.</param>
+    /// <param name="index">The rolling index.</param>
+    /// <returns>The file name.</returns>
+    public static string FileName(ServiceName service, string sourceKind, int index) => CaptureFiles.FileNameFor(service, sourceKind, index);
+
     /// <inheritdoc/>
     public Task Write(IReadOnlyList<Capture> captures, CancellationToken cancellationToken = default)
     {
@@ -45,8 +54,8 @@ public sealed class JsonFileCaptureOutput : ICaptureOutput, IDisposable
         {
             foreach (var entry in capture.Entries)
             {
-                var writer = WriterFor(entry.Source.Value);
-                var record = new CapturedEntry(capture.Id, entry.Occurred, entry.Source, entry.Payload);
+                var writer = WriterFor(entry.Service, entry.Source.Value);
+                var record = new CapturedEntry(capture.Id, entry.Occurred, entry.Source, entry.Payload) { Service = entry.Service };
                 writer.WriteLine(CaptureFiles.Serialize(record), _options.MaxEntriesPerFile);
             }
         }
@@ -70,21 +79,20 @@ public sealed class JsonFileCaptureOutput : ICaptureOutput, IDisposable
         _writers.Clear();
     }
 
-    RollingWriter WriterFor(string sourceKind)
+    RollingWriter WriterFor(ServiceName service, string sourceKind)
     {
-        if (!_writers.TryGetValue(sourceKind, out var writer))
+        if (!_writers.TryGetValue((service, sourceKind), out var writer))
         {
-            writer = new RollingWriter(_options.Directory, sourceKind, NextIndexFor(sourceKind), _logger);
-            _writers[sourceKind] = writer;
+            writer = new RollingWriter(_options.Directory, service, sourceKind, NextIndexFor(service, sourceKind), _logger);
+            _writers[(service, sourceKind)] = writer;
         }
 
         return writer;
     }
 
-    int NextIndexFor(string sourceKind)
+    int NextIndexFor(ServiceName service, string sourceKind)
     {
-        var safeKind = string.Concat(sourceKind.Select(character => char.IsLetterOrDigit(character) ? character : '-'));
-        var existing = Directory.EnumerateFiles(_options.Directory, $"prologue-{safeKind}-*.jsonl")
+        var existing = Directory.EnumerateFiles(_options.Directory, CaptureFiles.SearchPatternFor(service, sourceKind))
             .Select(path => Path.GetFileNameWithoutExtension(path).Split('-').LastOrDefault())
             .Select(suffix => int.TryParse(suffix, out var value) ? value : 0)
             .DefaultIfEmpty(0)
@@ -92,7 +100,7 @@ public sealed class JsonFileCaptureOutput : ICaptureOutput, IDisposable
         return existing + 1;
     }
 
-    sealed class RollingWriter(string directory, string sourceKind, int startIndex, ILogger logger) : IDisposable
+    sealed class RollingWriter(string directory, ServiceName service, string sourceKind, int startIndex, ILogger logger) : IDisposable
     {
         StreamWriter? _writer;
         int _index = startIndex;
@@ -122,7 +130,7 @@ public sealed class JsonFileCaptureOutput : ICaptureOutput, IDisposable
         {
             _writer?.Flush();
             _writer?.Dispose();
-            var path = Path.Combine(directory, FileName(sourceKind, _index));
+            var path = Path.Combine(directory, FileName(service, sourceKind, _index));
             _writer = new StreamWriter(path, append: true) { AutoFlush = false };
             _count = 0;
             _index++;

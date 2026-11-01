@@ -81,6 +81,9 @@ The file provides the baseline and environment variables override it using the n
   `SqlServer[].EnableChangeDataCapture` defaults to `true`; `SqlServer[].Tables` narrows capture to named tables.
 - `Prologue.PrologueId` associates captures with one interpretation session.
 - `Prologue.OpenTelemetry` configures OTLP capture, filtering, allowlisted attribute values, and optional forwarding.
+- `Prologue.Services` names the services of a system made of several services. Each named service has its own
+  `SqlServer[]` / `Postgres[]`, claims reverse-proxy `Clusters` and OpenTelemetry `TelemetryServiceNames` (both
+  default to the service name), and is correlated on its own. Everything outside it belongs to the default service.
 - `ReverseProxy` is the standard YARP route/cluster configuration for the monitored HTTP application.
 
 HTTP observations include the query string, and OpenTelemetry observations can include values for explicitly

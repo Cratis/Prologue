@@ -33,7 +33,7 @@ flowchart TD
 
 | Property | Type | Purpose |
 |---|---|---|
-| `name` | `string` | Module name |
+| `name` | `string` | Module name — the [named service](configuration.md#prologueservices) the captures came from, or one inferred from routes and database names for the default service |
 | `description` | `string` | Optional description |
 | `features` | array of `ExtractedFeature` | Features within the module |
 

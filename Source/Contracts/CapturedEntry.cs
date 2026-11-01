@@ -11,4 +11,11 @@ namespace Cratis.Prologue.Contracts;
 /// <param name="Occurred">When the observation happened.</param>
 /// <param name="Source">The kind of source the observation came from.</param>
 /// <param name="Payload">The source-specific metadata.</param>
-public record CapturedEntry(Guid CaptureId, DateTimeOffset Occurred, SourceKind Source, ObservationPayload Payload);
+public record CapturedEntry(Guid CaptureId, DateTimeOffset Occurred, SourceKind Source, ObservationPayload Payload)
+{
+    /// <summary>
+    /// Gets the service the observation was captured from. Lines written before named services existed carry no
+    /// service and read back as <see cref="ServiceName.Default"/>.
+    /// </summary>
+    public ServiceName Service { get; init; } = ServiceName.Default;
+}

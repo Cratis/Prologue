@@ -29,9 +29,9 @@ CultureInfo.CurrentUICulture = CultureInfo.InvariantCulture;
 var arguments = InterpreterArguments.Parse(args);
 if (arguments is null)
 {
-    await Console.Error.WriteLineAsync("Usage: interpreter [--captures <folder>] [--output <file>] [--play-output <file>] [--prologue-id <guid>] [--serve]");
+    await Console.Error.WriteLineAsync("Usage: interpreter [--captures <folder>] [--output <file>] [--play-output <file>] [--prologue-id <guid>] [--captured-service <name>] [--serve]");
     await Console.Error.WriteLineAsync($"Defaults: --captures {InterpreterArguments.DefaultCapturesFolder}, --output {InterpreterArguments.DefaultOutputFile}, --play-output derived from the output folder and the system name.");
-    await Console.Error.WriteLineAsync("Environment overrides: PROLOGUE_CAPTURES, PROLOGUE_OUTPUT, PROLOGUE_PLAY_OUTPUT, PROLOGUE_ID, PROLOGUE_CONFIG.");
+    await Console.Error.WriteLineAsync("Environment overrides: PROLOGUE_CAPTURES, PROLOGUE_OUTPUT, PROLOGUE_PLAY_OUTPUT, PROLOGUE_ID, PROLOGUE_CAPTURED_SERVICE, PROLOGUE_CONFIG.");
     await Console.Error.WriteLineAsync("Service mode: --serve or PROLOGUE_MODE=service, tuned with PROLOGUE_SERVICE_PORT, PROLOGUE_GRACE_PERIOD and PROLOGUE_IDLE_TIMEOUT (seconds).");
     return 2;
 }
@@ -69,8 +69,10 @@ if (!Directory.Exists(arguments.CapturesFolder))
 // an event model and write the extraction result to the mounted output location. Batch mode is non-interactive —
 // the session runs with zero question rounds, so the language model is told not to ask questions and the session
 // finalizes with its best judgment instead of parking to await answers.
-var captures = await CaptureFiles.ReadFromFolder(arguments.CapturesFolder, arguments.PrologueId);
-await Console.Out.WriteLineAsync($"Read {captures.Count} capture(s) from '{arguments.CapturesFolder}'.");
+// Every captured service is interpreted by default, each into its own module; --captured-service narrows the run
+// to a single service.
+var captures = (await CaptureFiles.ReadFromFolder(arguments.CapturesFolder, arguments.PrologueId)).OfService(arguments.CapturedService);
+await Console.Out.WriteLineAsync($"Read {captures.Count} capture(s) of {captures.Services().Count} service(s) from '{arguments.CapturesFolder}'.");
 
 var factory = host.Services.GetRequiredService<IInterpreterSessionFactory>();
 var callbacks = new BatchCallbacks();
