@@ -11,7 +11,8 @@ namespace Cratis.Prologue.Workbench.Discover.Runtime;
 
 /// <summary>
 /// Feeds Discover from the captures: the command matrix and the capture aggregates are projected from every recorded capture,
-/// so what Discover matches the code against is never counted when a page is opened.
+/// so what Discover matches the code against is never counted when a page is opened. It starts with no evidence, as nothing is
+/// observed for a prologue that has no captures yet.
 /// </summary>
 /// <param name="readModels">Observes the stored matrix and aggregates.</param>
 public class CapturedRuntimeShapes(IReadModels readModels) : IRuntimeShapes
@@ -19,7 +20,8 @@ public class CapturedRuntimeShapes(IReadModels readModels) : IRuntimeShapes
     /// <inheritdoc/>
     public IObservable<RuntimeEvidence> Observe(PrologueId prologue) =>
         readModels.Observe<CommandMatrix>(matrix => matrix.Id == prologue)
+            .StartWith([])
             .CombineLatest(
-                readModels.Observe<CaptureAggregates>(aggregates => aggregates.Id == prologue),
+                readModels.Observe<CaptureAggregates>(aggregates => aggregates.Id == prologue).StartWith([]),
                 (matrix, aggregates) => CapturedRuntimeEvidence.From(matrix.FirstOrDefault(), aggregates.FirstOrDefault()));
 }
