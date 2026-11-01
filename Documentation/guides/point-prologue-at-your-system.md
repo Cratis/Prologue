@@ -63,6 +63,39 @@ Port `8080` is the reverse proxy your system's traffic should go through instead
 
 If you'd rather not mount a config file, every property has a double-underscore environment variable equivalent (`Prologue__SqlServer__0__ConnectionString`, `ReverseProxy__Clusters__monitored__Destinations__primary__Address`, and so on) — env vars win over the file, which is handy for injecting secrets from your orchestrator instead of writing them into `cratis-prologue.json`.
 
+## Capture a system made of several services
+
+When the system is several services, each with its own databases, HTTP endpoint and telemetry, name each one under
+`prologue.services`. Give each service a reverse-proxy cluster named after it (or list its clusters under
+`clusters`), and Prologue attributes every command, database change and span to the service it came from:
+
+```json
+{
+    "prologue": {
+        "output": { "kind": "Json", "json": { "directory": "/captures" } },
+        "services": {
+            "orders": { "sqlServer": [ { "name": "orders", "connectionString": "..." } ] },
+            "billing": { "postgres": [ { "name": "billing", "connectionString": "..." } ] }
+        }
+    },
+    "reverseProxy": {
+        "routes": {
+            "orders": { "clusterId": "orders", "match": { "path": "/orders/{**rest}" } },
+            "billing": { "clusterId": "billing", "match": { "path": "/billing/{**rest}" } }
+        },
+        "clusters": {
+            "orders": { "destinations": { "primary": { "address": "http://orders:8080/" } } },
+            "billing": { "destinations": { "primary": { "address": "http://billing:8080/" } } }
+        }
+    }
+}
+```
+
+A command sent to `orders` is only ever correlated with changes in the `orders` database, and each service's
+captures land in their own `prologue-{service}-{kind}-*.jsonl` files. Anything you configure outside `services` keeps
+working as the default service, so you can add named services to an existing configuration one at a time. See
+[Reference — Configuration](../reference/configuration.md#prologueservices) for every option.
+
 ## Confirm captures are landing
 
 Exercise the system — a real request, or your own smoke test — through port `8080`, then check the mounted `captures` folder for new `.jsonl` files (or your Receiver's MongoDB collection, if that's where you pointed output). No files after a state-changing request usually means the reverse proxy destination is wrong, or the request didn't use `POST`/`PUT`/`DELETE` — see [Troubleshooting](../reference/faq.md).

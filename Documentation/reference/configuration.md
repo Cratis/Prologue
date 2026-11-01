@@ -35,9 +35,10 @@ binds `prologue.mongo`.
 | `prologueId` | `guid` | empty guid | Associates captures with one interpretation session when explicitly configured |
 | `output` | [`OutputOptions`](#prologueoutput) | — | Where captures are written |
 | `correlation` | [`CorrelationOptions`](#prologuecorrelation) | — | The correlation time window |
-| `sqlServer` | array of [`SqlServerOptions`](#prologuesqlserver) | `[]` | SQL Server databases to watch via CDC |
-| `postgres` | array of [`PostgresOptions`](#prologuepostgres) | `[]` | PostgreSQL databases to watch via logical replication |
-| `openTelemetry` | [`OpenTelemetryOptions`](#prologueopentelemetry) | — | OTLP proxy configuration |
+| `sqlServer` | array of [`SqlServerOptions`](#prologuesqlserver) | `[]` | SQL Server databases of the default service to watch via CDC |
+| `postgres` | array of [`PostgresOptions`](#prologuepostgres) | `[]` | PostgreSQL databases of the default service to watch via logical replication |
+| `openTelemetry` | [`OpenTelemetryOptions`](#prologueopentelemetry) | — | OTLP proxy configuration, shared by every service |
+| `services` | map of service name to [`ServiceOptions`](#prologueservices) | `{}` | Named services of a system made of several services |
 | `mongo` | [`MongoOptions`](#prologuemongo) | — | Capture and service-session storage used by the Receiver and service Interpreter |
 
 ### `prologue.output`
@@ -79,12 +80,55 @@ binds `prologue.mongo`.
 | Property | Type | Default | Purpose |
 |---|---|---|---|
 | `enabled` | `bool` | `false` | Whether the OTLP proxy is active |
-| `serviceNames` | array of `string` | `[]` | Service name allowlist; empty captures telemetry from every service |
+| `serviceNames` | array of `string` | `[]` | Service name allowlist for the default service; empty captures telemetry from every service no [named service](#prologueservices) claims |
 | `attributeKeys` | array of `string` | `[]` | Attribute keys whose values are captured; all observed keys remain visible while other values are dropped |
 | `upstream.http` | `string` | — | Upstream OTLP/HTTP collector to forward telemetry to |
 | `upstream.grpc` | `string` | — | Upstream OTLP/gRPC collector to forward telemetry to |
 
 Leave both `upstream` addresses empty to make the Extractor a terminal collector rather than a forwarding proxy.
+
+### `prologue.services`
+
+A system captured as one service needs no `services` at all: the top-level `sqlServer`, `postgres`, every
+reverse-proxy cluster and all telemetry belong to the **default service**. For a system made of several services,
+name each one under `services`. Every observation is attributed to exactly one service, and observations from
+different services are never correlated into the same capture.
+
+| Property | Type | Default | Purpose |
+|---|---|---|---|
+| `sqlServer` | array of [`SqlServerOptions`](#prologuesqlserver) | `[]` | SQL Server databases belonging to the service |
+| `postgres` | array of [`PostgresOptions`](#prologuepostgres) | `[]` | PostgreSQL databases belonging to the service |
+| `clusters` | array of `string` | the service name | Ids of the `reverseProxy` clusters whose HTTP commands belong to the service |
+| `telemetryServiceNames` | array of `string` | the service name | OpenTelemetry `service.name` values whose telemetry belongs to the service; matched case-insensitively |
+
+```json
+{
+    "prologue": {
+        "sqlServer": [ { "name": "legacy", "connectionString": "..." } ],
+        "services": {
+            "orders": {
+                "sqlServer": [ { "name": "orders", "connectionString": "..." } ]
+            },
+            "billing": {
+                "postgres": [ { "name": "billing", "connectionString": "..." } ],
+                "clusters": [ "billing-api" ],
+                "telemetryServiceNames": [ "Billing.Api" ]
+            }
+        }
+    }
+}
+```
+
+- Clusters and telemetry service names no named service claims stay with the default service. Telemetry claimed by
+  a named service is captured even when the default service's `openTelemetry.serviceNames` filter would exclude it.
+- A cluster or telemetry service name claimed by two services is a configuration error; the Extractor refuses to
+  start.
+- Captures and observations carry a `service` property — empty for the default service. JSON output keeps the
+  `prologue-{kind}-{index}.jsonl` file names for the default service and writes `prologue-{service}-{kind}-{index}.jsonl`
+  for a named one. Capture files and stored captures written before named services existed read back as the
+  default service.
+- Environment variables reach a named service the usual way, for example
+  `Prologue__Services__billing__Postgres__0__ConnectionString`.
 
 ### `prologue.mongo`
 
