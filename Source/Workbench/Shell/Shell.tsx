@@ -17,12 +17,12 @@ export const Shell = () => {
     const { loaded, hasPrologue } = usePrologues();
 
     useEffect(() => {
-        if (!step) navigate(defaultStep.path);
+        if (!step) navigate(defaultStep.path, { replace: true });
     }, [step, navigate]);
 
     // Every step but the first works on a prologue, so with none the first is where to start.
     useEffect(() => {
-        if (step && loaded && !hasPrologue && step.id !== 'systems') navigate('/systems');
+        if (step && loaded && !hasPrologue && step.id !== 'systems') navigate('/systems', { replace: true });
     }, [step, loaded, hasPrologue, navigate]);
 
     const current = step ?? defaultStep;

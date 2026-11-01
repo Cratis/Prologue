@@ -2,10 +2,12 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 import { createContext, MouseEvent, ReactNode, useCallback, useContext, useEffect, useMemo, useState } from 'react';
+import { commitNavigation, NavigateOptions } from './navigation';
 
 interface RouterValue {
     readonly path: string;
-    readonly navigate: (path: string) => void;
+    /** Go to a path; pass `{ replace: true }` for a redirect so Back does not return to the page that redirected. */
+    readonly navigate: (path: string, options?: NavigateOptions) => void;
 }
 
 const RouterContext = createContext<RouterValue>({ path: '/', navigate: () => undefined });
@@ -20,9 +22,13 @@ export const RouterProvider = ({ children }: { children: ReactNode }) => {
         return () => window.removeEventListener('popstate', onPop);
     }, []);
 
-    const navigate = useCallback((target: string) => {
-        if (target === window.location.pathname) return;
-        window.history.pushState({}, '', target);
+    const navigate = useCallback((target: string, options?: NavigateOptions) => {
+        const history = {
+            pathname: () => window.location.pathname,
+            pushState: (data: unknown, unused: string, url: string) => window.history.pushState(data, unused, url),
+            replaceState: (data: unknown, unused: string, url: string) => window.history.replaceState(data, unused, url)
+        };
+        if (!commitNavigation(history, target, options)) return;
         setPath(target);
         document.querySelector('main')?.scrollTo({ top: 0 });
     }, []);
