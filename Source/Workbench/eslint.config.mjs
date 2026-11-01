@@ -45,5 +45,12 @@ export default tseslint.config(
             ]
         }
     },
-    { files: ['**/index.ts'], rules: { 'header/header': 'off' } }
+    { files: ['**/index.ts'], rules: { 'header/header': 'off' } },
+    {
+        // Generated Arc proxies expose a static use() that forwards to Arc's hooks; the hooks rule reads any hook call
+        // inside a class body as a class component. Hand-written hooks are named use*.ts, so they stay covered.
+        files: ['**/*.ts'],
+        ignores: ['**/use*.ts'],
+        rules: { 'react-hooks/rules-of-hooks': 'off', 'react-hooks/exhaustive-deps': 'off' }
+    }
 );
