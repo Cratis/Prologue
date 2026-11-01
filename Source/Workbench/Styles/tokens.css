@@ -49,6 +49,8 @@
   --green-bg: rgba(16, 185, 129, 0.14);
   --orange: #f0a050;
   --orange-bg: rgba(240, 160, 80, 0.14);
+  --orange-edge: rgba(240, 160, 80, 0.25);
+  --orange-ink: #fcd9b6;
   --lime: #b8d63b;
   --lime-bg: rgba(184, 214, 59, 0.14);
   --red: #fca5a5;

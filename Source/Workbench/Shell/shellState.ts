@@ -1,7 +1,9 @@
 // Copyright (c) Cratis. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+import { Guid } from '@cratis/fundamentals';
 import { createContext, useContext } from 'react';
+import { ObserveOpenQuestions } from '../Events/Questions/OpenQuestion';
 import { PrologueDefinition } from '../Prologues/PrologueDefinition';
 import { Posture } from '../AI/networkPosture';
 import { useAIPosture } from '../AI/useAIPosture';
@@ -72,8 +74,13 @@ export const useOptionalSteps = () => {
     return { isOn, setOn: setOptionalStep };
 };
 
-/** Counts shown as a badge next to a step in the sidebar, such as open questions on Events. */
-export const useStepBadges = (): Readonly<Partial<Record<StepId, number>>> => ({});
+/** Counts shown as a badge next to a step in the sidebar: the questions the interpreter waits on, on Events. */
+export const useStepBadges = (): Readonly<Partial<Record<StepId, number>>> => {
+    const definition = useContext(ShellStateContext).definition;
+    const [questions] = ObserveOpenQuestions.use({ id: definition?.id ?? Guid.empty });
+    const open = Array.isArray(questions.data) ? questions.data.length : 0;
+    return open > 0 ? { events: open } : {};
+};
 
 export interface CaptureStatus {
     readonly capturing: boolean;
