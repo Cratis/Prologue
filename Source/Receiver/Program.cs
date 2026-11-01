@@ -37,10 +37,13 @@ app.UseCratis();
 // Public-facing endpoint the Prologue Extractor posts correlated captures to when it is not associated with a Prologue.
 app.MapPost("/captures", async (Capture capture, ICaptureStore store, ICaptureRecordingQueue recordings, CancellationToken cancellationToken) =>
 {
-    await store.Store(capture, cancellationToken);
-
     // The capture is stored; recording it for the Workbench happens in the background, so the answer never waits for the event store.
-    recordings.TryEnqueue(capture);
+    // A capture stored already is a retry and was recorded the first time.
+    if (await store.Store(capture, cancellationToken))
+    {
+        recordings.TryEnqueue(capture);
+    }
+
     return Results.Accepted();
 });
 
@@ -49,8 +52,11 @@ app.MapPost("/captures", async (Capture capture, ICaptureStore store, ICaptureRe
 app.MapPost("/prologues/{prologueId:guid}/captures", async (Guid prologueId, Capture capture, ICaptureStore store, ICaptureRecordingQueue recordings, CancellationToken cancellationToken) =>
 {
     var associated = capture with { PrologueId = prologueId };
-    await store.Store(associated, cancellationToken);
-    recordings.TryEnqueue(associated);
+    if (await store.Store(associated, cancellationToken))
+    {
+        recordings.TryEnqueue(associated);
+    }
+
     return Results.Accepted();
 });
 

@@ -10,12 +10,12 @@ namespace Cratis.Prologue.Storage;
 public interface ICaptureStore
 {
     /// <summary>
-    /// Stores a correlated capture.
+    /// Stores a correlated capture. Storing a capture that is stored already, which is what a retried post sends, is not an error.
     /// </summary>
     /// <param name="capture">The <see cref="Capture"/> to store.</param>
     /// <param name="cancellationToken">A <see cref="CancellationToken"/> for the operation.</param>
-    /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
-    Task Store(Capture capture, CancellationToken cancellationToken = default);
+    /// <returns>True when the capture was stored now; false when it was stored already.</returns>
+    Task<bool> Store(Capture capture, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Gets all captures belonging to a specific Prologue, ordered by when they occurred.

@@ -16,6 +16,8 @@ public class when_the_same_capture_is_stored_twice : Specification
     IMongoCollection<Capture> _collection;
     Capture _capture;
     Exception _duplicate;
+    bool _storedAgain;
+    bool _storedFirst;
     Exception _otherFailure;
 
     static MongoWriteException WriteFailure(ServerErrorCategory category, int code)
@@ -38,7 +40,15 @@ public class when_the_same_capture_is_stored_twice : Specification
         _collection
             .InsertOneAsync(Arg.Any<Capture>(), Arg.Any<InsertOneOptions>(), Arg.Any<CancellationToken>())
             .Returns(Task.FromException(WriteFailure(ServerErrorCategory.DuplicateKey, 11000)));
-        _duplicate = await Cratis.Specifications.Catch.Exception(() => new MongoCaptureStore(_collection).Store(_capture));
+        _duplicate = await Cratis.Specifications.Catch.Exception(async () => _storedAgain = await new MongoCaptureStore(_collection).Store(_capture));
+
+        _collection
+            .InsertOneAsync(Arg.Any<Capture>(), Arg.Any<InsertOneOptions>(), Arg.Any<CancellationToken>())
+            .Returns(Task.FromException(WriteFailure(ServerErrorCategory.Uncategorized, 2)));
+        _collection
+            .InsertOneAsync(Arg.Any<Capture>(), Arg.Any<InsertOneOptions>(), Arg.Any<CancellationToken>())
+            .Returns(Task.CompletedTask);
+        _storedFirst = await new MongoCaptureStore(_collection).Store(_capture);
 
         _collection
             .InsertOneAsync(Arg.Any<Capture>(), Arg.Any<InsertOneOptions>(), Arg.Any<CancellationToken>())
@@ -47,6 +57,8 @@ public class when_the_same_capture_is_stored_twice : Specification
     }
 
     [Fact] void should_treat_the_duplicate_as_stored() => _duplicate.ShouldBeNull();
+    [Fact] void should_say_it_was_stored_already() => _storedAgain.ShouldBeFalse();
+    [Fact] void should_say_a_new_capture_was_stored() => _storedFirst.ShouldBeTrue();
     [Fact] void should_still_fail_on_any_other_write_error() => _otherFailure.ShouldBeOfExactType<MongoWriteException>();
 }
 #endif

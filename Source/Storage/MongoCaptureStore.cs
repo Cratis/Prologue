@@ -34,15 +34,17 @@ public class MongoCaptureStore : ICaptureStore
     internal MongoCaptureStore(IMongoCollection<Capture> captures) => _captures = captures;
 
     /// <inheritdoc/>
-    public async Task Store(Capture capture, CancellationToken cancellationToken = default)
+    public async Task<bool> Store(Capture capture, CancellationToken cancellationToken = default)
     {
         try
         {
             await _captures.InsertOneAsync(capture, cancellationToken: cancellationToken);
+            return true;
         }
         catch (MongoWriteException exception) when (exception.WriteError.Category == ServerErrorCategory.DuplicateKey)
         {
             // The same capture arrived again: it is already stored, which is what the caller wants.
+            return false;
         }
     }
 
