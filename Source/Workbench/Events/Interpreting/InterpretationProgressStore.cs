@@ -21,7 +21,15 @@ public sealed class InterpretationProgressStore : IInterpretationProgress, IDisp
     public InterpretationProgress Get(PrologueId prologue) => SubjectOf(prologue).Value;
 
     /// <inheritdoc/>
-    public void Set(InterpretationProgress progress) => SubjectOf(progress.Prologue).OnNext(progress);
+    public void Set(InterpretationProgress progress)
+    {
+        // A subject is not safe for concurrent OnNext.
+        var subject = SubjectOf(progress.Prologue);
+        lock (subject)
+        {
+            subject.OnNext(progress);
+        }
+    }
 
     /// <inheritdoc/>
     public void Dispose()

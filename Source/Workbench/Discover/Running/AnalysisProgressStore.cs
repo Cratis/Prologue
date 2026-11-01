@@ -12,6 +12,7 @@ namespace Cratis.Prologue.Workbench.Discover.Running;
 public sealed class AnalysisProgressStore : IAnalysisProgress, IDisposable
 {
     readonly ConcurrentDictionary<AnalysisSubjectId, AnalysisProgress> _progress = new();
+    readonly Lock _gate = new();
     readonly BehaviorSubject<IReadOnlyList<AnalysisProgress>> _subject = new([]);
 
     /// <inheritdoc/>
@@ -20,8 +21,12 @@ public sealed class AnalysisProgressStore : IAnalysisProgress, IDisposable
     /// <inheritdoc/>
     public void Set(AnalysisProgress progress)
     {
-        _progress[progress.Target.Subject] = progress;
-        _subject.OnNext([.. _progress.Values]);
+        // A subject is not safe for concurrent OnNext, and two sets racing could also publish an older snapshot last.
+        lock (_gate)
+        {
+            _progress[progress.Target.Subject] = progress;
+            _subject.OnNext([.. _progress.Values]);
+        }
     }
 
     /// <inheritdoc/>

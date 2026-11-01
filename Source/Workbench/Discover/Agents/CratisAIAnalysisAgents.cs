@@ -13,9 +13,9 @@ namespace Cratis.Prologue.Workbench.Discover.Agents;
 /// Reads batches through Cratis.AI's chat clients under the Dramaturg, Prompter and Usher purposes, so the pools and network
 /// posture a person set up decide where the code is sent.
 /// </summary>
-/// <param name="services">Creates the scope a language model is resolved in.</param>
+/// <param name="scopes">Creates the scope a language model is resolved in.</param>
 /// <param name="logger">The logger.</param>
-public class CratisAIAnalysisAgents(IServiceProvider services, ILogger<CratisAIAnalysisAgents> logger) : IAnalysisAgents
+public class CratisAIAnalysisAgents(IServiceScopeFactory scopes, ILogger<CratisAIAnalysisAgents> logger) : IAnalysisAgents
 {
     /// <inheritdoc/>
     public async Task<AgentFindings> Read(AnalysisBatch batch, CancellationToken cancellationToken)
@@ -35,7 +35,7 @@ public class CratisAIAnalysisAgents(IServiceProvider services, ILogger<CratisAIA
         string text;
         try
         {
-            await using var scope = services.CreateAsyncScope();
+            await using var scope = scopes.CreateAsyncScope();
             using var client = scope.ServiceProvider.GetRequiredService<IAIChatClients>().For(agent.Purpose);
             var response = await client.GetResponseAsync(prompt, cancellationToken: cancellationToken);
             text = response.Text;

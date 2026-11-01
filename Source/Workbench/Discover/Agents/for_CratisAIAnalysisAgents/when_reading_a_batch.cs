@@ -47,12 +47,12 @@ public class when_reading_a_batch : Specification
 
     async Task Because()
     {
-        var agents = new CratisAIAnalysisAgents(new ServiceCollection().AddSingleton(_clients).BuildServiceProvider(), Microsoft.Extensions.Logging.Abstractions.NullLogger<CratisAIAnalysisAgents>.Instance);
+        var agents = new CratisAIAnalysisAgents(new ServiceCollection().AddSingleton(_clients).BuildServiceProvider().GetRequiredService<IServiceScopeFactory>(), Microsoft.Extensions.Logging.Abstractions.NullLogger<CratisAIAnalysisAgents>.Instance);
         _findings = await agents.Read(Batch, CancellationToken.None);
 
         var down = Substitute.For<IAIChatClients>();
         down.For(Arg.Any<LanguageModelPurpose>()).Returns(_ => throw new InvalidOperationException("No pool is configured for the agent"));
-        _unavailable = await new CratisAIAnalysisAgents(new ServiceCollection().AddSingleton(down).BuildServiceProvider(), Microsoft.Extensions.Logging.Abstractions.NullLogger<CratisAIAnalysisAgents>.Instance).Read(Batch, CancellationToken.None);
+        _unavailable = await new CratisAIAnalysisAgents(new ServiceCollection().AddSingleton(down).BuildServiceProvider().GetRequiredService<IServiceScopeFactory>(), Microsoft.Extensions.Logging.Abstractions.NullLogger<CratisAIAnalysisAgents>.Instance).Read(Batch, CancellationToken.None);
     }
 
     [Fact] void should_ask_the_dramaturg_for_capabilities() => _findings.Findings.Capabilities.Single().Capability.Value.ShouldEqual("Lend a copy");
