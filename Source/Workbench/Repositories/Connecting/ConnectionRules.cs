@@ -1,0 +1,60 @@
+// Copyright (c) Cratis. All rights reserved.
+// Licensed under the MIT license. See LICENSE file in the project root for full license information.
+
+using Cratis.Prologue.Workbench.Common;
+
+namespace Cratis.Prologue.Workbench.Repositories.Connecting;
+
+/// <summary>
+/// The rules every repository connection shares.
+/// </summary>
+public static class ConnectionRules
+{
+    static readonly string[] _tokenPrefixes = ["ghp_", "gho_", "ghs_", "ghu_", "github_pat_", "glpat-", "xoxb-", "sk-"];
+
+    /// <summary>
+    /// Gets why a connection to a host cannot be recorded, when it cannot.
+    /// </summary>
+    /// <param name="url">The server or organization address.</param>
+    /// <param name="token">The name of the secret holding the access token.</param>
+    /// <returns>The refusal, or null when the connection can be recorded.</returns>
+    public static ValidationResult? Refuse(ServerUrl url, SecretName token) =>
+        RefuseUrl(url) ?? RefuseSecretName(token);
+
+    /// <summary>
+    /// Gets why a server address cannot be used, when it cannot.
+    /// </summary>
+    /// <param name="url">The address.</param>
+    /// <returns>The refusal, or null when the address can be used.</returns>
+    public static ValidationResult? RefuseUrl(ServerUrl url) =>
+        url.IsValid ? null : ValidationResult.Error("Give the address of the server, starting with https://");
+
+    /// <summary>
+    /// Gets why a secret name cannot be recorded, when it cannot. Only the name of a secret is ever recorded, so a value
+    /// that looks like a credential is refused rather than written into the event log.
+    /// </summary>
+    /// <param name="name">The secret's name.</param>
+    /// <returns>The refusal, or null when it can be recorded.</returns>
+    public static ValidationResult? RefuseSecretName(SecretName name)
+    {
+        var value = name.Value.Trim();
+        if (value.Length == 0)
+        {
+            return ValidationResult.Error("Name the secret that holds the access token");
+        }
+
+        return LooksLikeCredential(value)
+            ? ValidationResult.Error("That looks like the token itself. Enter the name of the secret that holds it; the token is never stored.")
+            : null;
+    }
+
+    /// <summary>
+    /// Gets whether a value looks like a credential rather than the name of one.
+    /// </summary>
+    /// <param name="value">The value.</param>
+    /// <returns>True when it does.</returns>
+    public static bool LooksLikeCredential(string value) =>
+        value.Any(char.IsWhiteSpace) ||
+        _tokenPrefixes.Any(prefix => value.StartsWith(prefix, StringComparison.OrdinalIgnoreCase)) ||
+        (value.Length >= 40 && value.All(char.IsLetterOrDigit));
+}

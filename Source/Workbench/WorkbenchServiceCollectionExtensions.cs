@@ -4,6 +4,7 @@
 using Cratis.AI.Configuration;
 using Cratis.Prologue.Workbench.AI;
 using Cratis.Prologue.Workbench.Identity;
+using Cratis.Prologue.Workbench.Repositories;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -42,6 +43,8 @@ public static class WorkbenchServiceCollectionExtensions
                 options.ConnectTimeout = 30;
             },
             configureChronicleBuilder: chronicle => chronicle.WithCamelCaseNamingPolicy().WithIdentityProvider(identityProvider));
+
+        builder.AddRepositories();
 
         return builder;
     }
