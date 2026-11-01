@@ -1,6 +1,8 @@
 // Copyright (c) Cratis. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using Cratis.Chronicle.ReadModels;
+using Cratis.Prologue.Workbench.Common;
 using Cratis.Prologue.Workbench.Prologues.Correlation;
 using Cratis.Prologue.Workbench.Prologues.Defining;
 using Cratis.Prologue.Workbench.Prologues.Evidence;
@@ -30,19 +32,19 @@ public partial record PrologueDefinition(
     /// <summary>
     /// Observes every prologue, so the shell can offer them.
     /// </summary>
-    /// <param name="collection">The projected prologues.</param>
+    /// <param name="readModels">Observes the stored prologues.</param>
     /// <returns>The prologues.</returns>
-    public static ISubject<IEnumerable<PrologueDefinition>> ObservePrologues(IMongoCollection<PrologueDefinition> collection) =>
-        collection.Observe();
+    public static ISubject<IEnumerable<PrologueDefinition>> ObservePrologues(IReadModels readModels) =>
+        readModels.Observe<PrologueDefinition>();
 
     /// <summary>
     /// Observes one prologue.
     /// </summary>
     /// <param name="id">The prologue to observe.</param>
-    /// <param name="collection">The collection the prologue is read from.</param>
+    /// <param name="readModels">Observes the stored prologues.</param>
     /// <returns>The prologue.</returns>
-    public static ISubject<PrologueDefinition> ObservePrologue(PrologueId id, IMongoCollection<PrologueDefinition> collection) =>
-        collection.ObserveById<PrologueDefinition, PrologueId>(id);
+    public static ISubject<PrologueDefinition> ObservePrologue(PrologueId id, IReadModels readModels) =>
+        readModels.Observe<PrologueDefinition>(prologue => prologue.Id == id).FirstItem();
 
     /// <summary>
     /// Reduces a prologue being defined.

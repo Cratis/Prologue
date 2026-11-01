@@ -15,6 +15,7 @@ namespace Cratis.Prologue.Workbench.Systems.Locating;
 /// <param name="Branch">The branch.</param>
 /// <param name="SubPath">The path inside the repository; empty when the system is the whole repository.</param>
 [Command]
+[ReadProtection(ReadProtectionMode.On)]
 public record LocateSystemCode(PrologueId Prologue, SystemId Id, RepositoryHost Host, RepositoryName Repository, BranchName Branch, SubPath SubPath)
 {
     /// <summary>

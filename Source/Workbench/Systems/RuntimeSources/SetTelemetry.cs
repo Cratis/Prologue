@@ -14,6 +14,7 @@ namespace Cratis.Prologue.Workbench.Systems.RuntimeSources;
 /// <param name="Services">The service names; empty stops telemetry capture for the system.</param>
 /// <param name="AttributeKeys">The attribute keys whose values may be captured.</param>
 [Command]
+[ReadProtection(ReadProtectionMode.On)]
 public record SetTelemetry(PrologueId Prologue, SystemId Id, IEnumerable<TelemetryServiceName> Services, IEnumerable<AttributeKey> AttributeKeys)
 {
     /// <summary>

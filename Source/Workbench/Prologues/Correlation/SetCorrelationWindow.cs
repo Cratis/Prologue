@@ -9,6 +9,7 @@ namespace Cratis.Prologue.Workbench.Prologues.Correlation;
 /// <param name="Prologue">The prologue.</param>
 /// <param name="Window">The window.</param>
 [Command]
+[ReadProtection(ReadProtectionMode.On)]
 public record SetCorrelationWindow(PrologueId Prologue, CorrelationWindow Window)
 {
     /// <summary>

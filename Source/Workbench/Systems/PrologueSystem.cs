@@ -20,10 +20,4 @@ public record PrologueSystem(
     IEnumerable<ClusterName> HttpClusters,
     IEnumerable<DatabaseSource> Databases,
     IEnumerable<TelemetryServiceName> TelemetryServices,
-    IEnumerable<AttributeKey> AttributeKeys)
-{
-    /// <summary>
-    /// Gets a value indicating whether anything is captured from the system while it runs.
-    /// </summary>
-    public bool IsCaptured => HttpClusters.Any() || Databases.Any() || TelemetryServices.Any();
-}
+    IEnumerable<AttributeKey> AttributeKeys);

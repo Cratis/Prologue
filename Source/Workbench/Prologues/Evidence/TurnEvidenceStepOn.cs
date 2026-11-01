@@ -9,6 +9,7 @@ namespace Cratis.Prologue.Workbench.Prologues.Evidence;
 /// <param name="Prologue">The prologue.</param>
 /// <param name="Step">The step to turn on.</param>
 [Command]
+[ReadProtection(ReadProtectionMode.On)]
 public record TurnEvidenceStepOn(PrologueId Prologue, EvidenceStep Step)
 {
     /// <summary>

@@ -61,7 +61,7 @@ public static class PrologueConfigurationGenerator
         {
             var database = databases[index];
             var name = databases.Count == 1 ? system.Name.Value : $"{system.Name.Value}-{index + 1}";
-            var connectionString = $"<from secret {database.ConnectionString.Value}>";
+            var connectionString = $"${{secret:{database.ConnectionString.Value}}}";
             var tables = database.Tables.Select(table => table.Value).ToArray();
 
             if (database.Engine == DatabaseEngine.SqlServer)

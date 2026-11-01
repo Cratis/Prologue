@@ -10,10 +10,4 @@ namespace Cratis.Prologue.Workbench.Systems;
 /// <param name="Repository">The repository, or the folder for a local system.</param>
 /// <param name="Branch">The branch.</param>
 /// <param name="SubPath">The path inside the repository where the system lives; empty for the whole repository.</param>
-public record SystemCodeLocation(RepositoryHost Host, RepositoryName Repository, BranchName Branch, SubPath SubPath)
-{
-    /// <summary>
-    /// Gets a value indicating whether the system is the whole repository.
-    /// </summary>
-    public bool IsWholeRepository => string.IsNullOrWhiteSpace(SubPath.Value) || SubPath.Value.Trim('/').Length == 0;
-}
+public record SystemCodeLocation(RepositoryHost Host, RepositoryName Repository, BranchName Branch, SubPath SubPath);

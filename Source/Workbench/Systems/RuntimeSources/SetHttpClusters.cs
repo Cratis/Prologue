@@ -12,6 +12,7 @@ namespace Cratis.Prologue.Workbench.Systems.RuntimeSources;
 /// <param name="Id">The system.</param>
 /// <param name="Clusters">The clusters; empty stops HTTP capture for the system.</param>
 [Command]
+[ReadProtection(ReadProtectionMode.On)]
 public record SetHttpClusters(PrologueId Prologue, SystemId Id, IEnumerable<ClusterName> Clusters)
 {
     /// <summary>

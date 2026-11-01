@@ -12,6 +12,7 @@ namespace Cratis.Prologue.Workbench.Repositories.Connecting;
 /// <param name="Organization">The organization address, such as <c language="text">https://dev.azure.com/contoso</c>.</param>
 /// <param name="Secret">The name of the secret holding the access token.</param>
 [Command]
+[ReadProtection(ReadProtectionMode.On)]
 public record ConnectAzureDevOps(ServerUrl Organization, SecretName Secret) : ICanProvideEventSourceId
 {
     /// <inheritdoc/>

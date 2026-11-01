@@ -11,6 +11,7 @@ namespace Cratis.Prologue.Workbench.Systems.Removing;
 /// <param name="Prologue">The prologue.</param>
 /// <param name="Id">The system.</param>
 [Command]
+[ReadProtection(ReadProtectionMode.On)]
 public record RemoveSystem(PrologueId Prologue, SystemId Id)
 {
     /// <summary>

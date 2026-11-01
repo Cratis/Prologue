@@ -12,6 +12,7 @@ namespace Cratis.Prologue.Workbench.Repositories.Connecting;
 /// <param name="Url">The GitHub server, <c language="text">https://github.com</c> for github.com.</param>
 /// <param name="Secret">The name of the secret holding the access token.</param>
 [Command]
+[ReadProtection(ReadProtectionMode.On)]
 public record ConnectGitHub(ServerUrl Url, SecretName Secret) : ICanProvideEventSourceId
 {
     /// <inheritdoc/>

@@ -11,6 +11,7 @@ namespace Cratis.Prologue.Workbench.Repositories.Connecting;
 /// <param name="Url">The GitHub server.</param>
 /// <param name="Installation">The installation.</param>
 [Command]
+[ReadProtection(ReadProtectionMode.On)]
 public record ConnectGitHubApp(ServerUrl Url, InstallationId Installation) : ICanProvideEventSourceId
 {
     /// <inheritdoc/>

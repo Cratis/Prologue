@@ -11,4 +11,3 @@ global using Cratis.Chronicle.Keys;
 global using Cratis.Chronicle.Reducers;
 global using Cratis.Concepts;
 global using Cratis.Monads;
-global using MongoDB.Driver;

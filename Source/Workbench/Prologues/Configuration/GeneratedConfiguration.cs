@@ -1,6 +1,7 @@
 // Copyright (c) Cratis. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using Cratis.Chronicle.ReadModels;
 using Cratis.Prologue.Workbench.Common;
 
 namespace Cratis.Prologue.Workbench.Prologues.Configuration;
@@ -17,9 +18,9 @@ public record GeneratedConfiguration(PrologueId Id, string Json)
     /// Observes the configuration for a prologue.
     /// </summary>
     /// <param name="id">The prologue.</param>
-    /// <param name="collection">The projected prologues.</param>
+    /// <param name="readModels">Observes the stored prologues.</param>
     /// <returns>The configuration.</returns>
-    public static ISubject<GeneratedConfiguration> ObserveGeneratedConfiguration(PrologueId id, IMongoCollection<PrologueDefinition> collection) =>
-        collection.ObserveById<PrologueDefinition, PrologueId>(id)
+    public static ISubject<GeneratedConfiguration> ObserveGeneratedConfiguration(PrologueId id, IReadModels readModels) =>
+        readModels.Observe<PrologueDefinition>(prologue => prologue.Id == id).FirstItem()
             .Mapped(prologue => new GeneratedConfiguration(prologue.Id, PrologueConfigurationGenerator.ToJson(prologue)));
 }

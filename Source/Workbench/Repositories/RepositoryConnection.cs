@@ -1,6 +1,7 @@
 // Copyright (c) Cratis. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using Cratis.Chronicle.ReadModels;
 using Cratis.Prologue.Workbench.Common;
 using Cratis.Prologue.Workbench.Repositories.Connecting;
 using Cratis.Prologue.Workbench.Systems;
@@ -21,10 +22,10 @@ public record RepositoryConnection(RepositoryConnectionId Id, RepositoryHost Hos
     /// <summary>
     /// Observes the connected hosts.
     /// </summary>
-    /// <param name="collection">The projected connections.</param>
+    /// <param name="readModels">Observes the stored connections.</param>
     /// <returns>The connections.</returns>
-    public static ISubject<IEnumerable<RepositoryConnection>> ObserveRepositoryConnections(IMongoCollection<RepositoryConnection> collection) =>
-        collection.Observe();
+    public static ISubject<IEnumerable<RepositoryConnection>> ObserveRepositoryConnections(IReadModels readModels) =>
+        readModels.Observe<RepositoryConnection>();
 
     /// <summary>
     /// Reduces GitHub being connected with a token.

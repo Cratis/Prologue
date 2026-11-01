@@ -10,6 +10,7 @@ namespace Cratis.Prologue.Workbench.Repositories.Connecting;
 /// </summary>
 /// <param name="Host">The host.</param>
 [Command]
+[ReadProtection(ReadProtectionMode.On)]
 public record DisconnectRepositoryHost(RepositoryHost Host) : ICanProvideEventSourceId
 {
     /// <inheritdoc/>

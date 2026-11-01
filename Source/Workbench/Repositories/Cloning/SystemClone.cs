@@ -1,6 +1,8 @@
 // Copyright (c) Cratis. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using Cratis.Chronicle.ReadModels;
+
 namespace Cratis.Prologue.Workbench.Repositories.Cloning;
 
 /// <summary>
@@ -18,10 +20,10 @@ public record SystemClone(SystemCloneId Id, CloneStatus Status, CommitId? Commit
     /// <summary>
     /// Observes the clones of every system.
     /// </summary>
-    /// <param name="collection">The projected clones.</param>
+    /// <param name="readModels">Observes the stored clones.</param>
     /// <returns>The clones.</returns>
-    public static ISubject<IEnumerable<SystemClone>> ObserveSystemClones(IMongoCollection<SystemClone> collection) =>
-        collection.Observe();
+    public static ISubject<IEnumerable<SystemClone>> ObserveSystemClones(IReadModels readModels) =>
+        readModels.Observe<SystemClone>();
 
     /// <summary>
     /// Reduces a repository being cloned.

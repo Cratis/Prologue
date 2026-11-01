@@ -12,6 +12,7 @@ namespace Cratis.Prologue.Workbench.Repositories.Connecting;
 /// <param name="Url">The GitLab server, <c language="text">https://gitlab.com</c> for gitlab.com.</param>
 /// <param name="Secret">The name of the secret holding the access token.</param>
 [Command]
+[ReadProtection(ReadProtectionMode.On)]
 public record ConnectGitLab(ServerUrl Url, SecretName Secret) : ICanProvideEventSourceId
 {
     /// <inheritdoc/>

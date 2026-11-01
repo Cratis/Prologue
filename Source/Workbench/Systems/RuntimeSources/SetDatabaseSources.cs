@@ -14,6 +14,7 @@ namespace Cratis.Prologue.Workbench.Systems.RuntimeSources;
 /// <param name="Id">The system.</param>
 /// <param name="Sources">The databases; empty stops database capture for the system.</param>
 [Command]
+[ReadProtection(ReadProtectionMode.On)]
 public record SetDatabaseSources(PrologueId Prologue, SystemId Id, IEnumerable<DatabaseSource> Sources)
 {
     /// <summary>

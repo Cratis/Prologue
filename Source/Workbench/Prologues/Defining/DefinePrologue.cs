@@ -9,6 +9,7 @@ namespace Cratis.Prologue.Workbench.Prologues.Defining;
 /// <param name="Id">The identity of the prologue; supplied by the caller so a retry reuses it.</param>
 /// <param name="Name">What the prologue is called.</param>
 [Command]
+[ReadProtection(ReadProtectionMode.On)]
 public record DefinePrologue(PrologueId Id, PrologueName Name) : ICanProvideEventSourceId
 {
     /// <inheritdoc/>

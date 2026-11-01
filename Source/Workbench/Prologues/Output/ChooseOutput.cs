@@ -9,6 +9,7 @@ namespace Cratis.Prologue.Workbench.Prologues.Output;
 /// <param name="Prologue">The prologue.</param>
 /// <param name="Kind">The kind of output.</param>
 [Command]
+[ReadProtection(ReadProtectionMode.On)]
 public record ChooseOutput(PrologueId Prologue, CaptureOutput Kind)
 {
     /// <summary>
