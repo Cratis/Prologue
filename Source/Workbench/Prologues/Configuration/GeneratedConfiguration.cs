@@ -18,9 +18,10 @@ public record GeneratedConfiguration(PrologueId Id, string Json)
     /// Observes the configuration for a prologue.
     /// </summary>
     /// <param name="id">The prologue.</param>
+    /// <param name="receiver">The public base address this Receiver is reached at (the browser's origin); the Extractor posts captures there.</param>
     /// <param name="readModels">Observes the stored prologues.</param>
     /// <returns>The configuration.</returns>
-    public static ISubject<GeneratedConfiguration> ObserveGeneratedConfiguration(PrologueId id, IReadModels readModels) =>
+    public static ISubject<GeneratedConfiguration> ObserveGeneratedConfiguration(PrologueId id, string receiver, IReadModels readModels) =>
         readModels.Observe<PrologueDefinition>(prologue => prologue.Id == id).FirstItem()
-            .Mapped(prologue => new GeneratedConfiguration(prologue.Id, PrologueConfigurationGenerator.ToJson(prologue)));
+            .Mapped(prologue => new GeneratedConfiguration(prologue.Id, PrologueConfigurationGenerator.ToJson(prologue, receiver)));
 }

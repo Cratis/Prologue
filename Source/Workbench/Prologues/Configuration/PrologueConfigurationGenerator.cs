@@ -15,13 +15,14 @@ public static class PrologueConfigurationGenerator
     /// Builds the configuration for a prologue: one named service per system.
     /// </summary>
     /// <param name="prologue">The prologue.</param>
+    /// <param name="receiver">The public base address of this Receiver, which the Extractor posts captures to. Ignored unless it is an absolute http or https address.</param>
     /// <returns>The configuration the Extractor binds.</returns>
-    public static PrologueConfiguration ToConfiguration(PrologueDefinition prologue)
+    public static PrologueConfiguration ToConfiguration(PrologueDefinition prologue, string? receiver = null)
     {
         var options = new PrologueOptions
         {
             PrologueId = prologue.Id.Value,
-            Output = new OutputOptions { Kind = prologue.Output == CaptureOutput.Json ? OutputKind.Json : OutputKind.Api },
+            Output = ToOutput(prologue, receiver),
             Correlation = new CorrelationOptions { WindowMilliseconds = prologue.Correlation.Value }
         };
 
@@ -45,8 +46,20 @@ public static class PrologueConfigurationGenerator
     /// Builds the text of <c language="json">cratis-prologue.json</c> for a prologue.
     /// </summary>
     /// <param name="prologue">The prologue.</param>
+    /// <param name="receiver">The public base address of this Receiver; see <see cref="ToConfiguration"/>.</param>
     /// <returns>The JSON.</returns>
-    public static string ToJson(PrologueDefinition prologue) => PrologueConfigurationFile.Write(ToConfiguration(prologue));
+    public static string ToJson(PrologueDefinition prologue, string? receiver = null) => PrologueConfigurationFile.Write(ToConfiguration(prologue, receiver));
+
+    static OutputOptions ToOutput(PrologueDefinition prologue, string? receiver)
+    {
+        var output = new OutputOptions { Kind = prologue.Output == CaptureOutput.Json ? OutputKind.Json : OutputKind.Api };
+        if (Uri.TryCreate(receiver?.Trim(), UriKind.Absolute, out var address) && (address.Scheme == Uri.UriSchemeHttp || address.Scheme == Uri.UriSchemeHttps))
+        {
+            output.Api.Endpoint = address.GetLeftPart(UriPartial.Authority);
+        }
+
+        return output;
+    }
 
     static ServiceOptions ToService(PrologueSystem system)
     {

@@ -5,9 +5,9 @@ import { CopyButton, Panel } from '../Components';
 import { ObserveGeneratedConfiguration } from '../Prologues/Configuration/GeneratedConfiguration';
 import { PrologueDefinition } from '../Prologues/PrologueDefinition';
 
-/** The `cratis-prologue.json` for the prologue, kept current as the definition changes. Secrets appear by name only. */
+/** The `cratis-prologue.json` for the prologue, kept current as the definition changes. Secrets appear by name only, and captures are posted back to this Receiver. */
 export const GeneratedConfiguration = ({ prologue }: { prologue: PrologueDefinition }) => {
-    const [result] = ObserveGeneratedConfiguration.use({ id: prologue.id });
+    const [result] = ObserveGeneratedConfiguration.use({ id: prologue.id, receiver: window.location.origin });
     const json = result.data?.json ?? '';
 
     return (
