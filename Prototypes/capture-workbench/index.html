@@ -1,0 +1,862 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Prologue Capture Workbench</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans+Condensed:wght@500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+/* Layout: app shell — top bar with the five-stage journey, one working canvas per stage, evidence drawer on the right. */
+:root {
+  --ink: #18202b;
+  --muted: #5b6676;
+  --line: #d9dee6;
+  --surface: #ffffff;
+  --canvas: #f2f4f7;
+  --accent: #2f4fd8;
+  --accent-soft: #e6ebff;
+  /* Event-modeling sticky colors, used as content, not decoration */
+  --cmd: #3d7be0; --cmd-bg: #e3eeff;
+  --evt: #e07a1f; --evt-bg: #fff0e0;
+  --rm: #2f9a5a;  --rm-bg: #e2f5e9;
+  --warn: #b7791f; --warn-bg: #fff6e0;
+  --bad: #c2413b;  --bad-bg: #fde8e7;
+  --good: #2f9a5a;
+  --display: "IBM Plex Sans Condensed", "Arial Narrow", sans-serif;
+  --body: "IBM Plex Sans", system-ui, sans-serif;
+  --mono: "IBM Plex Mono", ui-monospace, monospace;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --ink: #e4e8ef; --muted: #96a1b2; --line: #2c3442; --surface: #171c25; --canvas: #10141b;
+    --accent: #7d95ff; --accent-soft: #232c4d;
+    --cmd: #78a6f0; --cmd-bg: #1b2a44; --evt: #f0a057; --evt-bg: #3a2814; --rm: #5cc488; --rm-bg: #15301f;
+    --warn: #e2b04f; --warn-bg: #352a12; --bad: #ef7d77; --bad-bg: #3a1a19; --good: #5cc488;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --ink: #e4e8ef; --muted: #96a1b2; --line: #2c3442; --surface: #171c25; --canvas: #10141b;
+  --accent: #7d95ff; --accent-soft: #232c4d;
+  --cmd: #78a6f0; --cmd-bg: #1b2a44; --evt: #f0a057; --evt-bg: #3a2814; --rm: #5cc488; --rm-bg: #15301f;
+  --warn: #e2b04f; --warn-bg: #352a12; --bad: #ef7d77; --bad-bg: #3a1a19; --good: #5cc488;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+html, body { height: 100%; margin: 0; }
+body { background: var(--canvas); color: var(--ink); font: 14px/1.5 var(--body); display: flex; flex-direction: column; }
+button, input, select, textarea { font: inherit; color: inherit; }
+button { cursor: pointer; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+code, .mono { font-family: var(--mono); font-size: 12.5px; }
+h1, h2, h3 { font-family: var(--display); font-weight: 600; text-wrap: balance; margin: 0; letter-spacing: .01em; }
+h2 { font-size: 22px; }
+h3 { font-size: 15px; }
+.num { font-variant-numeric: tabular-nums; }
+
+/* Top bar */
+header.bar { background: var(--surface); border-bottom: 1px solid var(--line); padding: 10px 20px; display: flex; flex-wrap: wrap; gap: 12px 24px; align-items: center; }
+.brand { display: flex; align-items: baseline; gap: 10px; }
+.brand b { font-family: var(--display); font-size: 18px; }
+.brand span { color: var(--muted); font-size: 13px; }
+.status-pill { display: inline-flex; align-items: center; gap: 6px; padding: 2px 10px; border-radius: 99px; font-size: 12px; font-weight: 500; background: var(--rm-bg); color: var(--rm); }
+.status-pill.paused { background: var(--warn-bg); color: var(--warn); }
+.dot { width: 8px; height: 8px; border-radius: 50%; background: currentColor; }
+.live .dot { animation: pulse 1.4s infinite; }
+@keyframes pulse { 50% { opacity: .3; } }
+@media (prefers-reduced-motion: reduce) { .live .dot { animation: none; } * { transition: none !important; } }
+nav.steps { display: flex; gap: 4px; margin-left: auto; flex-wrap: wrap; }
+nav.steps a { display: flex; align-items: center; gap: 8px; padding: 6px 12px; border-radius: 6px; text-decoration: none; color: var(--muted); font-weight: 500; }
+nav.steps a .n { width: 20px; height: 20px; border-radius: 50%; border: 1.5px solid currentColor; display: grid; place-items: center; font-size: 11px; }
+nav.steps a.done .n { background: var(--muted); color: var(--surface); border-color: var(--muted); }
+nav.steps a[aria-current="page"] { background: var(--accent-soft); color: var(--accent); }
+nav.steps a[aria-current="page"] .n { background: var(--accent); color: var(--surface); border-color: var(--accent); }
+nav.steps a .badge { background: var(--warn-bg); color: var(--warn); border-radius: 99px; padding: 0 7px; font-size: 11px; }
+
+main { flex: 1; min-height: 0; overflow: auto; padding: 20px; }
+.view { display: none; max-width: 1360px; margin: 0 auto; flex-direction: column; gap: 16px; }
+.view.on { display: flex; }
+.view-head { display: flex; flex-wrap: wrap; gap: 12px; align-items: flex-end; justify-content: space-between; }
+.view-head p { margin: 4px 0 0; color: var(--muted); max-width: 70ch; }
+.panel { background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 16px; }
+.panel > h3 { margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+.panel > h3 small { font-family: var(--body); font-weight: 400; color: var(--muted); font-size: 12px; }
+.grid { display: grid; gap: 16px; }
+.g2 { grid-template-columns: repeat(auto-fit, minmax(380px, 1fr)); }
+.g-side { grid-template-columns: minmax(0, 1fr) 380px; }
+@media (max-width: 1000px) { .g-side { grid-template-columns: 1fr; } }
+.btn { border: 1px solid var(--line); background: var(--surface); padding: 6px 12px; border-radius: 6px; font-weight: 500; }
+.btn:hover { border-color: var(--accent); }
+.btn.primary { background: var(--accent); color: #fff; border-color: var(--accent); }
+.btn.small { padding: 2px 8px; font-size: 12px; }
+.btn.ghost { border-color: transparent; color: var(--muted); }
+.row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.muted { color: var(--muted); }
+.chip { display: inline-flex; align-items: center; gap: 4px; padding: 1px 8px; border-radius: 4px; font-size: 12px; background: var(--canvas); border: 1px solid var(--line); white-space: nowrap; }
+.chip.http { background: var(--cmd-bg); color: var(--cmd); border-color: transparent; }
+.chip.db { background: var(--evt-bg); color: var(--evt); border-color: transparent; }
+.chip.otel { background: var(--rm-bg); color: var(--rm); border-color: transparent; }
+.chip.warn { background: var(--warn-bg); color: var(--warn); border-color: transparent; }
+.chip.bad { background: var(--bad-bg); color: var(--bad); border-color: transparent; }
+.chip.ok { background: var(--rm-bg); color: var(--rm); border-color: transparent; }
+table { border-collapse: collapse; width: 100%; }
+th, td { text-align: left; padding: 7px 8px; border-bottom: 1px solid var(--line); vertical-align: top; }
+th { font-size: 12px; color: var(--muted); font-weight: 500; }
+tr.click { cursor: pointer; }
+tr.click:hover td, tr.sel td { background: var(--accent-soft); }
+.scroll-x { overflow-x: auto; }
+
+/* Define */
+.src { border: 1px solid var(--line); border-radius: 8px; padding: 12px; display: flex; flex-direction: column; gap: 10px; }
+.src.off { opacity: .55; }
+.src header { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+.toggle { position: relative; width: 36px; height: 20px; flex: none; }
+.toggle input { opacity: 0; width: 100%; height: 100%; margin: 0; cursor: pointer; position: absolute; z-index: 1; }
+.toggle span { position: absolute; inset: 0; background: var(--line); border-radius: 99px; transition: .15s; }
+.toggle span::after { content: ""; position: absolute; width: 14px; height: 14px; left: 3px; top: 3px; border-radius: 50%; background: var(--surface); transition: .15s; }
+.toggle input:checked + span { background: var(--accent); }
+.toggle input:checked + span::after { left: 19px; }
+.toggle input:focus-visible + span { outline: 2px solid var(--accent); outline-offset: 2px; }
+label.f { display: flex; flex-direction: column; gap: 4px; font-size: 12px; color: var(--muted); }
+label.f input, label.f select, textarea { border: 1px solid var(--line); background: var(--canvas); border-radius: 6px; padding: 6px 8px; font-size: 13px; color: var(--ink); }
+.picklist { display: flex; flex-wrap: wrap; gap: 6px; }
+.pick { border: 1px solid var(--line); border-radius: 4px; padding: 2px 8px; font-size: 12px; font-family: var(--mono); background: var(--surface); }
+.pick[aria-pressed="true"] { background: var(--accent-soft); border-color: var(--accent); color: var(--accent); }
+.boundary { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.boundary ul { margin: 6px 0 0; padding-left: 18px; }
+.boundary li { margin: 2px 0; }
+pre.code { background: var(--canvas); border: 1px solid var(--line); border-radius: 6px; padding: 12px; overflow: auto; font: 12px/1.55 var(--mono); max-height: 420px; margin: 0; }
+.scen { display: flex; flex-direction: column; gap: 6px; }
+.scen-item { display: flex; gap: 10px; align-items: center; padding: 6px 8px; border: 1px solid var(--line); border-radius: 6px; }
+.scen-item .grow { flex: 1; }
+
+/* Capture */
+.tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 12px; }
+.tile { background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 12px 14px; display: flex; flex-direction: column; gap: 2px; }
+.tile .k { font-size: 12px; color: var(--muted); }
+.tile .v { font-family: var(--display); font-size: 28px; font-variant-numeric: tabular-nums; line-height: 1.1; }
+.tile .s { font-size: 12px; color: var(--muted); }
+.tile svg { margin-top: 4px; }
+.feed { display: flex; flex-direction: column; max-height: 520px; overflow: auto; }
+.cap { display: grid; grid-template-columns: 70px 1fr auto; gap: 10px; padding: 8px 6px; border-bottom: 1px solid var(--line); align-items: start; cursor: pointer; border-left: 3px solid transparent; }
+.cap:hover { background: var(--canvas); }
+.cap.new { animation: flash 1.2s ease-out; }
+@keyframes flash { from { background: var(--accent-soft); } to { background: transparent; } }
+.cap.sel { background: var(--accent-soft); border-left-color: var(--accent); }
+.cap .t { color: var(--muted); font-family: var(--mono); font-size: 12px; }
+.cap .obs { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 4px; }
+.cap.scenario { border-left-color: var(--evt); }
+.corr { font-size: 11px; white-space: nowrap; }
+.bars { display: flex; flex-direction: column; gap: 8px; }
+.bar-row { display: grid; grid-template-columns: 190px 1fr 60px; gap: 8px; align-items: center; font-size: 12px; }
+.bar { height: 8px; border-radius: 4px; background: var(--canvas); overflow: hidden; }
+.bar > i { display: block; height: 100%; background: var(--accent); border-radius: 4px; }
+.bar.db > i { background: var(--evt); }
+.marker { display: flex; gap: 8px; }
+.marker input { flex: 1; border: 1px solid var(--line); background: var(--canvas); border-radius: 6px; padding: 6px 8px; min-width: 0; }
+
+/* Swimlane */
+.lanes { display: grid; grid-template-columns: 70px 1fr; gap: 6px 10px; font-size: 12px; position: relative; }
+.lane-label { color: var(--muted); align-self: center; }
+.lane { position: relative; height: 26px; background: var(--canvas); border-radius: 4px; }
+.lane .blk { position: absolute; top: 3px; height: 20px; border-radius: 3px; padding: 0 6px; font-size: 11px; line-height: 20px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.blk.http { background: var(--cmd); color: #fff; }
+.blk.db { background: var(--evt); color: #fff; }
+.blk.otel { background: var(--rm); color: #fff; }
+.axis { display: flex; justify-content: space-between; color: var(--muted); font-size: 11px; grid-column: 2; }
+.window-note { grid-column: 2; font-size: 11px; color: var(--muted); }
+
+/* Explore */
+.heat td, .heat th { text-align: center; padding: 6px 4px; font-size: 12px; }
+.heat th.rowh, .heat td.rowh { text-align: left; white-space: nowrap; }
+.heat th.rot { height: 90px; vertical-align: bottom; }
+.heat th.rot span { writing-mode: vertical-rl; transform: rotate(180deg); white-space: nowrap; }
+.cell { display: inline-flex; gap: 2px; }
+.op { display: inline-grid; place-items: center; width: 18px; height: 18px; border-radius: 3px; font: 600 10px var(--mono); color: #fff; }
+.op.I { background: var(--rm); } .op.U { background: var(--cmd); } .op.D { background: var(--bad); }
+.op.p { opacity: .45; }
+tr.excluded td { opacity: .4; text-decoration: line-through; }
+.ask { display: flex; gap: 8px; }
+.ask input { flex: 1; min-width: 0; border: 1px solid var(--line); background: var(--canvas); border-radius: 6px; padding: 8px 10px; }
+.answer { margin-top: 10px; border-left: 3px solid var(--accent); padding: 8px 12px; background: var(--canvas); border-radius: 0 6px 6px 0; }
+.answer .cite { margin-top: 6px; display: flex; flex-wrap: wrap; gap: 4px; }
+.suggest { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+
+/* Events */
+.evcards { display: flex; flex-direction: column; gap: 10px; }
+.ev { border: 1px solid var(--line); border-left: 4px solid var(--evt); border-radius: 8px; padding: 12px 14px; background: var(--surface); display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 8px 16px; }
+.ev.accepted { border-left-color: var(--good); }
+.ev.rejected { opacity: .55; border-left-color: var(--line); }
+.ev.question { border-left-color: var(--warn); }
+.ev .name { font-family: var(--display); font-size: 17px; font-weight: 600; }
+.ev .name input { font: inherit; border: 1px solid var(--accent); border-radius: 4px; padding: 0 4px; background: var(--canvas); }
+.ev .mech { color: var(--muted); font-family: var(--mono); font-size: 12px; text-decoration: line-through; }
+.props { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 6px; }
+.prop { font-family: var(--mono); font-size: 12px; background: var(--evt-bg); color: var(--ink); padding: 1px 6px; border-radius: 3px; }
+.prop i { color: var(--muted); font-style: normal; }
+.ev .evidence { grid-column: 1 / -1; font-size: 12px; color: var(--muted); display: flex; flex-wrap: wrap; gap: 6px 14px; }
+.ev .note { grid-column: 1 / -1; font-size: 13px; background: var(--warn-bg); border-radius: 6px; padding: 6px 10px; }
+.ev .actions { display: flex; gap: 6px; align-items: flex-start; flex-wrap: wrap; justify-content: flex-end; }
+.conf { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; color: var(--muted); }
+.conf .meter { width: 48px; height: 6px; background: var(--canvas); border-radius: 3px; overflow: hidden; }
+.conf .meter i { display: block; height: 100%; background: var(--good); }
+.q { border: 1px solid var(--line); border-radius: 8px; padding: 12px; display: flex; flex-direction: column; gap: 8px; }
+.q.answered { opacity: .7; }
+.q .opts { display: flex; flex-direction: column; gap: 6px; }
+.q .opts button { text-align: left; border: 1px solid var(--line); background: var(--surface); border-radius: 6px; padding: 6px 10px; }
+.q .opts button[aria-pressed="true"] { border-color: var(--accent); background: var(--accent-soft); }
+.filters { display: flex; gap: 6px; flex-wrap: wrap; }
+.filters button { border: 1px solid var(--line); background: var(--surface); padding: 3px 10px; border-radius: 99px; font-size: 12px; }
+.filters button[aria-pressed="true"] { background: var(--ink); color: var(--surface); border-color: var(--ink); }
+
+/* Model board */
+.board-wrap { overflow-x: auto; padding-bottom: 6px; }
+.board { display: grid; gap: 0; min-width: max-content; }
+.board .lh { position: sticky; left: 0; z-index: 2; background: var(--surface); padding: 8px 10px; font-size: 12px; color: var(--muted); border-right: 1px solid var(--line); display: flex; align-items: center; width: 120px; }
+.board .mod { padding: 6px 10px; font-family: var(--display); font-weight: 600; font-size: 13px; border-bottom: 2px solid var(--ink); background: var(--surface); }
+.board .slh { padding: 4px 10px; font-size: 11px; color: var(--muted); background: var(--surface); border-bottom: 1px solid var(--line); cursor: pointer; }
+.board .slh.sel { color: var(--accent); font-weight: 600; }
+.board .cell2 { padding: 8px; min-height: 64px; border-bottom: 1px dashed var(--line); border-right: 1px dashed var(--line); display: flex; flex-direction: column; gap: 6px; align-items: flex-start; }
+.board .cell2.selcol { background: var(--accent-soft); }
+.sticky { width: 136px; padding: 6px 8px; border-radius: 3px; font-size: 12px; line-height: 1.3; font-weight: 500; box-shadow: 0 1px 0 rgba(0,0,0,.08); cursor: pointer; word-break: break-word; }
+.sticky.cmd { background: var(--cmd-bg); border-top: 3px solid var(--cmd); }
+.sticky.evt { background: var(--evt-bg); border-top: 3px solid var(--evt); }
+.sticky.rm { background: var(--rm-bg); border-top: 3px solid var(--rm); }
+.sticky.ui { background: var(--canvas); border: 1px dashed var(--line); color: var(--muted); }
+.sticky.pending { outline: 2px dashed var(--warn); outline-offset: 1px; }
+.sticky small { display: block; font-weight: 400; color: var(--muted); font-size: 11px; margin-top: 2px; }
+.legend { display: flex; gap: 14px; flex-wrap: wrap; font-size: 12px; color: var(--muted); }
+.legend span { display: inline-flex; align-items: center; gap: 6px; }
+.legend i { width: 12px; height: 12px; border-radius: 2px; display: inline-block; }
+.review-list { display: flex; flex-direction: column; gap: 6px; }
+.review-list li { list-style: none; display: flex; gap: 8px; align-items: baseline; }
+.review-list { padding: 0; margin: 0; }
+.stamp { font-size: 12px; color: var(--muted); }
+.toast { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: var(--ink); color: var(--surface); padding: 8px 16px; border-radius: 6px; font-size: 13px; opacity: 0; pointer-events: none; transition: opacity .2s; z-index: 10; }
+.toast.on { opacity: 1; }
+@media (max-width: 560px) { .boundary { grid-template-columns: 1fr; } .bar-row { grid-template-columns: 110px 1fr 44px; } main { padding: 12px; } }
+</style>
+</head>
+<body>
+<header class="bar">
+  <div class="brand"><b>Prologue</b><span>Library system · capture “Lending baseline”</span></div>
+  <span id="livePill" class="status-pill live"><span class="dot"></span><span id="liveText">Capturing · 00:41:12</span></span>
+  <nav class="steps" id="steps" aria-label="Capture journey">
+    <a href="#define" data-v="define" class="done"><span class="n">1</span>Define</a>
+    <a href="#capture" data-v="capture"><span class="n">2</span>Capture</a>
+    <a href="#explore" data-v="explore"><span class="n">3</span>Explore</a>
+    <a href="#events" data-v="events"><span class="n">4</span>Events <span class="badge" id="qBadge">3</span></a>
+    <a href="#model" data-v="model"><span class="n">5</span>Model</a>
+  </nav>
+</header>
+
+<main>
+<!-- ============ 1. DEFINE ============ -->
+<section class="view" id="v-define">
+  <div class="view-head">
+    <div>
+      <h2>Define what to watch</h2>
+      <p>Choose the signals Prologue may observe in the Library system and the business scenarios you plan to run while it watches. Everything here becomes <code>cratis-prologue.json</code>.</p>
+    </div>
+    <div class="row"><button class="btn" data-copy="cfgOut">Copy configuration</button><a class="btn primary" href="#capture">Start capturing</a></div>
+  </div>
+  <div class="grid g-side">
+    <div class="grid" style="gap:12px">
+      <div class="panel">
+        <h3>Sources <small>Selected metadata only. Row values and request bodies are never read.</small></h3>
+        <div class="grid g2" style="gap:12px">
+          <div class="src" id="src-http">
+            <header><b>HTTP commands</b><label class="toggle"><input type="checkbox" id="t-http" checked aria-label="HTTP commands"><span></span></label></header>
+            <label class="f" for="httpTarget">Forward to (system under capture)<input id="httpTarget" value="http://library-core:8080"></label>
+            <div class="muted" style="font-size:12px">Only POST, PUT and DELETE are recorded. Routes discovered so far:</div>
+            <div class="picklist" id="routePick"></div>
+          </div>
+          <div class="src" id="src-db">
+            <header><b>Database changes</b><label class="toggle"><input type="checkbox" id="t-db" checked aria-label="Database changes"><span></span></label></header>
+            <label class="f" for="dbKind">Engine
+              <select id="dbKind"><option>PostgreSQL · logical replication</option><option>SQL Server · change data capture</option></select></label>
+            <label class="f" for="dbConn">Connection string (by secret name)<input id="dbConn" value="secret: library-db/connection"></label>
+            <div class="muted" style="font-size:12px">Tables to watch (from the captured schema). Unselect noise:</div>
+            <div class="picklist" id="tablePick"></div>
+          </div>
+          <div class="src" id="src-otel">
+            <header><b>OpenTelemetry</b><label class="toggle"><input type="checkbox" id="t-otel" checked aria-label="OpenTelemetry"><span></span></label></header>
+            <label class="f" for="otelSvc">Services<input id="otelSvc" value="library-core"></label>
+            <div class="muted" style="font-size:12px">Attribute values kept (keys are always visible):</div>
+            <div class="picklist" id="attrPick"></div>
+            <label class="f" for="otelUp">Forward telemetry to<input id="otelUp" value="http://aspire-dashboard:18881"></label>
+          </div>
+          <div class="src">
+            <header><b>Correlation &amp; output</b></header>
+            <label class="f" for="win">Correlation window: <span id="winV" class="num">2000 ms</span><input type="range" id="win" min="250" max="5000" step="250" value="2000"></label>
+            <div class="muted" style="font-size:12px">An HTTP command claims database transactions and spans seen within this window. Shared trace ids join regardless of time.</div>
+            <label class="f" for="outKind">Send captures to<select id="outKind"><option value="Api">Receiver → MongoDB (live view)</option><option value="Json">JSON files in ./captures</option></select></label>
+          </div>
+        </div>
+      </div>
+      <div class="panel">
+        <h3>Scenario script <small>Run these in the Library UI while capturing. Each run labels its captures.</small></h3>
+        <div class="scen" id="scenList"></div>
+        <div class="marker" style="margin-top:8px"><input id="newScen" placeholder="Add a scenario, for example “Member returns a late book”" aria-label="New scenario"><button class="btn" id="addScen">Add</button></div>
+      </div>
+    </div>
+    <div class="grid" style="gap:12px; align-content:start">
+      <div class="panel">
+        <h3>Capture boundary</h3>
+        <div class="boundary">
+          <div><b style="color:var(--good)">Recorded</b><ul id="bIn"></ul></div>
+          <div><b style="color:var(--bad)">Never recorded</b><ul><li>Row values</li><li>HTTP bodies</li><li>GET and other reads</li><li>Log bodies, metric values</li><li>Non-allowlisted attribute values</li></ul></div>
+        </div>
+        <p class="muted" style="font-size:12px;margin:10px 0 0">Query strings and allowlisted attribute values can still be sensitive. Protect capture storage.</p>
+      </div>
+      <div class="panel">
+        <h3>cratis-prologue.json</h3>
+        <pre class="code" id="cfgOut"></pre>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 2. CAPTURE ============ -->
+<section class="view" id="v-capture">
+  <div class="view-head">
+    <div>
+      <h2>Watch captures arrive</h2>
+      <p>Each capture is one HTTP command plus the database transactions and spans correlated with it. Label what you are doing so the interpreter knows the business intent.</p>
+    </div>
+    <div class="row"><button class="btn" id="pauseBtn">Pause</button><a class="btn primary" href="#explore">Explore captures</a></div>
+  </div>
+  <div class="tiles">
+    <div class="tile"><span class="k">Captures</span><span class="v" id="kCap">0</span><span class="s" id="kRate">— per minute</span><svg id="spark" width="100%" height="30" viewBox="0 0 160 30" preserveAspectRatio="none" aria-hidden="true"></svg></div>
+    <div class="tile"><span class="k">Command shapes seen</span><span class="v"><span id="kShapes">0</span><span class="muted" style="font-size:16px"> / 10 routes</span></span><span class="s">Unseen routes need a scenario</span></div>
+    <div class="tile"><span class="k">Tables touched</span><span class="v"><span id="kTables">0</span><span class="muted" style="font-size:16px"> / 7</span></span><span class="s">of the watched schema</span></div>
+    <div class="tile"><span class="k">Trace-linked</span><span class="v" id="kTrace">0%</span><span class="s">The rest correlate by time only</span></div>
+    <div class="tile"><span class="k">Uncorrelated transactions</span><span class="v" id="kOrphan" style="color:var(--warn)">0</span><span class="s">Database writes with no command</span></div>
+  </div>
+  <div class="grid g-side">
+    <div class="panel">
+      <h3>Live feed <small id="feedNote">Newest first · click a capture to inspect it</small></h3>
+      <div class="marker" style="margin-bottom:10px">
+        <input id="scenLabel" list="scenOpts" placeholder="I'm now running… (pick a scenario)" aria-label="Current scenario">
+        <datalist id="scenOpts"></datalist>
+        <button class="btn" id="markBtn">Mark start</button>
+      </div>
+      <div class="feed" id="feed"></div>
+    </div>
+    <div class="grid" style="gap:12px;align-content:start">
+      <div class="panel">
+        <h3>Selected capture <small id="selMeta"></small></h3>
+        <div id="selDetail" class="muted">Pick a capture from the feed.</div>
+      </div>
+      <div class="panel">
+        <h3>Coverage by route</h3>
+        <div class="bars" id="covBars"></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 3. EXPLORE ============ -->
+<section class="view" id="v-explore">
+  <div class="view-head">
+    <div>
+      <h2>Explore what the system does</h2>
+      <p>Captures grouped into command shapes. The matrix shows which tables each command writes; partial cells mean the write happens only in some runs. Exclude noise before interpreting.</p>
+    </div>
+    <div class="row"><a class="btn primary" href="#events" id="interpretBtn">Interpret into events</a></div>
+  </div>
+  <div class="panel">
+    <h3>Ask about the captures <small>Answers cite the captures they come from</small></h3>
+    <form class="ask" id="askForm"><input id="askIn" placeholder="Ask, for example: what happens when a book is lent?" aria-label="Question about captures"><button class="btn primary" type="submit">Ask</button></form>
+    <div class="suggest" id="askSuggest"></div>
+    <div id="askOut"></div>
+  </div>
+  <div class="grid g-side">
+    <div class="panel scroll-x">
+      <h3>Command × table <small><span class="op I">I</span> insert <span class="op U">U</span> update <span class="op D">D</span> delete · faded = some runs</small></h3>
+      <table class="heat" id="heat"></table>
+    </div>
+    <div class="panel">
+      <h3>Shape detail <small id="shapeMeta"></small></h3>
+      <div id="shapeDetail"></div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 4. EVENTS ============ -->
+<section class="view" id="v-events">
+  <div class="view-head">
+    <div>
+      <h2>Review event suggestions</h2>
+      <p>The interpreter proposes past-tense facts from the evidence. Mechanical names come from tables and routes; refined names come from the language model. Nothing becomes part of the model until you accept it.</p>
+    </div>
+    <div class="row"><span class="stamp" id="evStats"></span><a class="btn primary" href="#model">Build event model</a></div>
+  </div>
+  <div class="grid g-side">
+    <div class="grid" style="gap:10px;align-content:start">
+      <div class="filters" id="evFilters"></div>
+      <div class="evcards" id="evCards"></div>
+    </div>
+    <div class="grid" style="gap:12px;align-content:start">
+      <div class="panel">
+        <h3>Questions from the interpreter <small id="qLeft"></small></h3>
+        <div class="grid" style="gap:10px" id="qList"></div>
+      </div>
+      <div class="panel">
+        <h3>Not events</h3>
+        <ul class="review-list">
+          <li><span class="chip">Inventory.AvailableCount</span><span class="muted">Changes with every loan and return. Derived state: becomes a read model, not an event property.</span></li>
+          <li><span class="chip">Loans.ReturnedOn</span><span class="muted">Nullable column. Recorded as its own fact, BookReturned, rather than an optional property on BookLent.</span></li>
+          <li><span class="chip">POST /api/simulation/*</span><span class="muted">Excluded in Explore as load-generator traffic.</span></li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 5. MODEL ============ -->
+<section class="view" id="v-model">
+  <div class="view-head">
+    <div>
+      <h2>Provisional event model</h2>
+      <p>Accepted events laid out as slices along the story of the Library. Dashed outlines are still open. Select a slice to see its evidence and the Screenplay it will produce.</p>
+    </div>
+    <div class="row"><button class="btn" data-copy="playOut">Copy .play</button><button class="btn primary" id="handoff">Continue in Screenplay</button></div>
+  </div>
+  <div class="panel">
+    <div class="row" style="justify-content:space-between;margin-bottom:10px">
+      <div class="legend"><span><i style="background:var(--canvas);border:1px dashed var(--line)"></i>Screen (inferred)</span><span><i style="background:var(--cmd)"></i>Command</span><span><i style="background:var(--evt)"></i>Event</span><span><i style="background:var(--rm)"></i>Read model</span><span><i style="outline:2px dashed var(--warn)"></i>Open question</span></div>
+      <span class="stamp" id="modelStats"></span>
+    </div>
+    <div class="board-wrap"><div class="board" id="board"></div></div>
+  </div>
+  <div class="grid g2">
+    <div class="panel"><h3>Slice <small id="sliceMeta"></small></h3><div id="sliceDetail"></div></div>
+    <div class="panel"><h3>Library.play <small>Generated from accepted suggestions</small></h3><pre class="code" id="playOut"></pre></div>
+  </div>
+</section>
+</main>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script>
+// ------------------------------------------------------------------ data
+// Example data modeled on Samples/Library (ASP.NET Core MVC + EF Core).
+const TABLES = ["Authors","Members","Books","BookTags","Inventory","Reservations","Loans"];
+const SHAPES = [
+  { id:"reg-author", method:"POST", path:"/api/authors", weight:6, status:{201:1}, svc:"AuthorsController.Register",
+    tx:[{t:"Authors",op:"I",cols:["FirstName","LastName"],p:1}], module:"Authors", scenario:"Register an author" },
+  { id:"del-author", method:"DELETE", path:"/api/authors/{id}", weight:2, status:{204:.62,409:.38}, svc:"AuthorsController.Remove",
+    tx:[{t:"Authors",op:"D",cols:["AuthorId"],p:.62}], module:"Authors", scenario:"Remove an author" },
+  { id:"reg-member", method:"POST", path:"/api/members", weight:7, status:{201:1}, svc:"MembersController.Register",
+    tx:[{t:"Members",op:"I",cols:["FirstName","LastName"],p:1}], module:"Members", scenario:"Register a member" },
+  { id:"add-book", method:"POST", path:"/api/catalog/books", weight:6, status:{201:.94,400:.06}, svc:"CatalogController.AddBook",
+    tx:[{t:"Books",op:"I",cols:["Isbn","Title","AuthorId"],p:.94}], module:"Catalog", scenario:"Add a book to the catalog" },
+  { id:"tag-book", method:"POST", path:"/api/catalog/books/{isbn}/tags", weight:4, status:{201:1}, svc:"CatalogController.AddTag",
+    tx:[{t:"BookTags",op:"I",cols:["BookId","Tag"],p:1}], module:"Catalog", scenario:"Tag a book" },
+  { id:"stock", method:"POST", path:"/api/inventory", weight:5, status:{201:.55,200:.45}, svc:"InventoryController.Register",
+    tx:[{t:"Inventory",op:"I",cols:["BookId","TotalCount","AvailableCount"],p:.55},{t:"Inventory",op:"U",cols:["TotalCount","AvailableCount"],p:.45}], module:"Inventory", scenario:"Stock copies of a book" },
+  { id:"lost", method:"POST", path:"/api/inventory/{isbn}/lost", weight:1, status:{200:1}, svc:"InventoryController.ReportLost",
+    tx:[{t:"Inventory",op:"U",cols:["TotalCount","AvailableCount"],p:1}], module:"Inventory", scenario:"Report copies lost" },
+  { id:"reserve", method:"POST", path:"/api/reservations", weight:5, status:{201:.9,409:.1}, svc:"ReservationsController.Reserve",
+    tx:[{t:"Reservations",op:"I",cols:["BookId","MemberId","ReservedOn"],p:.9}], module:"Lending", scenario:"Reserve a title" },
+  { id:"lend", method:"POST", path:"/api/loans", weight:12, status:{201:.92,409:.08}, svc:"LoansController.Lend",
+    tx:[{t:"Loans",op:"I",cols:["BookId","MemberId","LentOn"],p:.92},{t:"Inventory",op:"U",cols:["AvailableCount"],p:.92},{t:"Reservations",op:"D",cols:["ReservationId"],p:.18}], module:"Lending", scenario:"Lend a copy" },
+  { id:"return", method:"POST", path:"/api/loans/{id}/return", weight:10, status:{200:1}, svc:"LoansController.Return",
+    tx:[{t:"Loans",op:"U",cols:["ReturnedOn"],p:1},{t:"Inventory",op:"U",cols:["AvailableCount"],p:1}], module:"Lending", scenario:"Return a copy" },
+  { id:"sim", method:"POST", path:"/api/simulation/start", weight:.2, status:{202:1}, svc:"SimulationController.Start", tx:[], module:"—", noise:true }
+];
+const COUNTS = { "reg-author":412, "del-author":61, "reg-member":538, "add-book":470, "tag-book":301, "stock":366, "lost":0, "reserve":349, "lend":902, "return":811, "sim":3 };
+const ORPHANS_BASE = 14;
+
+const state = {
+  live: true, startedAt: Date.now() - (41*60+12)*1000, feed: [], captures: 0, perMin: [],
+  scenario: "", scenarios: ["Register an author","Register a member","Add a book to the catalog","Tag a book","Stock copies of a book","Reserve a title","Lend a copy","Return a copy","Remove an author","Report copies lost"],
+  scenDone: new Set(["Register an author","Register a member","Add a book to the catalog","Tag a book","Stock copies of a book","Reserve a title","Lend a copy","Return a copy","Remove an author"]),
+  routesOn: new Set(SHAPES.filter(s=>!s.noise).map(s=>s.method+" "+s.path)),
+  tablesOn: new Set(TABLES), attrs: new Set(["http.route","db.operation","library.isbn"]),
+  excluded: new Set(["sim"]), selShape: "lend", selCap: null, evFilter: "all", selSlice: "Lending.LendBook",
+  answers: {}
+};
+
+// ------------------------------------------------------------------ helpers
+const $ = s => document.querySelector(s);
+const esc = s => String(s).replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const pick = obj => { let r = Math.random(), acc = 0; for (const [k,v] of Object.entries(obj)) { acc += v; if (r <= acc) return k; } return Object.keys(obj)[0]; };
+const hex = n => [...crypto.getRandomValues(new Uint8Array(n))].map(b=>b.toString(16).padStart(2,"0")).join("");
+function toast(msg){ const t=$("#toast"); t.textContent=msg; t.classList.add("on"); clearTimeout(toast.h); toast.h=setTimeout(()=>t.classList.remove("on"),2200); }
+function fmtClock(ms){ const s=Math.floor(ms/1000); return [Math.floor(s/3600),Math.floor(s/60)%60,s%60].map(n=>String(n).padStart(2,"0")).join(":"); }
+document.addEventListener("click", e => {
+  const b = e.target.closest("[data-copy]"); if (!b) return;
+  const text = document.getElementById(b.dataset.copy).textContent;
+  navigator.clipboard?.writeText(text).then(()=>toast("Copied to clipboard"), ()=>toast("Copy was blocked by the browser. Select the text instead."));
+});
+
+// ------------------------------------------------------------------ routing
+const VIEWS = ["define","capture","explore","events","model"];
+function route(){
+  const v = VIEWS.includes(location.hash.slice(1)) ? location.hash.slice(1) : "capture";
+  VIEWS.forEach((name,i) => {
+    $("#v-"+name).classList.toggle("on", name===v);
+    const a = document.querySelector(`nav.steps a[data-v="${name}"]`);
+    a.toggleAttribute("aria-current", name===v); if (name===v) a.setAttribute("aria-current","page");
+    a.classList.toggle("done", i < VIEWS.indexOf(v));
+  });
+  if (v==="explore") renderExplore();
+  if (v==="events") renderEvents();
+  if (v==="model") renderModel();
+}
+window.addEventListener("hashchange", route);
+
+// ------------------------------------------------------------------ 1. define
+function renderDefine(){
+  $("#routePick").innerHTML = SHAPES.filter(s=>!s.noise).map(s => { const k=s.method+" "+s.path; return `<button class="pick" aria-pressed="${state.routesOn.has(k)}" data-route="${esc(k)}">${esc(k)}</button>`; }).join("")
+    + `<button class="pick" aria-pressed="false" data-route="POST /api/simulation/start">POST /api/simulation/start</button>`;
+  $("#tablePick").innerHTML = TABLES.concat(["__EFMigrationsHistory"]).map(t => `<button class="pick" aria-pressed="${state.tablesOn.has(t)}" data-table="${t}">${t}</button>`).join("");
+  $("#attrPick").innerHTML = ["http.route","db.operation","library.isbn","library.member_id","enduser.id"].map(a => `<button class="pick" aria-pressed="${state.attrs.has(a)}" data-attr="${a}">${a}</button>`).join("");
+  $("#scenList").innerHTML = state.scenarios.map(s => {
+    const done = state.scenDone.has(s); const shape = SHAPES.find(x=>x.scenario===s); const n = shape ? COUNTS[shape.id] : 0;
+    return `<div class="scen-item"><span class="chip ${done?"ok":"warn"}">${done?"Captured":"Not run yet"}</span><span class="grow">${esc(s)}</span><span class="muted num" style="font-size:12px">${n?n+" captures":""}</span></div>`;
+  }).join("");
+  $("#scenOpts").innerHTML = state.scenarios.map(s=>`<option value="${esc(s)}">`).join("");
+  const on = id => $("#t-"+id).checked;
+  ["http","db","otel"].forEach(id => $("#src-"+id).classList.toggle("off", !on(id)));
+  $("#bIn").innerHTML = [on("http")&&"Method, path with query string, status, trace id", on("db")&&"Changed table and column names per transaction", on("db")&&"Schema: keys, foreign keys, unique constraints", on("otel")&&"Span names, durations, attribute keys", on("otel")&&state.attrs.size&&`Values of ${[...state.attrs].join(", ")}`].filter(Boolean).map(x=>`<li>${esc(x)}</li>`).join("");
+  const pg = $("#dbKind").selectedIndex===0;
+  const db = { name:"library", connectionString:"<from secret library-db/connection>" };
+  const cfg = { prologue: {
+      prologueId: "6f1c2a0e-4b7d-4c1e-9a55-2d0b9e3f7a41",
+      output: $("#outKind").value==="Api" ? { kind:"Api", api:{ endpoint:"http://prologue-receiver:5005" } } : { kind:"Json", json:{ directory:"./captures" } },
+      correlation: { windowMilliseconds: +$("#win").value },
+      ...(on("db") ? (pg ? { postgres:[{ ...db, slot:"prologue_slot", publication:"prologue_publication" }] } : { sqlServer:[{ ...db, tables:[...state.tablesOn].map(t=>"dbo."+t) }] }) : {}),
+      openTelemetry: { enabled: on("otel"), serviceNames: $("#otelSvc").value.split(",").map(s=>s.trim()).filter(Boolean), attributeKeys:[...state.attrs], upstream:{ grpc: $("#otelUp").value } }
+    },
+    ...(on("http") ? { reverseProxy: { routes: { commands: { clusterId:"monitored", match:{ path:"/api/{**catch-all}", methods:["POST","PUT","DELETE"] } } },
+      clusters: { monitored: { destinations: { primary: { address: $("#httpTarget").value } } } } } } : {}),
+    llm: { enabled:true, kind:"Anthropic", modelId:"claude-sonnet-5-5", accessToken:"<from secret prologue/llm-key>" }
+  };
+  $("#cfgOut").textContent = JSON.stringify(cfg, null, 2);
+}
+document.addEventListener("click", e => {
+  const r = e.target.closest("[data-route]"), t = e.target.closest("[data-table]"), a = e.target.closest("[data-attr]");
+  const flip = (set,key) => set.has(key) ? set.delete(key) : set.add(key);
+  if (r) flip(state.routesOn, r.dataset.route); else if (t) flip(state.tablesOn, t.dataset.table); else if (a) flip(state.attrs, a.dataset.attr); else return;
+  renderDefine();
+});
+["#t-http","#t-db","#t-otel","#dbKind","#outKind","#httpTarget","#otelSvc","#otelUp"].forEach(id => $(id).addEventListener("input", renderDefine));
+$("#win").addEventListener("input", e => { $("#winV").textContent = e.target.value+" ms"; renderDefine(); });
+$("#addScen").addEventListener("click", () => { const v=$("#newScen").value.trim(); if(!v) return; state.scenarios.push(v); $("#newScen").value=""; renderDefine(); });
+
+// ------------------------------------------------------------------ 2. capture
+function makeCapture(forceShape){
+  const real = SHAPES.filter(s=>!s.noise && s.id!=="lost");
+  let shape = forceShape;
+  if (!shape) { const tot = real.reduce((a,s)=>a+s.weight,0); let r=Math.random()*tot; shape = real.find(s => (r-=s.weight) < 0) || real[0]; }
+  const status = +pick(shape.status), ok = status < 400;
+  const trace = Math.random() < .78 ? hex(16) : "";
+  const tx = ok ? shape.tx.filter(x => x.op!=="D" || Math.random() < (x.p/0.92)).filter((x,i,arr) => shape.id!=="stock" || (status===201 ? x.op==="I" : x.op==="U")) : [];
+  const id = "4"+hex(3);
+  const path = shape.path.replace("{id}", 1000+Math.floor(Math.random()*9000)).replace("{isbn}", "978-0-"+(100000+Math.floor(Math.random()*899999)));
+  return { id, at: new Date(), shape, status, path, trace, tx, spans: 2 + tx.length, offs: tx.map((_,i)=>140+i*90+Math.floor(Math.random()*60)), scenario: state.scenario };
+}
+function pushCapture(c, animate=true){
+  state.feed.unshift(c); state.feed = state.feed.slice(0,60); state.captures++;
+  COUNTS[c.shape.id] = (COUNTS[c.shape.id]||0) + 1;
+  if (c.shape.scenario) state.scenDone.add(c.shape.scenario);
+  const el = document.createElement("div"); el.innerHTML = capHtml(c, animate); const node = el.firstElementChild;
+  $("#feed").prepend(node); while ($("#feed").children.length > 60) $("#feed").lastElementChild.remove();
+}
+function capHtml(c, animate){
+  const ok = c.status < 400;
+  const obs = [`<span class="chip http">${c.shape.method} ${esc(c.path)} → ${c.status}</span>`]
+    .concat(c.tx.map(x=>`<span class="chip db">${x.op==="I"?"INSERT":x.op==="U"?"UPDATE":"DELETE"} ${x.t}</span>`))
+    .concat([`<span class="chip otel">${c.spans} spans</span>`]);
+  return `<div class="cap${animate?" new":""}${c.scenario?" scenario":""}" data-cap="${c.id}" tabindex="0">
+    <span class="t">${c.at.toLocaleTimeString([], {hour12:false})}</span>
+    <div><div class="row" style="gap:6px"><b>${esc(c.shape.svc.replace("Controller",""))}</b>${c.scenario?`<span class="chip warn">${esc(c.scenario)}</span>`:""}${ok?"":`<span class="chip bad">rejected</span>`}</div><div class="obs">${obs.join("")}</div></div>
+    <span class="corr ${c.trace?"":"muted"}">${c.trace?"trace-linked":"time window"}</span></div>`;
+}
+function selectCapture(id){
+  const c = state.feed.find(x=>x.id===id); if(!c) return; state.selCap = id;
+  document.querySelectorAll(".cap").forEach(n=>n.classList.toggle("sel", n.dataset.cap===id));
+  $("#selMeta").textContent = "capture "+c.id+"…";
+  const W = 600; const pct = ms => Math.min(96, ms/W*100);
+  const lanes = `<div class="lanes">
+    <span class="lane-label">HTTP</span><div class="lane"><span class="blk http" style="left:0;width:${pct(120+c.tx.length*90)}%">${c.shape.method} ${esc(c.shape.path)}</span></div>
+    <span class="lane-label">Database</span><div class="lane">${c.tx.map((x,i)=>`<span class="blk db" style="left:${pct(c.offs[i])}%;width:${Math.max(14,pct(80))}%" title="${x.op} ${x.t}">${x.op} ${x.t}</span>`).join("")}</div>
+    <span class="lane-label">Spans</span><div class="lane"><span class="blk otel" style="left:1%;width:${pct(110+c.tx.length*90)}%">${esc(c.shape.svc)}</span></div>
+    <div class="axis"><span>0 ms</span><span>300 ms</span><span>600 ms of ${$("#win").value} ms window</span></div>
+    <div class="window-note">${c.trace?`Spans joined by trace <code>${c.trace.slice(0,12)}…</code>. Database rows joined by time.`:`No trace id on the request. Everything joined by time, so this grouping is weaker.`}</div></div>`;
+  const cols = c.tx.length ? `<table style="margin-top:12px"><tr><th>Table</th><th>Op</th><th>Columns changed</th></tr>${c.tx.map(x=>`<tr><td>${x.t}</td><td><span class="op ${x.op}">${x.op}</span></td><td class="mono">${x.cols.join(", ")}</td></tr>`).join("")}</table>`
+    : `<p class="muted">No database writes. A ${c.status} response usually means a rule refused the command. That is evidence for a validation rule.</p>`;
+  $("#selDetail").innerHTML = lanes + cols;
+}
+$("#feed").addEventListener("click", e => { const n = e.target.closest("[data-cap]"); if (n) selectCapture(n.dataset.cap); });
+$("#feed").addEventListener("keydown", e => { const n = e.target.closest("[data-cap]"); if (n && (e.key==="Enter"||e.key===" ")) { e.preventDefault(); selectCapture(n.dataset.cap); } });
+function renderCaptureStats(){
+  const total = Object.entries(COUNTS).filter(([k])=>k!=="sim").reduce((a,[,v])=>a+v,0);
+  $("#kCap").textContent = total.toLocaleString();
+  const seen = SHAPES.filter(s=>!s.noise && COUNTS[s.id]>0).length; $("#kShapes").textContent = seen;
+  const touched = new Set(SHAPES.filter(s=>COUNTS[s.id]>0).flatMap(s=>s.tx.map(x=>x.t))); $("#kTables").textContent = touched.size;
+  const linked = state.feed.length ? Math.round(state.feed.filter(c=>c.trace).length/state.feed.length*100) : 78; $("#kTrace").textContent = linked+"%";
+  $("#kOrphan").textContent = ORPHANS_BASE;
+  const pm = state.perMin; $("#kRate").textContent = `${pm.length? pm[pm.length-1] : 0} in the last tick · ~${Math.round(total/41)} per minute`;
+  const max = Math.max(...pm, 1), pts = pm.map((v,i)=>`${(i/(Math.max(pm.length-1,1)))*160},${28-v/max*24}`).join(" ");
+  $("#spark").innerHTML = pm.length>1 ? `<polyline points="0,30 ${pts} 160,30" fill="var(--accent-soft)" stroke="none"/><polyline points="${pts}" fill="none" stroke="var(--accent)" stroke-width="1.5"/><circle cx="160" cy="${28-pm[pm.length-1]/max*24}" r="2.5" fill="var(--accent)"/>` : "";
+  const maxC = Math.max(...SHAPES.filter(s=>!s.noise).map(s=>COUNTS[s.id]));
+  $("#covBars").innerHTML = SHAPES.filter(s=>!s.noise).map(s => `<div class="bar-row"><span class="mono" title="${s.method} ${s.path}" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${s.svc.replace("Controller","")}</span><span class="bar"><i style="width:${COUNTS[s.id]/maxC*100}%"></i></span><span class="num" style="text-align:right;${COUNTS[s.id]?"":"color:var(--warn)"}">${COUNTS[s.id]||"none"}</span></div>`).join("")
+    + (COUNTS.lost ? "" : `<p class="muted" style="font-size:12px;margin:4px 0 0">ReportLost has not been seen. Run “Report copies lost” or its event will be missing from the model.</p>`);
+  $("#liveText").textContent = (state.live ? "Capturing · " : "Paused · ") + fmtClock(Date.now()-state.startedAt);
+  $("#livePill").classList.toggle("paused", !state.live); $("#livePill").classList.toggle("live", state.live);
+}
+let tickCount = 0;
+function tick(){
+  if (state.live) {
+    const n = 1 + Math.floor(Math.random()*3); state.perMin.push(n); state.perMin = state.perMin.slice(-30);
+    for (let i=0;i<n;i++) pushCapture(makeCapture());
+    if (++tickCount % 9 === 0 && !COUNTS.lost && state.scenario==="Report copies lost") pushCapture(makeCapture(SHAPES.find(s=>s.id==="lost")));
+  }
+  renderCaptureStats();
+}
+$("#pauseBtn").addEventListener("click", () => { state.live = !state.live; $("#pauseBtn").textContent = state.live ? "Pause" : "Resume"; renderCaptureStats(); });
+$("#markBtn").addEventListener("click", () => {
+  const v = $("#scenLabel").value.trim();
+  if (state.scenario) { toast(`Marked end of “${state.scenario}”`); state.scenario=""; $("#markBtn").textContent="Mark start"; $("#scenLabel").value=""; return; }
+  if (!v) { toast("Pick or type a scenario first"); return; }
+  state.scenario = v; $("#markBtn").textContent = "Mark end"; toast(`Captures are now labeled “${v}”`);
+  if (v === "Report copies lost") setTimeout(()=>{ pushCapture(makeCapture(SHAPES.find(s=>s.id==="lost"))); renderCaptureStats(); }, 900);
+});
+
+// ------------------------------------------------------------------ 3. explore
+function renderExplore(){
+  const rows = SHAPES;
+  $("#heat").innerHTML = `<thead><tr><th class="rowh">Command shape</th><th>Captures</th>${TABLES.map(t=>`<th class="rot"><span>${t}</span></th>`).join("")}<th></th></tr></thead><tbody>` +
+    rows.map(s => {
+      const ex = state.excluded.has(s.id);
+      const cells = TABLES.map(t => { const ops = s.tx.filter(x=>x.t===t); return `<td>${ops.length?`<span class="cell">${ops.map(o=>`<span class="op ${o.op}${o.p<.9?" p":""}" title="${o.op} ${t} in ${Math.round(o.p*100)}% of runs">${o.op}</span>`).join("")}</span>`:""}</td>`; }).join("");
+      return `<tr class="click${state.selShape===s.id?" sel":""}${ex?" excluded":""}" data-shape="${s.id}"><td class="rowh"><span class="mono">${s.method} ${esc(s.path)}</span></td><td class="num">${COUNTS[s.id]||0}</td>${cells}<td><button class="btn small ghost" data-exclude="${s.id}">${ex?"Include":"Exclude"}</button></td></tr>`;
+    }).join("") +
+    `<tr class="click${state.selShape==="orphan"?" sel":""}" data-shape="orphan"><td class="rowh"><span class="chip warn">no command</span> <span class="muted">standalone transactions</span></td><td class="num">${ORPHANS_BASE}</td>${TABLES.map(t=>`<td>${t==="Inventory"?`<span class="op U" title="UPDATE Inventory">U</span>`:""}</td>`).join("")}<td></td></tr></tbody>`;
+  renderShape();
+  $("#askSuggest").innerHTML = ASKS.map((a,i)=>`<button class="btn small" data-ask="${i}">${esc(a.q)}</button>`).join("");
+}
+function renderShape(){
+  if (state.selShape === "orphan") {
+    $("#shapeMeta").textContent = ORPHANS_BASE+" transactions";
+    $("#shapeDetail").innerHTML = `<p>Inventory was updated ${ORPHANS_BASE} times with no HTTP command or span in the window. Every one ran between 02:00 and 02:05.</p>
+      <table><tr><th>Columns</th><td class="mono">TotalCount, AvailableCount</td></tr><tr><th>Time of day</th><td>02:00–02:05, nightly</td></tr><tr><th>Likely source</th><td>A scheduled job or direct SQL. Prologue cannot see which.</td></tr></table>
+      <p class="muted" style="font-size:12px">This becomes a question for you in Events. If it is a stock reconciliation, it may deserve its own event.</p>`;
+    return;
+  }
+  const s = SHAPES.find(x=>x.id===state.selShape);
+  $("#shapeMeta").textContent = (COUNTS[s.id]||0)+" captures";
+  const st = Object.entries(s.status).map(([k,v])=>`<span class="chip ${+k>=400?"bad":"ok"}">${k} · ${Math.round(v*100)}%</span>`).join(" ");
+  $("#shapeDetail").innerHTML = `<div class="mono" style="font-size:14px;margin-bottom:8px">${s.method} ${esc(s.path)}</div>
+    <table><tr><th>Handler span</th><td class="mono">${s.svc}</td></tr><tr><th>Responses</th><td>${st}</td></tr>
+    <tr><th>Writes</th><td>${s.tx.length? s.tx.map(x=>`<div><span class="op ${x.op}">${x.op}</span> ${x.t} <span class="muted">(${Math.round(x.p*100)}%)</span> <span class="mono muted">${x.cols.join(", ")}</span></div>`).join("") : "none"}</td></tr>
+    <tr><th>Labeled as</th><td>${s.scenario?`<span class="chip warn">${esc(s.scenario)}</span>`:"<span class='muted'>no scenario</span>"}</td></tr></table>
+    ${s.id==="lend"?`<p class="answer" style="margin-top:12px">Lending writes three tables. The Reservations delete appears in only 18% of runs, which suggests two different outcomes of the same command.</p>`:""}
+    ${s.id==="stock"?`<p class="answer" style="margin-top:12px">The same route inserts on first stock (201) and updates afterwards (200). That is two behaviors behind one endpoint.</p>`:""}
+    ${s.id==="del-author"?`<p class="answer" style="margin-top:12px">38% of removals answer 409 and write nothing. Every one of those authors had rows in Books, so this looks like a rule: an author with books cannot be removed.</p>`:""}
+    <div class="row" style="margin-top:12px"><button class="btn small" data-exclude="${s.id}">${state.excluded.has(s.id)?"Include in interpretation":"Exclude from interpretation"}</button><button class="btn small" id="splitBtn">Split by response</button></div>`;
+}
+$("#heat").addEventListener("click", e => {
+  const x = e.target.closest("[data-exclude]");
+  if (x) { e.stopPropagation(); state.excluded.has(x.dataset.exclude) ? state.excluded.delete(x.dataset.exclude) : state.excluded.add(x.dataset.exclude); renderExplore(); return; }
+  const r = e.target.closest("[data-shape]"); if (r) { state.selShape = r.dataset.shape; renderExplore(); }
+});
+$("#shapeDetail").addEventListener("click", e => {
+  const x = e.target.closest("[data-exclude]"); if (x) { state.excluded.has(x.dataset.exclude) ? state.excluded.delete(x.dataset.exclude) : state.excluded.add(x.dataset.exclude); renderExplore(); }
+  if (e.target.id==="splitBtn") toast("Split into one shape per response status. The interpreter will treat each as its own candidate.");
+});
+const ASKS = [
+  { q:"What happens when a book is lent?", m:/lend|lent|loan/i, a:"A loan inserts a row in Loans (BookId, MemberId, LentOn) and decrements Inventory.AvailableCount in the same transaction. In 165 of 902 loans it also deletes the member’s Reservation for that book. 72 loans were refused with 409 and wrote nothing; in every one AvailableCount was already 0.", cite:["lend","reserve"] },
+  { q:"Which commands change Inventory?", m:/inventor|stock|available/i, a:"Four sources write Inventory: RegisterInventory (insert or update TotalCount and AvailableCount), Lend and Return (AvailableCount only), and 14 nightly transactions with no command. ReportLost should too, but it has not been captured yet.", cite:["stock","lend","return"] },
+  { q:"Why are some commands rejected?", m:/reject|409|fail|refus|400/i, a:"Three commands are refused with no writes: removing an author who has books (409, 23 times), lending when no copy is available (409, 72 times), and reserving a title the member already reserved (409, 35 times). Adding a book answers 400 when the ISBN already exists. Each is a candidate validation rule or constraint.", cite:["del-author","lend","reserve","add-book"] },
+  { q:"What have we not seen yet?", m:/not seen|missing|coverage|unseen/i, a:"No captures for POST /api/inventory/{isbn}/lost. No PUT routes were observed at all. Members are never updated or removed, so either the system cannot do that or nobody did it during capture.", cite:["lost"] }
+];
+function answer(text){
+  const hit = ASKS.find(a=>a.m.test(text));
+  $("#askOut").innerHTML = hit ? `<div class="answer"><div>${esc(hit.a)}</div><div class="cite">${hit.cite.map(id=>{const s=SHAPES.find(x=>x.id===id);return `<button class="chip http" data-goto="${id}">${s.method} ${esc(s.path)} · ${COUNTS[id]||0}</button>`;}).join("")}</div></div>`
+    : `<div class="answer muted">This prototype answers a few example questions. Try one of the suggestions above.</div>`;
+}
+$("#askForm").addEventListener("submit", e => { e.preventDefault(); answer($("#askIn").value); });
+document.addEventListener("click", e => {
+  const a = e.target.closest("[data-ask]"); if (a) { $("#askIn").value = ASKS[+a.dataset.ask].q; answer(ASKS[+a.dataset.ask].q); }
+  const g = e.target.closest("[data-goto]"); if (g) { state.selShape = g.dataset.goto; renderExplore(); }
+});
+
+// ------------------------------------------------------------------ 4. events
+const EVENTS = [
+  { id:"AuthorRegistered", mech:"AuthorsInserted", module:"Authors", stream:"Author", props:[["firstName","String"],["lastName","String"]], from:["reg-author"], src:"INSERT Authors (FirstName, LastName)", conf:.96, status:"accepted" },
+  { id:"AuthorRemoved", mech:"AuthorsDeleted", module:"Authors", stream:"Author", props:[], from:["del-author"], src:"DELETE Authors", conf:.88, status:"suggested", note:"Removal is refused when the author has books. Suggested rule on RemoveAuthor: “Author has no books in the catalog”." },
+  { id:"MemberRegistered", mech:"MembersInserted", module:"Members", stream:"Member", props:[["firstName","String"],["lastName","String"]], from:["reg-member"], src:"INSERT Members (FirstName, LastName)", conf:.96, status:"accepted" },
+  { id:"BookAddedToCatalog", mech:"BooksInserted", module:"Catalog", stream:"Book", props:[["isbn","Isbn"],["title","String"],["authorId","AuthorId"]], from:["add-book"], src:"INSERT Books (Isbn, Title, AuthorId)", conf:.93, status:"accepted", note:"Books.Isbn has a unique index. Suggested constraint: one book per ISBN." },
+  { id:"BookTagged", mech:"BookTagsInserted", module:"Catalog", stream:"Book", props:[["tag","String"]], from:["tag-book"], src:"INSERT BookTags (BookId, Tag)", conf:.9, status:"suggested" },
+  { id:"BookStocked", mech:"InventoryInserted", module:"Inventory", stream:"Book", props:[["copies","Count"]], from:["stock"], src:"INSERT Inventory (BookId, TotalCount, AvailableCount) · 201 only", conf:.74, status:"question", q:"stock" },
+  { id:"CopiesAdded", mech:"InventoryUpdated", module:"Inventory", stream:"Book", props:[["copies","Count"]], from:["stock"], src:"UPDATE Inventory (TotalCount, AvailableCount) · 200 only", conf:.71, status:"question", q:"stock" },
+  { id:"CopiesReportedLost", mech:"InventoryUpdated", module:"Inventory", stream:"Book", props:[["copies","Count"]], from:["lost"], src:"Inferred from route only. No captures yet", conf:.38, status:"suggested", note:"No evidence captured. Run “Report copies lost” in Capture to confirm." },
+  { id:"BookReserved", mech:"ReservationsInserted", module:"Lending", stream:"Member", props:[["isbn","Isbn"]], from:["reserve"], src:"INSERT Reservations (BookId, MemberId, ReservedOn)", conf:.91, status:"accepted", note:"ReservedOn maps to the event’s occurred time, so it is not a property." },
+  { id:"BookLent", mech:"LoansInserted", module:"Lending", stream:"Loan", props:[["isbn","Isbn"],["memberId","MemberId"]], from:["lend"], src:"INSERT Loans (BookId, MemberId, LentOn) + UPDATE Inventory.AvailableCount", conf:.94, status:"accepted" },
+  { id:"ReservationFulfilled", mech:"ReservationsDeleted", module:"Lending", stream:"Member", props:[["isbn","Isbn"]], from:["lend"], src:"DELETE Reservations inside 18% of POST /api/loans", conf:.62, status:"question", q:"resv" },
+  { id:"BookReturned", mech:"LoansUpdated", module:"Lending", stream:"Loan", props:[], from:["return"], src:"UPDATE Loans (ReturnedOn) + UPDATE Inventory.AvailableCount", conf:.92, status:"accepted" },
+  { id:"StockReconciled", mech:"InventoryUpdated (no command)", module:"Inventory", stream:"Book", props:[["totalCopies","Count"]], from:[], src:"14 nightly UPDATE Inventory with no HTTP command", conf:.4, status:"question", q:"orphan" }
+];
+const QUESTIONS = [
+  { id:"resv", text:"When a member borrows a book they had reserved, the reservation row is deleted in the same transaction. Is fulfilling a reservation a fact the library cares about?",
+    opts:[["yes","Yes. Record ReservationFulfilled alongside BookLent"],["no","No. It is cleanup. Drop the event"],["unsure","Not sure. Keep it open"]], evidence:"165 of 902 loans" },
+  { id:"stock", text:"POST /api/inventory inserts the first time a title is stocked and updates afterwards. Are these two different things to the library?",
+    opts:[["yes","Yes. Keep BookStocked and CopiesAdded"],["no","No. Merge into one CopiesAdded event"]], evidence:"201 in 55%, 200 in 45%" },
+  { id:"orphan", text:"Inventory counts change every night at 02:00 without any command. What is that?",
+    opts:[["job","A stock-take job. Record it as StockReconciled"],["sql","Staff fix counts with SQL. Model a correction command"],["ignore","Ignore it. Not part of the domain"]], evidence:"14 transactions, 02:00–02:05" }
+];
+function renderEvents(){
+  const fs = [["all","All"],["suggested","To review"],["question","Needs an answer"],["accepted","Accepted"],["rejected","Rejected"]];
+  const count = k => k==="all" ? EVENTS.length : EVENTS.filter(e=>e.status===k).length;
+  $("#evFilters").innerHTML = fs.map(([k,l])=>`<button aria-pressed="${state.evFilter===k}" data-filter="${k}">${l} · ${count(k)}</button>`).join("");
+  const list = EVENTS.filter(e => state.evFilter==="all" || e.status===state.evFilter);
+  $("#evCards").innerHTML = list.map(e => {
+    const shapes = e.from.map(id=>SHAPES.find(s=>s.id===id)).filter(Boolean);
+    const n = e.from.reduce((a,id)=>a+(COUNTS[id]||0),0);
+    const lbl = {accepted:"Accepted",suggested:"Suggested",question:"Waiting on your answer",rejected:"Rejected"}[e.status];
+    return `<article class="ev ${e.status}" data-ev="${e.id}">
+      <div>
+        <div class="row" style="gap:10px"><span class="name" data-name="${e.id}">${esc(e.id)}</span><span class="mech" title="Mechanical name">${esc(e.mech)}</span></div>
+        <div class="row" style="gap:6px;margin-top:2px"><span class="chip">${e.module}</span><span class="chip">stream: ${e.stream}</span><span class="chip ${e.status==="accepted"?"ok":e.status==="question"?"warn":""}">${lbl}</span></div>
+        <div class="props">${e.props.length? e.props.map(([p,t])=>`<span class="prop">${p} <i>${t}</i></span>`).join("") : `<span class="muted" style="font-size:12px">No properties. The fact and its stream identity are the whole event.</span>`}</div>
+      </div>
+      <div class="actions">
+        <span class="conf" title="Evidence strength"><span class="meter"><i style="width:${e.conf*100}%;${e.conf<.6?"background:var(--warn)":""}"></i></span>${Math.round(e.conf*100)}%</span>
+        ${e.status!=="accepted"?`<button class="btn small primary" data-act="accept" data-id="${e.id}">Accept</button>`:""}
+        <button class="btn small" data-act="rename" data-id="${e.id}">Rename</button>
+        ${e.status!=="rejected"?`<button class="btn small ghost" data-act="reject" data-id="${e.id}">Reject</button>`:`<button class="btn small ghost" data-act="restore" data-id="${e.id}">Restore</button>`}
+      </div>
+      <div class="evidence"><span>Evidence: <span class="mono">${esc(e.src)}</span></span><span class="num">${n} captures</span>${shapes.map(s=>`<a href="#explore" class="mono" data-goto="${s.id}">${s.method} ${esc(s.path)}</a>`).join("")}</div>
+      ${e.note?`<div class="note">${esc(e.note)}</div>`:""}
+    </article>`;
+  }).join("") || `<p class="muted">Nothing in this filter.</p>`;
+  const open = QUESTIONS.filter(q=>!state.answers[q.id]).length;
+  $("#qLeft").textContent = open ? open+" open" : "all answered";
+  $("#qBadge").textContent = open; $("#qBadge").style.display = open ? "" : "none";
+  $("#qList").innerHTML = QUESTIONS.map(q => `<div class="q${state.answers[q.id]?" answered":""}"><div>${esc(q.text)}</div><div class="muted" style="font-size:12px">Evidence: ${esc(q.evidence)}</div><div class="opts">${q.opts.map(([k,l])=>`<button aria-pressed="${state.answers[q.id]===k}" data-q="${q.id}" data-a="${k}">${esc(l)}</button>`).join("")}</div></div>`).join("");
+  const acc = EVENTS.filter(e=>e.status==="accepted").length;
+  $("#evStats").textContent = `${acc} of ${EVENTS.length} accepted`;
+}
+function applyAnswer(q, a){
+  state.answers[q] = a;
+  const set = (id, st) => { const e = EVENTS.find(x=>x.id===id); if (e) e.status = st; };
+  if (q==="resv") set("ReservationFulfilled", a==="yes"?"accepted":a==="no"?"rejected":"question");
+  if (q==="stock") { if (a==="yes") { set("BookStocked","accepted"); set("CopiesAdded","accepted"); } else { set("BookStocked","rejected"); set("CopiesAdded","accepted"); } }
+  if (q==="orphan") { if (a==="job") set("StockReconciled","accepted"); else if (a==="sql") { const e=EVENTS.find(x=>x.id==="StockReconciled"); e.id="StockCountCorrected"; e.status="accepted"; e.note="Modeled as a correction command for staff. Name the command in Screenplay."; } else set("StockReconciled","rejected"); }
+  toast("Answer recorded. The interpreter re-ran on the affected slices.");
+  renderEvents();
+}
+document.addEventListener("click", e => {
+  const f = e.target.closest("[data-filter]"); if (f) { state.evFilter = f.dataset.filter; renderEvents(); return; }
+  const q = e.target.closest("[data-q]"); if (q) { applyAnswer(q.dataset.q, q.dataset.a); return; }
+  const b = e.target.closest("[data-act]"); if (!b) return;
+  const ev = EVENTS.find(x=>x.id===b.dataset.id);
+  if (b.dataset.act==="accept") { ev.status="accepted"; if (ev.q) state.answers[ev.q] = state.answers[ev.q] || "manual"; }
+  if (b.dataset.act==="reject") ev.status="rejected";
+  if (b.dataset.act==="restore") ev.status="suggested";
+  if (b.dataset.act==="rename") {
+    const span = document.querySelector(`[data-name="${ev.id}"]`);
+    span.innerHTML = `<input id="ren-${ev.id}" value="${esc(ev.id)}" aria-label="Event name" size="${ev.id.length+2}">`;
+    const inp = span.querySelector("input"); inp.focus(); inp.select();
+    const done = () => { const v = inp.value.trim().replace(/\s+/g,""); if (v && v!==ev.id) { if (state.selSlice.endsWith(ev.id)) state.selSlice = ""; ev.id = v; toast("Renamed. Past-tense names read best as facts."); } renderEvents(); };
+    inp.addEventListener("keydown", k => { if (k.key==="Enter") done(); if (k.key==="Escape") renderEvents(); });
+    inp.addEventListener("blur", done);
+    return;
+  }
+  renderEvents();
+});
+
+// ------------------------------------------------------------------ 5. model
+const COMMAND_FOR = { AuthorRegistered:"RegisterAuthor", AuthorRemoved:"RemoveAuthor", MemberRegistered:"RegisterMember", BookAddedToCatalog:"AddBook", BookTagged:"TagBook",
+  BookStocked:"StockBook", CopiesAdded:"AddCopies", CopiesReportedLost:"ReportLost", BookReserved:"ReserveBook", BookLent:"LendBook", ReservationFulfilled:"LendBook", BookReturned:"ReturnBook", StockReconciled:"(nightly job)", StockCountCorrected:"CorrectStockCount" };
+const SCREEN_FOR = { RegisterAuthor:"Authors", RemoveAuthor:"Authors", RegisterMember:"Members", AddBook:"Catalog", TagBook:"Book details", StockBook:"Inventory", AddCopies:"Inventory", ReportLost:"Inventory", ReserveBook:"Reservations", LendBook:"Lending desk", ReturnBook:"Lending desk" };
+const VIEWS_FOR = { Authors:["AuthorList"], Members:["MemberList"], Catalog:["CatalogEntry"], Inventory:["Availability"], Lending:["ActiveLoans","ReservationQueue"] };
+const MODULE_ORDER = ["Authors","Members","Catalog","Inventory","Lending"];
+function slices(){
+  const live = EVENTS.filter(e=>e.status!=="rejected");
+  const out = [];
+  MODULE_ORDER.forEach(m => {
+    const byCmd = {};
+    live.filter(e=>e.module===m).forEach(e => { const c = COMMAND_FOR[e.id] || ("Record"+e.id); (byCmd[c] ||= []).push(e); });
+    Object.entries(byCmd).forEach(([c, evs]) => out.push({ key:m+"."+c, module:m, type: c.startsWith("(") ? "Automation" : "StateChange", command:c, events:evs, screen:SCREEN_FOR[c] }));
+    out.push({ key:m+".views", module:m, type:"StateView", views:VIEWS_FOR[m], events: live.filter(e=>e.module===m) });
+  });
+  return out;
+}
+function renderModel(){
+  const sl = slices(); if (!sl.find(s=>s.key===state.selSlice)) state.selSlice = sl[0].key;
+  const cols = sl.length;
+  const board = $("#board");
+  board.style.gridTemplateColumns = `120px repeat(${cols}, 156px)`;
+  let html = `<div class="lh" style="border-bottom:2px solid var(--ink)">Module</div>`;
+  MODULE_ORDER.forEach(m => { const n = sl.filter(s=>s.module===m).length; html += `<div class="mod" style="grid-column:span ${n}">${m}</div>`; });
+  html += `<div class="lh">Slice</div>` + sl.map(s=>`<div class="slh${s.key===state.selSlice?" sel":""}" data-slice="${s.key}">${s.type==="StateView"?"View":s.type==="Automation"?"Automation":"Change"} · ${esc(s.command||s.views.join(", "))}</div>`).join("");
+  const sel = k => k===state.selSlice ? " selcol" : "";
+  html += `<div class="lh">Screens</div>` + sl.map(s=>`<div class="cell2${sel(s.key)}" data-slice="${s.key}">${s.screen?`<div class="sticky ui">${esc(s.screen)}<small>inferred from route</small></div>`:""}</div>`).join("");
+  html += `<div class="lh">Commands</div>` + sl.map(s=>`<div class="cell2${sel(s.key)}" data-slice="${s.key}">${s.type==="StateChange"?`<div class="sticky cmd">${esc(s.command)}</div>`:s.type==="Automation"?`<div class="sticky ui">⚙ ${esc(s.command)}</div>`:""}</div>`).join("");
+  const streams = [...new Set(EVENTS.map(e=>e.stream))];
+  streams.forEach(st => {
+    html += `<div class="lh">Events · ${st}</div>` + sl.map(s => `<div class="cell2${sel(s.key)}" data-slice="${s.key}">${s.type!=="StateView" ? s.events.filter(e=>e.stream===st).map(e=>`<div class="sticky evt${e.status!=="accepted"?" pending":""}">${esc(e.id)}${e.props.length?`<small>${e.props.map(p=>p[0]).join(", ")}</small>`:""}</div>`).join("") : ""}</div>`).join("");
+  });
+  html += `<div class="lh">Read models</div>` + sl.map(s=>`<div class="cell2${sel(s.key)}" data-slice="${s.key}">${s.type==="StateView"? s.views.map(v=>`<div class="sticky rm">${v}<small>no GET evidence</small></div>`).join("") : ""}</div>`).join("");
+  board.innerHTML = html;
+  const live = EVENTS.filter(e=>e.status!=="rejected"), acc = live.filter(e=>e.status==="accepted").length;
+  $("#modelStats").textContent = `${sl.length} slices · ${acc} accepted events · ${live.length-acc} open`;
+  renderSlice(sl.find(s=>s.key===state.selSlice));
+  $("#playOut").textContent = play(sl);
+}
+function renderSlice(s){
+  $("#sliceMeta").textContent = s.type;
+  if (s.type==="StateView") {
+    $("#sliceDetail").innerHTML = `<p><b>${s.views.join(", ")}</b> in ${s.module}.</p><p class="muted">Prologue does not record GET traffic, so read models are inferred from the tables the commands write and the events that change them. Confirm the columns against the real screens.</p>
+      <p>Built from: ${s.events.map(e=>`<span class="chip db">${esc(e.id)}</span>`).join(" ")}</p>`;
+    return;
+  }
+  const shapes = [...new Set(s.events.flatMap(e=>e.from))].map(id=>SHAPES.find(x=>x.id===id));
+  $("#sliceDetail").innerHTML = `<p><span class="sticky cmd" style="display:inline-block;width:auto">${esc(s.command)}</span> → ${s.events.map(e=>`<span class="sticky evt${e.status!=="accepted"?" pending":""}" style="display:inline-block;width:auto">${esc(e.id)}</span>`).join(" ")}</p>
+    <table><tr><th>Observed as</th><td>${shapes.map(x=>`<div class="mono">${x.method} ${esc(x.path)} · ${COUNTS[x.id]||0}</div>`).join("") || "<span class='muted'>no HTTP command</span>"}</td></tr>
+    <tr><th>Writes</th><td>${shapes.flatMap(x=>x.tx).map(x=>`<span class="op ${x.op}">${x.op}</span> ${x.t}`).join(" &nbsp; ") || "—"}</td></tr>
+    <tr><th>Rules seen</th><td>${s.events.map(e=>e.note).filter(Boolean).map(n=>`<div>${esc(n)}</div>`).join("") || "<span class='muted'>none inferred</span>"}</td></tr>
+    <tr><th>Status</th><td>${s.events.every(e=>e.status==="accepted")?`<span class="chip ok">ready for Screenplay</span>`:`<span class="chip warn">has open suggestions</span> <a href="#events">Review</a>`}</td></tr></table>`;
+}
+function play(sl){
+  const L = [`// Provisional model from Prologue capture “Lending baseline”.`, `// Evidence: ${Object.values(COUNTS).reduce((a,b)=>a+b,0)} captures. Review before accepting as the contract.`, ""];
+  MODULE_ORDER.forEach(m => {
+    L.push(`module ${m}`, `  feature ${m}`);
+    sl.filter(s=>s.module===m).forEach(s => {
+      if (s.type==="StateView") { s.views.forEach(v => { L.push(`    slice StateView ${v}`, `      readmodel ${v}`, `        // columns to confirm: no GET traffic captured`); }); return; }
+      const name = s.command.startsWith("(") ? "NightlyStockTake" : s.command;
+      L.push(`    slice ${s.type} ${name}`);
+      s.events.forEach(e => { L.push(`      event ${e.id}${e.status!=="accepted"?"  // open":""}`); e.props.forEach(([p,t]) => L.push(`        ${p} ${t}`)); });
+      if (s.type==="StateChange") {
+        const props = [...new Map(s.events.flatMap(e=>e.props)).entries()];
+        L.push(`      command ${s.command}`); props.forEach(([p,t]) => L.push(`        ${p} ${t}`));
+        s.events.forEach(e => L.push(`        produces ${e.id}`));
+      }
+    });
+    L.push("");
+  });
+  return L.join("\n");
+}
+$("#board").addEventListener("click", e => { const c = e.target.closest("[data-slice]"); if (c) { state.selSlice = c.dataset.slice; renderModel(); } });
+$("#handoff").addEventListener("click", () => {
+  const open = EVENTS.filter(e=>e.status==="suggested"||e.status==="question").length;
+  toast(open ? `${open} suggestions are still open. They will be marked as drafts in the .play file.` : "Model handed to Screenplay for review.");
+});
+
+// ------------------------------------------------------------------ boot
+renderDefine();
+for (let i=0;i<14;i++) { const c = makeCapture(); c.at = new Date(Date.now() - (14-i)*1700); pushCapture(c, false); }
+state.perMin = [2,3,1,2,4,3,2,2,3,1,2,3,4,2,3,2,1,3,2,2];
+renderCaptureStats(); selectCapture(state.feed.find(c=>c.shape.id==="lend")?.id || state.feed[0].id);
+route();
+setInterval(tick, 1800);
+</script>
+</body>
+</html>
