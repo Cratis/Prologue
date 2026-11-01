@@ -15,7 +15,8 @@ public class clean_environment : Specification
         "PROLOGUE_MODE",
         "PROLOGUE_SERVICE_PORT",
         "PROLOGUE_GRACE_PERIOD",
-        "PROLOGUE_IDLE_TIMEOUT"
+        "PROLOGUE_IDLE_TIMEOUT",
+        "PROLOGUE_CAPTURED_SERVICE"
     ];
 
     Dictionary<string, string?> _original;

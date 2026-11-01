@@ -1,6 +1,7 @@
 // Copyright (c) Cratis. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using Cratis.Prologue.Contracts;
 using Cratis.Prologue.Interpreter.Contracts;
 using Cratis.Prologue.Screenplay;
 
@@ -21,6 +22,7 @@ namespace Cratis.Prologue.Interpreter;
 /// <param name="ServicePort">The port the service's HTTP API listens on.</param>
 /// <param name="GracePeriodSeconds">How many seconds the service waits for answers while a session is parked awaiting them before exiting cleanly.</param>
 /// <param name="IdleTimeoutSeconds">How many seconds without session activity the service lingers before exiting cleanly.</param>
+/// <param name="CapturedService">The captured service to interpret on its own; <see langword="null"/> interprets every service.</param>
 public record InterpreterArguments(
     string CapturesFolder,
     string OutputFile,
@@ -29,7 +31,8 @@ public record InterpreterArguments(
     bool Serve = false,
     int ServicePort = InterpreterArguments.DefaultServicePort,
     int GracePeriodSeconds = InterpreterArguments.DefaultGracePeriodSeconds,
-    int IdleTimeoutSeconds = InterpreterArguments.DefaultIdleTimeoutSeconds)
+    int IdleTimeoutSeconds = InterpreterArguments.DefaultIdleTimeoutSeconds,
+    ServiceName? CapturedService = null)
 {
     /// <summary>
     /// The default folder capture files are read from when nothing is specified.
@@ -80,7 +83,8 @@ public record InterpreterArguments(
 
     /// <summary>
     /// Parses the command-line arguments, falling back to the <c language="csharp">PROLOGUE_CAPTURES</c>, <c language="csharp">PROLOGUE_OUTPUT</c>,
-    /// <c language="csharp">PROLOGUE_PLAY_OUTPUT</c> and <c language="csharp">PROLOGUE_ID</c> environment variables and then the defaults. Service
+    /// <c language="csharp">PROLOGUE_PLAY_OUTPUT</c>, <c language="csharp">PROLOGUE_ID</c> and <c language="csharp">PROLOGUE_CAPTURED_SERVICE</c> environment
+    /// variables and then the defaults. Service
     /// mode is selected with <c language="csharp">--serve</c> or <c language="csharp">PROLOGUE_MODE=service</c>, and its behavior is tuned through
     /// <c language="csharp">PROLOGUE_SERVICE_PORT</c>, <c language="csharp">PROLOGUE_GRACE_PERIOD</c> and <c language="csharp">PROLOGUE_IDLE_TIMEOUT</c> (seconds).
     /// </summary>
@@ -96,6 +100,7 @@ public record InterpreterArguments(
         var servicePort = PositiveNumberFromEnvironment("PROLOGUE_SERVICE_PORT", DefaultServicePort);
         var gracePeriod = PositiveNumberFromEnvironment("PROLOGUE_GRACE_PERIOD", DefaultGracePeriodSeconds);
         var idleTimeout = PositiveNumberFromEnvironment("PROLOGUE_IDLE_TIMEOUT", DefaultIdleTimeoutSeconds);
+        var capturedService = Environment.GetEnvironmentVariable("PROLOGUE_CAPTURED_SERVICE") is { Length: > 0 } serviceFromEnvironment ? new ServiceName(serviceFromEnvironment) : null;
 
         for (var index = 0; index < args.Length; index++)
         {
@@ -114,6 +119,9 @@ public record InterpreterArguments(
                     prologueId = parsed;
                     index++;
                     break;
+                case "--captured-service" when index + 1 < args.Length:
+                    capturedService = new ServiceName(args[++index]);
+                    break;
                 case "--serve":
                     serve = true;
                     break;
@@ -122,7 +130,7 @@ public record InterpreterArguments(
             }
         }
 
-        return new InterpreterArguments(captures, output, prologueId, playOutput, serve, servicePort, gracePeriod, idleTimeout);
+        return new InterpreterArguments(captures, output, prologueId, playOutput, serve, servicePort, gracePeriod, idleTimeout, capturedService);
     }
 
     static int PositiveNumberFromEnvironment(string variable, int fallback) =>
