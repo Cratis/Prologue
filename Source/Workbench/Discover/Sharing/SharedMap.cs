@@ -35,7 +35,9 @@ public record SharedMap(PrologueId Id, ShareToken Token)
     /// <param name="readModels">Observes the stored shares.</param>
     /// <returns>The share; nothing when no map is shared with that token.</returns>
     public static ISubject<IEnumerable<SharedMap>> ObserveSharedMapByToken(ShareToken token, IReadModels readModels) =>
-        readModels.Observe<SharedMap>(share => share.Token == token);
+        string.IsNullOrWhiteSpace(token.Value) || token == ShareToken.None
+            ? new BehaviorSubject<IEnumerable<SharedMap>>([])
+            : readModels.Observe<SharedMap>(share => share.Token == token);
 
     /// <summary>
     /// Reduces a map being shared.
