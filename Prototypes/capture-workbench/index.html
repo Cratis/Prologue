@@ -306,6 +306,24 @@ tr.excluded td { opacity: .4; text-decoration: line-through; }
 .capbar { height: 6px; border-radius: 3px; background: rgba(148,163,184,.15); overflow: hidden; }
 .capbar i { display: block; height: 100%; background: var(--accent); }
 .codeev { font-family: var(--mono); font-size: 12px; color: var(--accent); }
+/* AI (Cratis.AI, as in Direct's AI providers & pools) */
+.ai-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 16px; }
+.ai-sub { font-size: 11px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); margin: 4px 0 8px; display: flex; justify-content: space-between; align-items: center; }
+.prow { display: grid; grid-template-columns: 30px minmax(0,1fr) auto; gap: 12px; align-items: center; padding: 10px 0; border-top: 1px solid rgba(255,255,255,.06); }
+.prow:first-of-type { border-top: 0; }
+.prow small { display: block; color: var(--muted); font-size: 12px; }
+.prow .capbar { margin-top: 6px; max-width: 220px; }
+.vmark { width: 30px; height: 30px; border-radius: 8px; display: grid; place-items: center; font-size: 11px; font-weight: 800; background: #1e3a5f; color: var(--accent); }
+.vmark.local { background: var(--rm-bg); color: var(--rm); }
+.poolcard { border: 1px solid var(--line); border-radius: var(--r-card); padding: 12px 14px; background: rgba(13,21,40,.6); display: flex; flex-direction: column; gap: 10px; }
+.poolcard header { display: flex; justify-content: space-between; align-items: center; gap: 8px; flex-wrap: wrap; }
+.member { display: grid; grid-template-columns: 22px minmax(0,1fr) auto; gap: 10px; align-items: center; font-size: 13px; }
+.member .ord { width: 22px; height: 22px; border-radius: 6px; background: var(--slate-bg); display: grid; place-items: center; font-size: 11px; font-weight: 700; }
+.member .mv { display: flex; gap: 2px; }
+.member .mv button { min-height: 26px; min-width: 26px; padding: 0; }
+.poolcard select { border: 1px solid var(--line-strong); background: var(--sunken); border-radius: var(--r-sm); min-height: 32px; padding: 0 8px; font-size: 12px; color: var(--ink); }
+.addprov { display: none; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 10px; margin-top: 10px; padding: 14px; border-radius: var(--r-card); background: var(--sunken); }
+.addprov.on { display: grid; }
 /* Decisions, journeys, boundaries, rebuild */
 .decision { display:flex; gap:10px; align-items:center; flex-wrap:wrap; padding:10px 12px; border-radius:var(--r-ctl); background:var(--sunken); margin-bottom:12px; }
 .explain { margin:0 0 12px; padding:0; list-style:none; display:flex; flex-direction:column; gap:6px; counter-reset:x; }
@@ -399,6 +417,32 @@ tr.excluded td { opacity: .4; text-decoration: line-through; }
         </div>
       </div>
       <div class="panel">
+        <h3>AI <small>Cratis.AI providers, pools and agents, set up the same way as in Direct</small></h3>
+        <div class="ai-grid">
+          <div>
+            <div class="ai-sub">Providers<button class="btn small" id="addProvBtn">Add provider</button></div>
+            <div id="provList"></div>
+            <form class="addprov" id="addProv">
+              <label class="f" for="apVendor">Vendor<select id="apVendor"></select></label>
+              <label class="f" for="apName">Name<input id="apName" placeholder="A recognizable name for the provider"></label>
+              <label class="f" for="apEndpoint" id="apEndpointF">Endpoint<input id="apEndpoint"></label>
+              <label class="f" for="apKey" id="apKeyF">API key (stored as a secret)<input id="apKey" type="password"></label>
+              <label class="f" for="apConc">Max concurrent jobs<input id="apConc" type="number" min="0" value="2"></label>
+              <p class="muted" id="apNote" style="grid-column:1/-1;margin:0;font-size:12px"></p>
+              <div class="row" style="grid-column:1/-1"><button class="btn primary small" type="submit">Add</button><button class="btn small" type="button" id="apCancel">Cancel</button></div>
+            </form>
+          </div>
+          <div>
+            <div class="ai-sub">Pools<span id="aiPill" class="status-pill localpill">Local only</span></div>
+            <div class="grid" style="gap:10px" id="poolList"></div>
+          </div>
+          <div>
+            <div class="ai-sub">Agents</div>
+            <div class="grid" style="gap:10px" id="agentList"></div>
+          </div>
+        </div>
+      </div>
+      <div class="panel">
         <h3>Runtime sources <small>For Capture. Selected metadata only. Row values and request bodies are never read.</small></h3>
         <div class="grid g2" style="gap:12px">
           <div class="src" id="src-http">
@@ -426,7 +470,7 @@ tr.excluded td { opacity: .4; text-decoration: line-through; }
             <header><b>Correlation &amp; output</b></header>
             <label class="f" for="win">Correlation window: <span id="winV" class="num">2000 ms</span><input type="range" id="win" min="250" max="5000" step="250" value="2000"></label>
             <div class="muted" style="font-size:12px">An HTTP command claims database transactions and spans seen within this window. Shared trace ids join regardless of time.</div>
-            <label class="f" for="llmKind">AI pool (Cratis.AI) for interpretation and code analysis<select id="llmKind"><option value="Ollama">Local pool · Ollama in your network (local only)</option><option value="Anthropic">Engineering pool · Anthropic (code and metadata leave the network)</option></select></label>
+            
             <label class="f" for="outKind">Send captures to<select id="outKind"><option value="Api">Receiver → MongoDB (live view)</option><option value="Json">JSON files in ./captures</option></select></label>
           </div>
         </div>
@@ -517,18 +561,8 @@ tr.excluded td { opacity: .4; text-decoration: line-through; }
       </div>
       <div class="panel">
         <h3>AI for code analysis <small>Cratis.AI</small></h3>
-        <div class="pool">
-          <div class="row" style="justify-content:space-between"><b id="poolName">Local pool · Deep tier</b><span class="status-pill localpill" id="poolPill">In your network</span></div>
-          <div class="muted" style="font-size:12px" id="poolMembers">1 Ollama · qwen3-coder:32b on llm:11434</div>
-          <div class="capbar"><i style="width:64%"></i></div>
-          <div class="muted" style="font-size:12px">1.28M of 2M tokens used this analysis · ceiling set on the pool</div>
-        </div>
-        <div class="grid" style="gap:8px;margin-top:12px">
-          <div class="agent"><span class="av">Ca</span><span><b>Cartographer</b><span class="muted"> maps capabilities and modules</span></span></div>
-          <div class="agent"><span class="av">Sc</span><span><b>Scout</b><span class="muted"> finds decision points and rules</span></span></div>
-          <div class="agent"><span class="av">Tr</span><span><b>Tracer</b><span class="muted"> follows calls between systems</span></span></div>
-        </div>
-        <p class="muted" style="font-size:12px;margin:10px 0 0">Providers, pools, agents and ceilings come from Cratis.AI. Change the pool in <a href="#define">Systems</a>.</p>
+        <div id="discoverAI"></div>
+        <p class="muted" style="font-size:12px;margin:10px 0 0">Providers, pools and agents are set up under <a href="#define">Systems → AI</a>, the same way as in Direct.</p>
       </div>
     </div>
   </div>
@@ -776,7 +810,7 @@ function renderDefine(){
   $("#scenOpts").innerHTML = state.scenarios.map(s=>`<option value="${esc(s)}">`).join("");
   const on = id => $("#t-"+id).checked;
   ["http","db","otel"].forEach(id => $("#src-"+id).classList.toggle("off", !on(id)));
-  $("#bIn").innerHTML = [on("http")&&"Method, path with query string, status, trace id", on("db")&&"Changed table and column names per transaction", on("db")&&"Schema: keys, foreign keys, unique constraints", on("otel")&&"Span names, durations, attribute keys", on("otel")&&state.attrs.size&&`Values of ${[...state.attrs].join(", ")}`, on("db")&&"Read from the database transaction log, never by querying tables", state.steps.discover&&"Source code, cloned read-only into your network", state.steps.discover&&"Code sent to the AI pool you choose (local pool keeps it in your network)"].filter(Boolean).map(x=>`<li>${esc(x)}</li>`).join("");
+  $("#bIn").innerHTML = [on("http")&&"Method, path with query string, status, trace id", on("db")&&"Changed table and column names per transaction", on("db")&&"Schema: keys, foreign keys, unique constraints", on("otel")&&"Span names, durations, attribute keys", on("otel")&&state.attrs.size&&`Values of ${[...state.attrs].join(", ")}`, on("db")&&"Read from the database transaction log, never by querying tables", state.steps.discover&&"Source code, cloned read-only into your network", state.steps.discover&&(aiPosture().all ? "Code read only by AI providers in your network" : aiPosture().first ? "Code read by local AI first; asks before any provider outside your network" : "Code may be sent to AI providers outside your network")].filter(Boolean).map(x=>`<li>${esc(x)}</li>`).join("");
   const pg = $("#dbKind").selectedIndex===0;
   const db = { name:"library", connectionString:"<from secret library-db/connection>" };
   const cfg = { prologue: {
@@ -790,16 +824,15 @@ function renderDefine(){
       clusters: { monitored: { destinations: { primary: { address: $("#httpTarget").value } } } } } } : {}),
     systems: SYSTEMS.map(x => ({ name:x.name, repository:{ host:x.host, repository:x.repo, branch:x.branch, path:x.path }, capture:x.runtime.length>0, analyze:state.steps.discover })),
     repositories: { cloneDirectory: $("#cloneDir").value, connections: CONNECTIONS.filter(c=>c.on).map(c=>({ host:c.host, ...c.cfg })) },
-    ai: { // Cratis.AI: providers, pools and agents
-      providers: $("#llmKind").value==="Ollama" ? [{ type:"Ollama", endpoint:"http://llm:11434" }] : [{ type:"Anthropic", apiKey:"<from secret prologue/anthropic-key>" }],
-      pools: [{ name: $("#llmKind").value==="Ollama" ? "local" : "engineering", tier:"Deep", members:[$("#llmKind").value==="Ollama" ? "Ollama" : "Anthropic"] }],
-      agents: { cartographer:"Deep", scout:"Deep", tracer:"Balanced", interpreter:"Balanced" },
-      ceiling: { tokensPerAnalysis: 2000000 }
+    ai: { // Cratis.AI: the same providers, pools and agents Direct configures
+      providers: AIPROVIDERS.map(x => ({ name:x.name, type:x.type, ...(x.endpoint?{ endpoint:x.endpoint }:{}), ...(x.secret?{ apiKey:`<from secret ${x.secret}>` }:{}), maxConcurrentJobs:x.conc })),
+      pools: POOLS.map(x => ({ name:x.name, tier:x.tier, members:x.members, ordering:x.ordering, fallback:x.fallback, ...(x.ceiling?{ ceiling:x.ceiling }:{}) })),
+      agents: AGENTS.map(x => ({ name:x.name, purpose:x.purpose, mode:x.mode, pool:x.pool, ...(x.harness?{ harness:x.harness }:{}) }))
     }
   };
   $("#cfgOut").textContent = JSON.stringify(cfg, null, 2);
   renderSystems();
-  const local = $("#llmKind").value==="Ollama" && $("#outKind").value==="Api";
+  const local = aiPosture().all && $("#outKind").value==="Api";
   $("#localPill").textContent = local ? "Local only" : "Leaves network"; $("#localPill").className = "status-pill " + (local ? "localpill" : "paused");
 }
 document.addEventListener("click", e => {
@@ -808,7 +841,7 @@ document.addEventListener("click", e => {
   if (r) flip(state.routesOn, r.dataset.route); else if (t) flip(state.tablesOn, t.dataset.table); else if (a) flip(state.attrs, a.dataset.attr); else return;
   renderDefine();
 });
-["#t-http","#t-db","#t-otel","#dbKind","#outKind","#llmKind","#cloneDir","#httpTarget","#otelSvc","#otelUp"].forEach(id => $(id).addEventListener("input", renderDefine));
+["#t-http","#t-db","#t-otel","#dbKind","#outKind","#cloneDir","#httpTarget","#otelSvc","#otelUp"].forEach(id => $(id).addEventListener("input", renderDefine));
 $("#win").addEventListener("input", e => { $("#winV").textContent = e.target.value+" ms"; renderDefine(); });
 $("#addScen").addEventListener("click", () => { const v=$("#newScen").value.trim(); if(!v) return; state.scenarios.push(v); $("#newScen").value=""; renderDefine(); });
 
@@ -825,6 +858,80 @@ const CONNECTIONS = [
   { host:"GitLab", on:true, detail:"gitlab.com · token from secret gitlab/prologue-read", cfg:{ url:"https://gitlab.com", token:"<from secret gitlab/prologue-read>" } },
   { host:"Local folder", on:false, detail:"Analyze code already on this machine", cfg:{ path:"/srv/legacy" } }
 ];
+const VENDORS = [
+  { type:"Anthropic", mark:"An", key:"sk-ant-..." },
+  { type:"OpenAI", mark:"OA", key:"sk-..." },
+  { type:"Azure OpenAI", mark:"Az", endpoint:"https://<resource>.openai.azure.com", key:"" },
+  { type:"OpenAI-compatible", mark:"OC", endpoint:"https://host/v1", key:"Optional - some endpoints run without one", note:"Use this for models in your network: Ollama, vLLM or LM Studio." },
+  { type:"Z.ai", mark:"Z", endpoint:"https://api.z.ai/api/anthropic", key:"The Z.ai API key" },
+  { type:"OpenAI Codex", mark:"Cx", note:"Add the provider, then use Connect on its row to authenticate with ChatGPT." },
+  { type:"GitHub Copilot", mark:"Co", note:"Add the provider, then use Connect on its row to authenticate with GitHub, or paste a GitHub token under Credentials." }
+];
+const AIPROVIDERS = [
+  { name:"Local models", type:"OpenAI-compatible", endpoint:"http://llm:11434/v1", local:true, conc:2, detail:"llm:11434 · qwen3-coder:32b · no key", left:null },
+  { name:"Anthropic", type:"Anthropic", secret:"prologue/anthropic-key", local:false, conc:4, detail:"Your key sk-…4f2a", left:64 },
+  { name:"Copilot", type:"GitHub Copilot", local:false, conc:2, detail:"Not connected", left:null, signIn:true }
+];
+const POOLS = [
+  { name:"Code analysis", tier:"Powerful", members:["Local models","Anthropic"], ordering:"In priority order", fallback:"Pause and ask", ceiling:"2,000,000 tokens per analysis", used:1.28 },
+  { name:"Interpretation", tier:"Balanced", members:["Local models"], ordering:"Most capacity left first", fallback:"Continue on the next provider" }
+];
+const AGENTS = [
+  { name:"Dramaturg", av:"Dr", purpose:"CodeMapping", mode:"Job", pool:"Code analysis", harness:"Claude", desc:"Reads each system’s source in a worker container and maps its modules and capabilities." },
+  { name:"Prompter", av:"Pr", purpose:"DecisionPointDiscovery", mode:"Job", pool:"Code analysis", harness:"Pi", desc:"Finds where the code decides (rules, refusals, state changes) with file and line." },
+  { name:"Usher", av:"Us", purpose:"DependencyTracing", mode:"Chat", pool:"Interpretation", desc:"Follows calls between systems and confirms them against captured spans." },
+  { name:"Interpreter", av:"In", purpose:"EventInterpretation", mode:"Chat", pool:"Interpretation", desc:"Names events, refines suggestions and asks you the questions in Events." }
+];
+const TIERS = ["Fast","Balanced","Powerful","Premier"];
+const ORDERINGS = ["Most capacity left first","In priority order"];
+const FALLBACKS = ["Continue on the next provider","Pause and ask"];
+const provOf = n => AIPROVIDERS.find(x=>x.name===n);
+function poolPosture(pl){ const ms = pl.members.map(provOf).filter(Boolean); const all = ms.every(m=>m.local); const first = ms[0]?.local && (all || pl.fallback==="Pause and ask"); return { all, first }; }
+function aiPosture(){ const ps = POOLS.map(poolPosture); return { all: ps.every(x=>x.all), first: ps.every(x=>x.first) }; }
+function postureChip(x){ return x.all ? `<span class="chip ok">Stays in your network</span>` : x.first ? `<span class="chip warn">Asks before leaving your network</span>` : `<span class="chip bad">May leave your network</span>`; }
+const sel = (id, opts, v) => `<select data-pool-field="${id}" aria-label="${id}">${opts.map(o=>`<option${o===v?" selected":""}>${o}</option>`).join("")}</select>`;
+function renderAI(){
+  const vm = t => (VENDORS.find(v=>v.type===t)||{}).mark || "?";
+  $("#provList").innerHTML = AIPROVIDERS.map((x,i)=>`<div class="prow"><span class="vmark${x.local?" local":""}">${vm(x.type)}</span><span><b>${esc(x.name)}</b> <span class="muted" style="font-size:12px">${esc(x.type)}</span><small>${x.local?`<span style="color:var(--rm)">In your network</span> · `:""}${esc(x.detail)} · ${x.conc} concurrent</small>${x.left!=null?`<div class="capbar"><i style="width:${x.left}%"></i></div><small>${x.left}% left · resets in 3 days</small>`:""}</span><span class="row" style="gap:6px">${x.signIn&&x.detail==="Not connected"?`<button class="btn small" data-signin="${i}">Connect</button>`:`<button class="btn small" data-manage="${i}">Manage</button>`}</span></div>`).join("");
+  $("#poolList").innerHTML = POOLS.map((pl,pi)=>`<div class="poolcard"><header><b>${esc(pl.name)}</b>${postureChip(poolPosture(pl))}</header>
+    <div class="row" style="gap:6px">${sel(pi+"|tier",TIERS,pl.tier)}${sel(pi+"|ordering",ORDERINGS,pl.ordering)}${sel(pi+"|fallback",FALLBACKS,pl.fallback)}</div>
+    ${pl.members.map((m,mi)=>`<div class="member"><span class="ord">${mi+1}</span><span>${esc(m)} <span class="muted" style="font-size:12px">${provOf(m)?.local?"local":provOf(m)?.type||""}</span></span><span class="mv"><button class="btn small" data-mv="${pi}|${mi}|-1" aria-label="Move ${esc(m)} up" ${mi===0?"disabled":""}>↑</button><button class="btn small" data-mv="${pi}|${mi}|1" aria-label="Move ${esc(m)} down" ${mi===pl.members.length-1?"disabled":""}>↓</button><button class="btn small" data-rm="${pi}|${mi}" aria-label="Remove ${esc(m)}" ${pl.members.length===1?"disabled":""}>×</button></span></div>`).join("")}
+    ${AIPROVIDERS.some(x=>!pl.members.includes(x.name))?`<select data-addmember="${pi}" aria-label="Add a provider to ${esc(pl.name)}"><option value="">Add a provider…</option>${AIPROVIDERS.filter(x=>!pl.members.includes(x.name)).map(x=>`<option>${esc(x.name)}</option>`).join("")}</select>`:""}
+    ${pl.ceiling?`<span class="muted" style="font-size:12px">Ceiling: ${esc(pl.ceiling)}</span>`:""}
+    <span class="muted" style="font-size:12px">Used by ${AGENTS.filter(a=>a.pool===pl.name).map(a=>a.name).join(", ")||"no agent"}</span></div>`).join("");
+  $("#agentList").innerHTML = AGENTS.map((a,ai)=>`<div class="poolcard"><div class="agent"><span class="av">${a.av}</span><span><b>${a.name}</b> <span class="chip">${a.mode==="Job"?"Job · worker container":"Chat"}</span></span></div><span class="muted" style="font-size:12px">${esc(a.desc)}</span><div class="row" style="gap:6px"><select data-agentpool="${ai}" aria-label="Pool for ${a.name}">${POOLS.map(p=>`<option${p.name===a.pool?" selected":""}>${esc(p.name)}</option>`).join("")}</select>${a.mode==="Job"?`<select data-harness="${ai}" aria-label="Harness for ${a.name}">${["Claude","Pi","Copilot"].map(h=>`<option${h===a.harness?" selected":""}>${h}</option>`).join("")}</select>`:""}</div></div>`).join("");
+  const post = aiPosture();
+  $("#aiPill").textContent = post.all ? "Local only" : post.first ? "Local first" : "Leaves network"; $("#aiPill").className = "status-pill " + (post.all ? "localpill" : post.first ? "localpill" : "paused");
+  const cp = POOLS[0];
+  $("#discoverAI").innerHTML = `<div class="pool"><div class="row" style="justify-content:space-between"><b>${esc(cp.name)} pool · ${esc(cp.tier)}</b>${postureChip(poolPosture(cp))}</div>
+    <div class="muted" style="font-size:12px">${cp.members.map((m,i)=>`${i+1} ${esc(m)}`).join(" · ")} · ${esc(cp.ordering.toLowerCase())}, then ${esc(cp.fallback.toLowerCase())}</div>
+    ${cp.ceiling?`<div class="capbar"><i style="width:${cp.used/2*100}%"></i></div><div class="muted" style="font-size:12px">${cp.used}M of 2M tokens used this analysis · ceiling on the pool</div>`:""}</div>
+    <div class="grid" style="gap:8px;margin-top:12px">${AGENTS.filter(a=>a.pool===cp.name || a.name==="Usher").map(a=>`<div class="agent"><span class="av">${a.av}</span><span><b>${a.name}</b><span class="muted"> ${esc(a.desc.charAt(0).toLowerCase()+a.desc.slice(1))}</span></span></div>`).join("")}</div>`;
+  const v = VENDORS.find(x=>x.type===$("#apVendor").value) || VENDORS[0];
+  $("#apEndpointF").style.display = v.endpoint ? "" : "none"; $("#apEndpoint").placeholder = v.endpoint || "";
+  $("#apKeyF").style.display = v.key!==undefined ? "" : "none"; $("#apKey").placeholder = v.key || "";
+  $("#apNote").textContent = v.note || "How many units of work may run on this provider at the same time. Zero means no limit. Work that arrives while the provider is full stays queued.";
+}
+document.addEventListener("change", e => {
+  const f = e.target.closest("[data-pool-field]"); if (f) { const [pi,k] = f.dataset.poolField.split("|"); POOLS[+pi][k] = f.value; renderDefine(); return; }
+  const am = e.target.closest("[data-addmember]"); if (am && am.value) { POOLS[+am.dataset.addmember].members.push(am.value); renderDefine(); return; }
+  const ap = e.target.closest("[data-agentpool]"); if (ap) { AGENTS[+ap.dataset.agentpool].pool = ap.value; renderDefine(); return; }
+  const h = e.target.closest("[data-harness]"); if (h) { AGENTS[+h.dataset.harness].harness = h.value; renderDefine(); return; }
+  if (e.target.id==="apVendor") renderAI();
+});
+document.addEventListener("click", e => {
+  const mv = e.target.closest("[data-mv]"); if (mv) { const [pi,mi,d] = mv.dataset.mv.split("|").map(Number); const m = POOLS[pi].members; [m[mi], m[mi+d]] = [m[mi+d], m[mi]]; renderDefine(); }
+  const rm = e.target.closest("[data-rm]"); if (rm) { const [pi,mi] = rm.dataset.rm.split("|").map(Number); POOLS[pi].members.splice(mi,1); renderDefine(); }
+  const si = e.target.closest("[data-signin]"); if (si) { const x = AIPROVIDERS[+si.dataset.signin]; x.detail = "Connected to GitHub"; toast(`${x.name}: connected with GitHub device sign-in`); renderDefine(); }
+  const mg = e.target.closest("[data-manage]"); if (mg) toast(`${AIPROVIDERS[+mg.dataset.manage].name}: credentials, concurrency and usage capacity`);
+});
+$("#apVendor").innerHTML = VENDORS.map(v=>`<option>${v.type}</option>`).join("");
+$("#addProvBtn").addEventListener("click", () => { $("#addProv").classList.add("on"); renderAI(); });
+$("#apCancel").addEventListener("click", () => $("#addProv").classList.remove("on"));
+$("#addProv").addEventListener("submit", e => { e.preventDefault(); const v = $("#apVendor").value, n = $("#apName").value.trim() || v; const ep = $("#apEndpoint").value.trim();
+  const local = v==="OpenAI-compatible" && /localhost|^https?:\/\/[a-z0-9-]+(:\d+)?(\/|$)|\.local|\.internal/i.test(ep);
+  AIPROVIDERS.push({ name:n, type:v, endpoint: ep || undefined, secret: $("#apKey").value ? `prologue/${n.toLowerCase().replace(/\W+/g,"-")}-key` : undefined, local, conc: +$("#apConc").value || 0, detail: VENDORS.find(x=>x.type===v).note ? "Not connected" : (ep || "Key stored as a secret"), signIn: !!VENDORS.find(x=>x.type===v).note && !VENDORS.find(x=>x.type===v).key, left:null });
+  $("#addProv").classList.remove("on"); $("#addProv").reset(); toast(`${n} added. Add it to a pool to use it.`); renderDefine(); });
 const PROV = { "GitHub":["gh","GH"], "Azure DevOps":["ado","Az"], "GitLab":["gl","GL"], "Local folder":["fs","▤"] };
 state.steps = { discover:true, capture:true, rebuild:true };
 function renderSystems(){
@@ -838,10 +945,7 @@ function renderSystems(){
   document.querySelectorAll(".opt[data-opt]").forEach(o => { const on = state.steps[o.dataset.opt]; o.textContent = on ? "Optional" : "Off"; o.classList.toggle("off", !on); });
   ["discover","capture","rebuild"].forEach(k => $("#off-"+k).classList.toggle("on", !state.steps[k]));
   $("#startBtn").setAttribute("href", state.steps.discover ? "#discover" : "#capture");
-  const local = $("#llmKind").value==="Ollama";
-  $("#poolName").textContent = local ? "Local pool · Deep tier" : "Engineering pool · Deep tier";
-  $("#poolMembers").textContent = local ? "1 Ollama · qwen3-coder:32b on llm:11434" : "1 Anthropic · your key · 64% capacity left";
-  $("#poolPill").textContent = local ? "In your network" : "Code leaves the network"; $("#poolPill").className = "status-pill " + (local ? "localpill" : "paused");
+  renderAI();
 }
 document.addEventListener("change", e => {
   const t = e.target.closest("[data-step]"); if (!t) return;
@@ -882,7 +986,7 @@ const CAPINFO = {
   "del-author":["services/core/Authors/AuthorsController.cs:57","Seen 61 times. Refused while the author has books."],
   orphan:["jobs/stocktake/Reconcile.cs:41","Explains the 14 uncorrelated Inventory updates at 02:00: the job overwrites counts with the physical stock-take."],
   search:["services/search/CatalogIndex.cs:12","Reads library-db only. Nothing to capture as events, but it is a read model candidate."],
-  notify:["library/notifications · scanning","The Tracer is still reading this repository."]
+  notify:["library/notifications · scanning","The Dramaturg is still reading this repository."]
 };
 const DECISIONS = [
   ["services/core/Loans/LoansController.cs:71","Refuse a loan when no copy is available","72 refusals (409)","ok","Matches"],
