@@ -29,8 +29,8 @@ flowchart LR
     Mongo -.-> Service --> Api["SessionResult over HTTP"]
 ```
 
-- **Extractor** — a reverse proxy plus a database and telemetry watcher, all in one process. It's the only piece that has to run continuously, next to the system it's watching.
-- **Receiver** — a thin HTTP endpoint (`POST /captures`, `POST /prologues/{id}/captures`) that stores whatever the Extractor posts to it in MongoDB via `Cratis.Prologue.Storage`. It's optional — the Extractor can write JSON files to a mounted folder instead, with no Receiver or MongoDB involved at all.
+- **Extractor** — a reverse proxy plus a database and telemetry watcher, all in one process. It's the only piece that has to run continuously, next to the system it's watching. One Extractor captures a whole system, including one made of several [named services](reference/configuration.md#prologueservices): it attributes every observation to its service and correlates each service on its own.
+- **Receiver** — a thin HTTP endpoint (`POST /captures`, `POST /prologues/{id}/captures`) that stores whatever the Extractor posts to it in MongoDB via `Cratis.Prologue.Storage`, keeping each capture's service. It's optional — the Extractor can write JSON files to a mounted folder instead, with no Receiver or MongoDB involved at all.
 - **Interpreter** — a job, not a service, by default. It reads a folder of capture files, interprets them, and exits. A second mode embeds Orleans and keeps interpretation running as resumable session grains with state backed by MongoDB.
 
 The shared `Cratis.Prologue.Contracts`, `Cratis.Prologue.Configuration`, and

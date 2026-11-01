@@ -79,6 +79,11 @@ committed within its window become one **capture**. Because timing and trace evi
 relationship is provisional. The Interpreter analyzes the captures into an `ExtractionResult`: candidate modules,
 features, and slices with commands, events, read models, and projections.
 
+A system made of several services can be captured as **named services** — each with its own databases,
+reverse-proxy clusters and telemetry. Observations are only correlated within a service, and each service becomes
+its own module. A single service needs no extra configuration; see
+[Configuration](Documentation/reference/configuration.md#prologueservices).
+
 ## 🎭 The cast (projects)
 
 | Project | Package / Image | Purpose |
@@ -117,6 +122,9 @@ write the format those tools expect. The Receiver uses standard ASP.NET configur
 }
 ```
 
+- Everything under `prologue` outside `services` describes the **default service**. Add named services under
+  `prologue.services` to capture a system made of several services — each with its own `sqlServer`, `postgres`,
+  reverse-proxy `clusters` and `telemetryServiceNames`.
 - The **Extractor** looks for `cratis-prologue.json` in its working directory (override with the
   `PROLOGUE_CONFIG` environment variable) and binds the `prologue` section.
 - **The file is the baseline; environment variables override it.** A deployed tool is configured by its host — a

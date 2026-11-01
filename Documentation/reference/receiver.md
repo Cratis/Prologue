@@ -12,7 +12,7 @@ The Receiver is a thin HTTP endpoint the Extractor can post captures to directly
 | `POST /captures` | Stores a capture with no Prologue association |
 | `POST /prologues/{prologueId}/captures` | Stores a capture stamped with the given Prologue id, overriding whatever id the Extractor sent |
 
-Both endpoints accept a single `Capture` (the shape defined in `Cratis.Prologue.Contracts`) and respond `202 Accepted` once it's stored.
+Both endpoints accept a single `Capture` (the shape defined in `Cratis.Prologue.Contracts`) and respond `202 Accepted` once it's stored. A capture carries the `service` it was correlated within — empty for the default service — so one Receiver collects the captures of every [named service](configuration.md#prologueservices), and stored captures keep that attribution. Captures stored before named services existed read back as the default service.
 
 ## Storage
 

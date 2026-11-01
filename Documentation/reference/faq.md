@@ -8,7 +8,8 @@ description: Common problems when running Prologue, and what usually causes them
 - **HTTP captures missing.** Confirm your traffic is actually going through the Extractor's proxy port (`8080` by default), not straight at your system — anything that bypasses the proxy is invisible to Prologue. Also check the request method: only `POST`, `PUT`, and `DELETE` are captured, so a `GET`-only smoke test produces nothing to see.
 - **SQL Server captures missing.** Confirm the connection string's account can enable Change Data Capture (or that CDC is already enabled, if you set `enableChangeDataCapture: false`), and that a `tables` allowlist, if you set one, actually includes the table you changed.
 - **PostgreSQL captures missing.** Confirm the server has `wal_level = logical` — the Extractor can create its own replication slot and publication, but it can't change that server setting for you, and logical replication won't work without it.
-- **OpenTelemetry captures missing.** Confirm `openTelemetry.enabled` is `true`, and that your service's name matches `serviceNames` (or that list is empty, to capture every service).
+- **OpenTelemetry captures missing.** Confirm `openTelemetry.enabled` is `true`, and that your service's name matches `serviceNames` (or that list is empty, to capture every service). For a named service, the telemetry's `service.name` must match one of its `telemetryServiceNames`, or the service name itself when that list is empty.
+- **A named service has no HTTP captures.** Its commands are attributed through the reverse-proxy cluster their route sends them to. Check that the route's `clusterId` is the service's name, or is listed in the service's `clusters`.
 
 ## The Interpreter says it found no capture files
 

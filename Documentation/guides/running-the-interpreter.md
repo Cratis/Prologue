@@ -32,6 +32,10 @@ Every input and output path is overridable, as a CLI argument on the binary or a
 | `--output <file>` | `PROLOGUE_OUTPUT` | `/output/extraction-result.json` in the image | Where to write the `ExtractionResult` JSON |
 | `--play-output <file>` | `PROLOGUE_PLAY_OUTPUT` | next to the output file, named after the derived system name | Where to write the generated `.play` file |
 | `--prologue-id <guid>` | `PROLOGUE_ID` | — | Which Prologue's captures to interpret, when a folder holds more than one |
+| `--captured-service <name>` | `PROLOGUE_CAPTURED_SERVICE` | every service | Interpret only the captures of one [named service](../reference/configuration.md#prologueservices) |
+
+When the captures come from several named services, every service is interpreted by default and each becomes its
+own module. Pass `--captured-service` to produce a model of a single service instead.
 
 `cratis-prologue.json` (mounted at `/config/cratis-prologue.json`, or wherever `PROLOGUE_CONFIG` points) is optional in batch mode — it's only needed to configure LLM refinement, since the capture folder and output paths are already explicit.
 
