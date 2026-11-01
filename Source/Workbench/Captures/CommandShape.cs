@@ -45,7 +45,7 @@ public record CommandShape(string Value) : ConceptAs<string>(Value)
         return new($"{method.Trim().ToUpperInvariant()} /{string.Join('/', segments)}");
     }
 
-    static bool IsIdentifier(string segment) =>
+    internal static bool IsIdentifier(string segment) =>
         segment.All(char.IsAsciiDigit) ||
         Guid.TryParse(segment, out _) ||
         (segment.Length >= 4 && segment.Any(char.IsAsciiDigit));
