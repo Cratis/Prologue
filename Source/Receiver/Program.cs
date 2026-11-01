@@ -4,6 +4,7 @@
 using System.Globalization;
 using Cratis.Prologue.Storage;
 using Cratis.Prologue.Workbench;
+using Cratis.Prologue.Workbench.Captures.Recording;
 
 // Force invariant culture for the backend
 CultureInfo.DefaultThreadCurrentCulture = CultureInfo.InvariantCulture;
@@ -29,17 +30,22 @@ app.UseStaticFiles();
 app.UseCratis();
 
 // Public-facing endpoint the Prologue Extractor posts correlated captures to when it is not associated with a Prologue.
-app.MapPost("/captures", async (Capture capture, ICaptureStore store, CancellationToken cancellationToken) =>
+app.MapPost("/captures", async (Capture capture, ICaptureStore store, ICaptureRecorder recorder, CancellationToken cancellationToken) =>
 {
     await store.Store(capture, cancellationToken);
+
+    // The capture is stored; recording it for the Workbench logs a failure instead of losing the capture or the 202.
+    await recorder.Record(capture, cancellationToken);
     return Results.Accepted();
 });
 
 // Endpoint the Prologue Extractor posts to when configured with the Prologue it captures for, so captures are
 // associated with that Prologue and can later be analyzed on their own by the interpreter.
-app.MapPost("/prologues/{prologueId:guid}/captures", async (Guid prologueId, Capture capture, ICaptureStore store, CancellationToken cancellationToken) =>
+app.MapPost("/prologues/{prologueId:guid}/captures", async (Guid prologueId, Capture capture, ICaptureStore store, ICaptureRecorder recorder, CancellationToken cancellationToken) =>
 {
-    await store.Store(capture with { PrologueId = prologueId }, cancellationToken);
+    var associated = capture with { PrologueId = prologueId };
+    await store.Store(associated, cancellationToken);
+    await recorder.Record(associated, cancellationToken);
     return Results.Accepted();
 });
 
