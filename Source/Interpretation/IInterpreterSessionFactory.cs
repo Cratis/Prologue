@@ -27,13 +27,15 @@ public interface IInterpreterSessionFactory
     /// <param name="llmOptions">The language-model configuration; refinement is skipped entirely when disabled.</param>
     /// <param name="statusChanged">An optional callback invoked on every status transition.</param>
     /// <param name="maxQuestionRounds">The maximum number of ask-and-answer rounds; zero makes the session non-interactive — the prompt tells the model not to ask and the session finalizes instead of awaiting answers.</param>
+    /// <param name="additionalEvidence">Evidence beyond the captures given to the language model; empty adds nothing.</param>
     /// <returns>The new <see cref="IInterpreterSession"/>.</returns>
     IInterpreterSession CreateNew(
         Guid prologueId,
         IReadOnlyList<Capture> captures,
         LlmOptions llmOptions,
         Action<InterpreterStatus>? statusChanged = null,
-        int maxQuestionRounds = DefaultMaxQuestionRounds);
+        int maxQuestionRounds = DefaultMaxQuestionRounds,
+        string additionalEvidence = "");
 
     /// <summary>
     /// Resumes a session from a previously serialized state — mid-conversation resumes replay the state's

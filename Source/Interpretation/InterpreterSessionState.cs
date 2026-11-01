@@ -19,6 +19,7 @@ namespace Cratis.Prologue.Interpretation;
 /// <param name="Transcript">The language-model conversation so far — replayed to the stateless model on resume.</param>
 /// <param name="QuestionRounds">The number of completed ask-and-answer rounds.</param>
 /// <param name="Error">What went wrong; empty unless <paramref name="Status"/> is <see cref="InterpreterStatus.Failed"/>.</param>
+/// <param name="Renames">The renames the language model's last refinement applied, from the provisional (mechanical) name to the refined one; <see langword="null"/> when the model was not refined. Lets a host relate the refined model back to the heuristic model it came from.</param>
 public record InterpreterSessionState(
     Guid PrologueId,
     InterpreterStatus Status,
@@ -27,7 +28,8 @@ public record InterpreterSessionState(
     IReadOnlyList<AnsweredQuestion> AnsweredQuestions,
     IReadOnlyList<SessionChatMessage> Transcript,
     int QuestionRounds,
-    string Error)
+    string Error,
+    IReadOnlyDictionary<string, string>? Renames = null)
 {
     /// <summary>
     /// Creates the initial state for a new session.

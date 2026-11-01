@@ -49,8 +49,9 @@ public static class RefinementPrompt
     /// </summary>
     /// <param name="model">The provisional event model to refine.</param>
     /// <param name="captures">The captures the model was derived from.</param>
+    /// <param name="additionalEvidence">Evidence beyond the captures, appended as its own section; empty adds nothing.</param>
     /// <returns>The evidence message text.</returns>
-    public static string Evidence(ExtractionResult model, IReadOnlyList<Capture> captures)
+    public static string Evidence(ExtractionResult model, IReadOnlyList<Capture> captures, string additionalEvidence = "")
     {
         var builder = new StringBuilder();
         builder.AppendLine("Provisional event model (structure is fixed; only names, descriptions, and the system name are yours to decide):");
@@ -70,6 +71,14 @@ public static class RefinementPrompt
                 .AppendLine()
                 .AppendLine("Observed database schema (column types, sizes, nullability, keys, unique constraints, relationships):")
                 .Append(schema);
+        }
+
+        if (additionalEvidence.Length > 0)
+        {
+            builder
+                .AppendLine()
+                .AppendLine("Additional evidence (scenario labels, observed decisions, rules found in the code):")
+                .AppendLine(additionalEvidence);
         }
 
         return builder.ToString();

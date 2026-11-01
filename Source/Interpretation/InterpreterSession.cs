@@ -24,6 +24,7 @@ namespace Cratis.Prologue.Interpretation;
 /// <param name="logger">The logger.</param>
 /// <param name="statusChanged">An optional callback invoked on every status transition.</param>
 /// <param name="maxQuestionRounds">The maximum number of ask-and-answer rounds before the session finalizes with whatever the model last returned; zero disallows questions entirely.</param>
+/// <param name="additionalEvidence">Evidence beyond the captures — scenario labels, observed decisions, code findings — appended to the evidence the language model refines from; empty adds nothing.</param>
 public class InterpreterSession(
     InterpreterSessionState state,
     IReadOnlyList<Capture> captures,
@@ -32,7 +33,8 @@ public class InterpreterSession(
     IChatClientFactory chatClients,
     ILogger<InterpreterSession> logger,
     Action<InterpreterStatus>? statusChanged,
-    int maxQuestionRounds) : IInterpreterSession
+    int maxQuestionRounds,
+    string additionalEvidence = "") : IInterpreterSession
 {
     IChatClient? _chatClient;
 
@@ -91,7 +93,7 @@ public class InterpreterSession(
             if (State.Transcript.Count == 0)
             {
                 Append(ChatRole.System, RefinementPrompt.System(maxQuestionRounds > 0));
-                Append(ChatRole.User, RefinementPrompt.Evidence(heuristic, captures));
+                Append(ChatRole.User, RefinementPrompt.Evidence(heuristic, captures, additionalEvidence));
             }
 
             return await ExchangeWithModel(cancellationToken);
@@ -157,7 +159,7 @@ public class InterpreterSession(
                 return State;
             }
 
-            return Finalize(ModelRenamer.Apply(heuristic, refinement));
+            return Finalize(ModelRenamer.Apply(heuristic, refinement), refinement.Renames);
         }
         catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
         {
@@ -170,14 +172,14 @@ public class InterpreterSession(
         }
     }
 
-    InterpreterSessionState Finalize(ExtractionResult model)
+    InterpreterSessionState Finalize(ExtractionResult model, IReadOnlyDictionary<string, string>? renames = null)
     {
         if (model.SystemName.Length == 0)
         {
             model = model with { SystemName = SystemNameDeriver.Derive(model) };
         }
 
-        State = State with { Model = SliceOrdering.Order(model), PendingQuestions = [] };
+        State = State with { Model = SliceOrdering.Order(model), PendingQuestions = [], Renames = renames };
         Transition(InterpreterStatus.Completed);
         return State;
     }
