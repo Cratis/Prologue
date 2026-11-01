@@ -13,11 +13,16 @@
     <!-- Arc proxies are generated next to the C# on Debug builds only; they are committed. -->
     <PropertyGroup Condition="'$(Configuration)' == 'Debug'">
         <CratisProxiesOutputPath>$(MSBuildThisFileDirectory)</CratisProxiesOutputPath>
-        <CratisProxiesSegmentsToSkip>3</CratisProxiesSegmentsToSkip>
+        <CratisProxiesSegmentsToSkip>1</CratisProxiesSegmentsToSkip>
         <CratisProxiesSkipOutputDeletion>true</CratisProxiesSkipOutputDeletion>
         <CratisProxiesSkipCommandNameInRoute>true</CratisProxiesSkipCommandNameInRoute>
         <CratisProxiesUseSourceFileAsOutputFile>true</CratisProxiesUseSourceFileAsOutputFile>
     </PropertyGroup>
+
+    <ItemGroup>
+        <NamespaceRoot Include="Workbench" Namespace="Cratis.Prologue.Workbench" Folder="." />
+        <NamespaceRoot Include="Contracts" Namespace="Cratis.Prologue.Contracts" Folder="." />
+    </ItemGroup>
 
     <ItemGroup>
         <PackageReference Include="Cratis" />

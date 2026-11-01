@@ -46,7 +46,7 @@ public static class WorkbenchServiceCollectionExtensions
                 // The generated proxies (Workbench.csproj, CratisProxies*) build their routes the same way: /api/<feature>/<slice>.
                 options.GeneratedApis.RoutePrefix = "api";
                 options.GeneratedApis.IncludeCommandNameInRoute = false;
-                options.GeneratedApis.SegmentsToSkipForRoute = 3;
+                options.GeneratedApis.SegmentsToSkipForRoute = 1;
             },
             configureArcBuilder: arc => arc.WithMongoDB(),
             configureChronicleOptions: options =>

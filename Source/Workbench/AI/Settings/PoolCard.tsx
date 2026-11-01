@@ -4,7 +4,7 @@
 import { useState } from 'react';
 import { Agent, AIProvider } from '@cratis/ai';
 import { Button, Chip } from '../../Components';
-import { ModelTier } from '../../ModelTier';
+import { ModelTier } from '../Providers/ModelTier';
 import { poolPosture } from '../networkPosture';
 import { PoolFallback } from '../Pools/PoolFallback';
 import { PoolOrdering } from '../Pools/PoolOrdering';

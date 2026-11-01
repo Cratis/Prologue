@@ -3,7 +3,7 @@
 
 import { AddProviderToPool, AIProvider, CreateAIProviderPool, RemoveAIProviderPool, RemoveProviderFromPool } from '@cratis/ai';
 import { Guid } from '@cratis/fundamentals';
-import { ModelTier } from '../../ModelTier';
+import { ModelTier } from '../Providers/ModelTier';
 import { ArrangePool } from '../Pools/Arranging/ArrangePool';
 import { moveMember } from '../poolOrder';
 import { useAICommands } from '../useAICommands';

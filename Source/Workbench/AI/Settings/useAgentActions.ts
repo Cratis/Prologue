@@ -3,7 +3,7 @@
 
 import { Agent, ConfigureAgent, Effort, Harness } from '@cratis/ai';
 import { Guid } from '@cratis/fundamentals';
-import { ModelTier } from '../../ModelTier';
+import { ModelTier } from '../Providers/ModelTier';
 import { useAICommands } from '../useAICommands';
 import { PrologueAgentInfo } from './agents';
 
