@@ -15,6 +15,7 @@ public class when_resolving_a_folder : a_prologue
     Result<AnalysisTarget, ValidationResult> _missing;
     Result<AnalysisTarget, ValidationResult> _blank;
     Result<AnalysisTarget, ValidationResult> _undefined;
+    Result<AnalysisTarget, ValidationResult> _outside;
 
     void Because()
     {
@@ -23,6 +24,7 @@ public class when_resolving_a_folder : a_prologue
         _missing = AnalysisTargets.ForFolder(_prologue, new FolderPath("/srv/gone"), false);
         _blank = AnalysisTargets.ForFolder(_prologue, new FolderPath("  "), false);
         _undefined = AnalysisTargets.ForFolder(null, new FolderPath("/srv/legacy/library"), true);
+        _outside = AnalysisTargets.ForFolder(_prologue, new FolderPath("/etc"), true, false);
     }
 
     [Fact] void should_name_the_folder_after_its_last_segment() => _folder.Appended()!.Name.Value.ShouldEqual("library");
@@ -31,6 +33,7 @@ public class when_resolving_a_folder : a_prologue
     [Fact] void should_make_the_same_folder_the_same_subject() => _sameFolder.Appended()!.Subject.ShouldEqual(_folder.Appended()!.Subject);
     [Fact] void should_refuse_a_folder_that_does_not_exist() => _missing.Refusal().Message.ShouldContain("does not exist");
     [Fact] void should_refuse_a_blank_path() => _blank.Refusal().Message.ShouldContain("folder path");
+    [Fact] void should_refuse_a_folder_outside_the_allowed_roots() => _outside.Refusal().Message.ShouldContain("AllowedRoots");
     [Fact] void should_refuse_an_undefined_prologue() => _undefined.Refusal().Message.ShouldContain("not defined");
 }
 #endif

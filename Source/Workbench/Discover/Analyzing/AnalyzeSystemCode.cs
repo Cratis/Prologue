@@ -26,13 +26,14 @@ public record AnalyzeSystemCode(PrologueId Prologue, SystemId Id)
     /// </summary>
     /// <param name="readModels">Reads the prologue and the clone.</param>
     /// <param name="options">The configured clone directory.</param>
+    /// <param name="folders">Tells which folders may be analyzed.</param>
     /// <returns>What to read, or a refusal.</returns>
     [Unprotected("Analyzing only reads: a stale prologue or clone costs a repeated analysis, never a wrong decision")]
-    public async Task<Result<AnalysisTarget, ValidationResult>> Provide(IReadModels readModels, IOptions<RepositoryOptions> options)
+    public async Task<Result<AnalysisTarget, ValidationResult>> Provide(IReadModels readModels, IOptions<RepositoryOptions> options, ISourceFolders folders)
     {
         var prologue = await readModels.GetInstanceById<PrologueDefinition>((EventSourceId)Prologue);
         var clone = await readModels.GetInstanceById<SystemClone>((EventSourceId)SystemCloneId.For(Id));
-        return AnalysisTargets.ForSystem(prologue, Id, clone, options.Value.CloneDirectory);
+        return AnalysisTargets.ForSystem(prologue, Id, clone, options.Value.CloneDirectory, folders.IsAllowed);
     }
 
     /// <summary>

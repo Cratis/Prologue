@@ -31,6 +31,7 @@ public static class DiscoverServiceCollectionExtensions
         builder.Services.Replace(ServiceDescriptor.Scoped<IDecisionReasons, FindingsDecisionReasons>());
         builder.Services.AddSingleton<IAnalysisProgress, AnalysisProgressStore>();
         builder.Services.AddSingleton<IAnalysisQueue, AnalysisQueue>();
+        builder.Services.Configure<DiscoverOptions>(builder.Configuration.GetSection(DiscoverOptions.SectionName));
         builder.Services.AddSingleton<ISourceFolders, SourceFolders>();
         builder.Services.AddSingleton<IAnalysisAgents, CratisAIAnalysisAgents>();
         builder.Services.AddSingleton<IAnalysisRunner, AnalysisRunner>();

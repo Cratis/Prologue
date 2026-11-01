@@ -12,6 +12,8 @@ namespace Cratis.Prologue.Workbench.Discover.Analyzing;
 /// </summary>
 public static class AnalysisTargets
 {
+    const string OutsideAllowedRoots = "That folder is outside the folders this Receiver may analyze (Prologue:Discover:AllowedRoots)";
+
     /// <summary>
     /// Resolves the code of a system. A system in a repository is read from its clone, so the repository has to be cloned
     /// first; a system in a local folder is read where it is.
@@ -20,8 +22,9 @@ public static class AnalysisTargets
     /// <param name="id">The system.</param>
     /// <param name="clone">The clone of the system's repository, when there is one.</param>
     /// <param name="cloneRoot">The directory repositories are cloned into.</param>
+    /// <param name="isAllowed">Whether a folder on the Receiver may be analyzed; null allows every folder.</param>
     /// <returns>What to read, or a refusal.</returns>
-    public static Result<AnalysisTarget, ValidationResult> ForSystem(PrologueDefinition? prologue, SystemId id, SystemClone? clone, string cloneRoot)
+    public static Result<AnalysisTarget, ValidationResult> ForSystem(PrologueDefinition? prologue, SystemId id, SystemClone? clone, string cloneRoot, Func<string, bool>? isAllowed = null)
     {
         if (SystemRules.RefuseUnknown(prologue, id) is { } unknown)
         {
@@ -46,6 +49,11 @@ public static class AnalysisTargets
         if (location.Host == RepositoryHost.LocalFolder)
         {
             var directory = Path.Combine(location.Repository.Value.Trim(), subPath);
+            if (isAllowed is not null && !isAllowed(directory))
+            {
+                return ValidationResult.Error(OutsideAllowedRoots);
+            }
+
             var source = clone is { Status: CloneStatus.Cloned, Commit: { } head } ? head.Value : "working tree";
             return new AnalysisTarget(subject, name, directory, source, location.Host, location.Repository, location.Branch, location.SubPath);
         }
@@ -73,8 +81,9 @@ public static class AnalysisTargets
     /// <param name="prologue">The prologue.</param>
     /// <param name="folder">The folder.</param>
     /// <param name="exists">Whether the folder exists on the Receiver.</param>
+    /// <param name="allowed">Whether the folder is one this Receiver may analyze.</param>
     /// <returns>What to read, or a refusal.</returns>
-    public static Result<AnalysisTarget, ValidationResult> ForFolder(PrologueDefinition? prologue, FolderPath folder, bool exists)
+    public static Result<AnalysisTarget, ValidationResult> ForFolder(PrologueDefinition? prologue, FolderPath folder, bool exists, bool allowed = true)
     {
         if (prologue is null)
         {
@@ -85,6 +94,11 @@ public static class AnalysisTargets
         if (path.Length == 0)
         {
             return ValidationResult.Error("Type a folder path first");
+        }
+
+        if (!allowed)
+        {
+            return ValidationResult.Error(OutsideAllowedRoots);
         }
 
         if (!exists)

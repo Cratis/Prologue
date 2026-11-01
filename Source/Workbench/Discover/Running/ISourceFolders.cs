@@ -14,4 +14,12 @@ public interface ISourceFolders
     /// <param name="path">The folder.</param>
     /// <returns>True when it does.</returns>
     bool Exists(string path);
+
+    /// <summary>
+    /// Gets whether a folder may be analyzed: always when no allowed roots are configured, otherwise only when it is one of
+    /// them or inside one.
+    /// </summary>
+    /// <param name="path">The folder.</param>
+    /// <returns>True when it may.</returns>
+    bool IsAllowed(string path);
 }

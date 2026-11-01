@@ -27,7 +27,7 @@ public record AnalyzeFolder(PrologueId Prologue, FolderPath Folder)
     public async Task<Result<AnalysisTarget, ValidationResult>> Provide(IReadModels readModels, ISourceFolders folders)
     {
         var prologue = await readModels.GetInstanceById<PrologueDefinition>((EventSourceId)Prologue);
-        return AnalysisTargets.ForFolder(prologue, Folder, folders.Exists(Folder.Value));
+        return AnalysisTargets.ForFolder(prologue, Folder, folders.Exists(Folder.Value), folders.IsAllowed(Folder.Value));
     }
 
     /// <summary>
