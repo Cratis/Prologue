@@ -22,6 +22,7 @@
     <ItemGroup>
         <NamespaceRoot Include="Workbench" Namespace="Cratis.Prologue.Workbench" Folder="." />
         <NamespaceRoot Include="Contracts" Namespace="Cratis.Prologue.Contracts" Folder="." />
+        <NamespaceRoot Include="InterpreterContracts" Namespace="Cratis.Prologue.Interpreter.Contracts" Folder="." />
     </ItemGroup>
 
     <ItemGroup>
@@ -45,6 +46,8 @@
     <ItemGroup>
         <ProjectReference Include="../Configuration/Configuration.csproj" />
         <ProjectReference Include="../Contracts/Contracts.csproj" />
+        <ProjectReference Include="../Interpretation/Interpretation.csproj" />
+        <ProjectReference Include="../Interpreter.Contracts/Interpreter.Contracts.csproj" />
         <ProjectReference Include="../Storage/Storage.csproj" />
     </ItemGroup>
 

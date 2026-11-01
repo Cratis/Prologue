@@ -8,6 +8,7 @@ using Cratis.Prologue.Workbench.AI;
 using Cratis.Prologue.Workbench.AI.Asking;
 using Cratis.Prologue.Workbench.Captures;
 using Cratis.Prologue.Workbench.Discover;
+using Cratis.Prologue.Workbench.Events;
 using Cratis.Prologue.Workbench.Identity;
 using Cratis.Prologue.Workbench.Rebuild;
 using Cratis.Prologue.Workbench.Repositories;
@@ -65,6 +66,7 @@ public static class WorkbenchServiceCollectionExtensions
         builder.AddCaptures();
         builder.AddAsking();
         builder.AddDiscover();
+        builder.AddEvents();
         builder.AddRebuild();
 
         return builder;
