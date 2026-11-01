@@ -2,10 +2,12 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Cratis.AI.Configuration;
+using Cratis.AI.Usage.Daily;
 using Cratis.Chronicle.Connections;
 using Cratis.Prologue.Workbench.AI;
 using Cratis.Prologue.Workbench.AI.Asking;
 using Cratis.Prologue.Workbench.Captures;
+using Cratis.Prologue.Workbench.Discover;
 using Cratis.Prologue.Workbench.Identity;
 using Cratis.Prologue.Workbench.Repositories;
 using Microsoft.AspNetCore.Builder;
@@ -61,6 +63,7 @@ public static class WorkbenchServiceCollectionExtensions
         builder.AddRepositories();
         builder.AddCaptures();
         builder.AddAsking();
+        builder.AddDiscover();
 
         return builder;
     }

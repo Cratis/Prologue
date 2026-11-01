@@ -28,7 +28,7 @@ public static class AskingServiceCollectionExtensions
         builder.Services.TryAddTransient<ILanguageModel>(services => ActivatorUtilities.CreateInstance<ManagedLanguageModel>(
             services,
             ActivatorUtilities.CreateInstance<ProviderAwareLanguageModel>(services)));
-        builder.Services.TryAddScoped<IRecordedAgentSessions, NoRecordedAgentSessions>();
+        builder.Services.TryAddScoped<IRecordedAgentSessions, Usage.RecordedAgentSessions>();
         builder.Services.TryAddScoped<IAgentAsker, LanguageModelAsker>();
         return builder;
     }
