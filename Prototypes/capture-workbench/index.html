@@ -101,6 +101,8 @@ main { flex: 999 1 560px; min-width: 0; min-height: 0; height: 100%; overflow: a
 .grid { display: grid; gap: 16px; }
 .g2 { grid-template-columns: repeat(auto-fit, minmax(380px, 1fr)); }
 .g-side { grid-template-columns: minmax(0, 1fr) 380px; }
+.grid > * { min-width: 0; }
+.conn .chip, .conn .btn { flex: none; }
 @media (max-width: 1000px) { .g-side { grid-template-columns: 1fr; } }
 .btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 40px; padding: 0 16px; border-radius: var(--r-ctl); font-weight: 600; font-size: 14px; white-space: nowrap; text-decoration: none; background: rgba(255,255,255,.07); color: var(--ink); border: 1px solid var(--line-strong); }
 .btn:hover { background: rgba(255,255,255,.11); }
@@ -252,6 +254,58 @@ tr.excluded td { opacity: .4; text-decoration: line-through; }
 .stamp { font-size: 12px; color: var(--muted); }
 .toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%); background: #1e293b; border: 1px solid var(--line-strong); color: var(--strong); padding: 10px 16px; border-radius: var(--r-ctl); font-size: 13px; opacity: 0; pointer-events: none; transition: opacity .2s; z-index: 10; box-shadow: 0 8px 24px rgba(0,0,0,.4); }
 .toast.on { opacity: 1; }
+/* Systems, discover, optional steps */
+.nav .opt { margin-left: auto; font-size: 10px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; color: var(--muted); background: var(--slate-bg); border-radius: 999px; padding: 1px 7px; }
+.nav .opt.off { color: var(--bad); background: var(--bad-bg); }
+.nav .badge + .opt { margin-left: 6px; }
+.offbanner { display: none; align-items: center; gap: 12px; flex-wrap: wrap; padding: 12px 16px; border-radius: var(--r-card); background: var(--slate-bg); border: 1px dashed rgba(148,163,184,.4); }
+.offbanner.on { display: flex; }
+.prov { display: inline-grid; place-items: center; width: 26px; height: 26px; border-radius: 7px; font-size: 11px; font-weight: 800; flex: none; background: #1e3a5f; color: var(--accent); }
+.prov.gh { background: rgba(248,250,252,.1); color: var(--strong); }
+.prov.ado { background: rgba(37,99,235,.25); color: #93c5fd; }
+.prov.gl { background: rgba(240,160,80,.2); color: var(--evt); }
+.prov.fs { background: var(--slate-bg); color: #cbd5e1; }
+.conn { display: flex; align-items: center; gap: 12px; min-height: 52px; padding: 8px 0; border-top: 1px solid rgba(255,255,255,.06); }
+.conn:first-of-type { border-top: 0; }
+.conn .grow { flex: 1; min-width: 0; }
+.conn small { display: block; color: var(--muted); font-size: 12px; }
+.addsys { display: none; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 10px; margin-top: 12px; padding: 14px; border-radius: var(--r-card); background: var(--sunken); }
+.addsys.on { display: grid; }
+.seg { display: flex; gap: 4px; flex-wrap: wrap; margin-bottom: 12px; }
+.seg button { border: 1px solid var(--line-strong); background: transparent; color: var(--muted); min-height: 32px; padding: 0 12px; border-radius: 999px; font-size: 13px; font-weight: 600; }
+.seg button[aria-pressed="true"] { background: rgba(37,99,235,.2); color: var(--strong); border-color: rgba(37,99,235,.5); }
+.srcline { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; padding: 10px 12px; border-radius: var(--r-ctl); background: var(--sunken); margin-bottom: 12px; font-size: 13px; }
+.files { display: flex; flex-direction: column; max-height: 300px; overflow: auto; }
+.file { display: grid; grid-template-columns: 18px 1fr auto; gap: 10px; align-items: center; min-height: 32px; font-family: var(--mono); font-size: 12px; color: var(--muted); border-top: 1px solid rgba(255,255,255,.05); }
+.file.done { color: var(--ink); }
+.file.cur { color: var(--accent); }
+.knob { width: 12px; height: 12px; border-radius: 50%; border: 2px solid rgba(148,163,184,.4); }
+.file.done .knob { background: var(--rm); border-color: var(--rm); }
+.file.cur .knob { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(126,200,240,.2); }
+.map { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 12px; }
+.mapsys { border: 1px solid var(--line); border-radius: var(--r-card); padding: 12px 14px; background: rgba(13,21,40,.6); display: flex; flex-direction: column; gap: 10px; }
+.mapsys h4 { margin: 0; font-size: 14px; color: var(--strong); display: flex; justify-content: space-between; gap: 8px; }
+.mapmod { display: flex; flex-direction: column; gap: 6px; }
+.mapmod b { font-size: 12px; color: var(--muted); font-weight: 600; }
+.caps { display: flex; flex-wrap: wrap; gap: 6px; }
+.cap-chip { border: 1px solid rgba(126,200,240,.35); color: var(--cmd); background: transparent; border-radius: 999px; min-height: 26px; padding: 0 10px; font-size: 12px; font-weight: 600; }
+.cap-chip.seen { background: var(--cmd-bg); border-color: transparent; }
+.cap-chip.codeonly { border-style: dashed; color: var(--muted); border-color: rgba(148,163,184,.4); }
+.cap-chip.pending { opacity: .4; }
+.cap-chip[aria-pressed="true"] { outline: 2px solid var(--accent); outline-offset: 1px; }
+.talk svg { width: 100%; height: auto; display: block; }
+.biz { display: flex; flex-direction: column; }
+.biz .b { padding: 10px 0; border-top: 1px solid rgba(255,255,255,.06); font-size: 13px; }
+.biz .b:first-child { border-top: 0; }
+.biz .b b { color: var(--strong); }
+.biz .because { color: var(--accent); font-weight: 600; }
+.biz .meta { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 4px; }
+.pool { border: 1px solid var(--line); border-radius: var(--r-card); padding: 12px; background: rgba(13,21,40,.6); display: flex; flex-direction: column; gap: 8px; }
+.agent { display: flex; align-items: center; gap: 10px; font-size: 13px; }
+.agent .av { width: 28px; height: 28px; border-radius: 8px; display: grid; place-items: center; font-size: 11px; font-weight: 800; background: var(--cmd-bg); color: var(--cmd); flex: none; }
+.capbar { height: 6px; border-radius: 3px; background: rgba(148,163,184,.15); overflow: hidden; }
+.capbar i { display: block; height: 100%; background: var(--accent); }
+.codeev { font-family: var(--mono); font-size: 12px; color: var(--accent); }
 /* Decisions, journeys, boundaries, rebuild */
 .decision { display:flex; gap:10px; align-items:center; flex-wrap:wrap; padding:10px 12px; border-radius:var(--r-ctl); background:var(--sunken); margin-bottom:12px; }
 .explain { margin:0 0 12px; padding:0; list-style:none; display:flex; flex-direction:column; gap:6px; counter-reset:x; }
@@ -290,33 +344,62 @@ tr.excluded td { opacity: .4; text-decoration: line-through; }
 <nav class="side steps" aria-label="Primary">
   <a class="wordmark" href="#capture"><svg viewBox="0 0 328 328" width="28" height="28" aria-hidden="true"><g transform="translate(0,328) scale(0.1,-0.1)" fill="#f8fafc"><path d="M1444 2779c-319-182-592-343-607-358-16-14-34-35-40-46-8-14-10-229-9-735l3-715 23-35c18-26 74-64 222-151 110-64 374-219 589-344 214-126 400-231 413-233 13-3 31 3 42 13 19 17 20 33 20 307 0 233-3 294-15 317-10 21-93 74-327 211-172 101-324 194-338 207l-25 23 0 401 0 401 27 23c14 12 161 100 327 194 177 101 310 184 325 202l26 31 0 293c0 318-1 325-55 325-12 0-283-149-601-331z"></path><path d="M1965 2009c-178-98-219-126-237-157-15-26-18-57-18-215 0-175 1-186 23-218 30-45 326-219 372-219 34 0 319 157 361 199 24 23 24 26 24 230l0 207-27 31c-39 44-319 203-358 203-19 0-73-24-140-61z" fill="#7ec8f0"></path></g></svg>Cratis Prologue</a>
   <div class="switcher" title="Switch capture"><span style="display:flex;align-items:center;gap:8px;min-width:0"><span class="mark">L</span><span style="min-width:0"><span style="display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Lending baseline</span><small>Library system</small></span></span><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="#94a3b8" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m7 9 5-5 5 5M7 15l5 5 5-5"></path></svg></div>
-  <div class="navhead">Capture<span>Experimental</span></div>
-  <a class="nav" href="#define" data-v="define"><span class="n">1</span>Define</a>
-  <a class="nav" href="#capture" data-v="capture"><span class="n">2</span>Capture</a>
-  <a class="nav" href="#explore" data-v="explore"><span class="n">3</span>Explore</a>
-  <a class="nav" href="#events" data-v="events"><span class="n">4</span>Events <span class="badge" id="qBadge">3</span></a>
-  <a class="nav" href="#model" data-v="model"><span class="n">5</span>Model</a>
-  <a class="nav" href="#rebuild" data-v="rebuild"><span class="n">6</span>Rebuild</a>
+  <div class="navhead">Setup<span>Experimental</span></div>
+  <a class="nav" href="#define" data-v="define"><span class="n">1</span>Systems</a>
+  <div class="navhead">Evidence</div>
+  <a class="nav" href="#discover" data-v="discover"><span class="n">2</span>Discover <span class="opt" data-opt="discover">Optional</span></a>
+  <a class="nav" href="#capture" data-v="capture"><span class="n">3</span>Capture <span class="opt" data-opt="capture">Optional</span></a>
+  <div class="navhead">Interpret</div>
+  <a class="nav" href="#explore" data-v="explore"><span class="n">4</span>Explore</a>
+  <a class="nav" href="#events" data-v="events"><span class="n">5</span>Events <span class="badge" id="qBadge">3</span></a>
+  <a class="nav" href="#model" data-v="model"><span class="n">6</span>Model</a>
+  <div class="navhead">Modernize</div>
+  <a class="nav" href="#rebuild" data-v="rebuild"><span class="n">7</span>Rebuild <span class="opt" data-opt="rebuild">Optional</span></a>
   <div class="spacer"></div>
   <div class="status"><span id="livePill" class="status-pill live"><span class="dot"></span><span id="liveText">Capturing · 00:41:12</span></span><span id="localPill" class="status-pill localpill" title="Captures and interpretation stay inside your network">Local only</span></div>
   <div class="user"><span class="avatar">E</span><span><b>Einar</b><span>Cratis · Maintainer</span></span></div>
 </nav>
-<nav class="tabbar steps" aria-label="Stages"><a href="#define" data-v="define"><span class="n">1</span>Define</a><a href="#capture" data-v="capture"><span class="n">2</span>Capture</a><a href="#explore" data-v="explore"><span class="n">3</span>Explore</a><a href="#events" data-v="events"><span class="n">4</span>Events</a><a href="#model" data-v="model"><span class="n">5</span>Model</a><a href="#rebuild" data-v="rebuild"><span class="n">6</span>Rebuild</a></nav>
+<nav class="tabbar steps" aria-label="Stages"><a href="#define" data-v="define"><span class="n">1</span>Systems</a><a href="#discover" data-v="discover"><span class="n">2</span>Discover</a><a href="#capture" data-v="capture"><span class="n">3</span>Capture</a><a href="#explore" data-v="explore"><span class="n">4</span>Explore</a><a href="#events" data-v="events"><span class="n">5</span>Events</a><a href="#model" data-v="model"><span class="n">6</span>Model</a><a href="#rebuild" data-v="rebuild"><span class="n">7</span>Rebuild</a></nav>
 
 <main>
 <!-- ============ 1. DEFINE ============ -->
 <section class="view" id="v-define">
   <div class="view-head">
     <div>
-      <div class="eyebrow">Step 1 of 6 · Define · Library system</div><h1>Define what to watch</h1>
-      <p>Choose the signals Prologue may observe in the Library system and the business scenarios you plan to run while it watches. Everything here becomes <code>cratis-prologue.json</code>.</p>
+      <div class="eyebrow">Step 1 of 7 · Systems · Library system</div><h1>Define the systems and evidence</h1>
+      <p>List the systems that make up the Library, where each one’s code lives, and which evidence Prologue should gather. Discovering code and capturing runtime are both optional; use either or both. Everything here becomes <code>cratis-prologue.json</code>.</p>
     </div>
-    <div class="row"><button class="btn" data-copy="cfgOut">Copy configuration</button><a class="btn primary" href="#capture">Start capturing</a></div>
+    <div class="row"><button class="btn" data-copy="cfgOut">Copy configuration</button><a class="btn primary" href="#discover" id="startBtn">Continue</a></div>
   </div>
   <div class="grid g-side">
     <div class="grid" style="gap:12px">
       <div class="panel">
-        <h3>Sources <small>Selected metadata only. Row values and request bodies are never read.</small></h3>
+        <h3>Systems <small>A system can be its own repository or a sub path in a monorepo</small></h3>
+        <div class="scroll-x"><table id="sysTable"></table></div>
+        <div class="row" style="margin-top:12px"><button class="btn small" id="addSysBtn">Add system</button><span class="muted" style="font-size:12px">Two systems live in the <code>library-platform</code> monorepo. Each points at its own path.</span></div>
+        <form class="addsys" id="addSys">
+          <label class="f" for="nsName">System name<input id="nsName" placeholder="Fines"></label>
+          <label class="f" for="nsProv">Repository host<select id="nsProv"><option>GitHub</option><option>Azure DevOps</option><option>GitLab</option><option>Local folder</option></select></label>
+          <label class="f" for="nsRepo">Repository or folder<input id="nsRepo" placeholder="cratis/library-platform"></label>
+          <label class="f" for="nsBranch">Branch<input id="nsBranch" value="main"></label>
+          <label class="f" for="nsPath">Sub path<input id="nsPath" placeholder="services/fines"></label>
+          <div class="row" style="align-self:end"><button class="btn primary small" type="submit">Add</button><button class="btn small" type="button" id="cancelSys">Cancel</button></div>
+        </form>
+      </div>
+      <div class="grid g2" style="gap:12px">
+        <div class="panel">
+          <h3>Repository connections <small>Cloned read-only, inside your network</small></h3>
+          <div id="connList"></div>
+          <label class="f" for="cloneDir" style="margin-top:10px">Clone into<input id="cloneDir" value="/var/prologue/repos"></label>
+        </div>
+        <div class="panel">
+          <h3>Evidence for this prologue <small>Each step is optional</small></h3>
+          <div class="scen" id="stepToggles"></div>
+          <p class="muted" style="font-size:12px;margin:10px 0 0">At least one of Discover and Capture has to be on. With both, findings in the code are matched to what the running system actually did.</p>
+        </div>
+      </div>
+      <div class="panel">
+        <h3>Runtime sources <small>For Capture. Selected metadata only. Row values and request bodies are never read.</small></h3>
         <div class="grid g2" style="gap:12px">
           <div class="src" id="src-http">
             <header><b>HTTP commands</b><label class="toggle"><input type="checkbox" id="t-http" checked aria-label="HTTP commands"><span></span></label></header>
@@ -343,7 +426,7 @@ tr.excluded td { opacity: .4; text-decoration: line-through; }
             <header><b>Correlation &amp; output</b></header>
             <label class="f" for="win">Correlation window: <span id="winV" class="num">2000 ms</span><input type="range" id="win" min="250" max="5000" step="250" value="2000"></label>
             <div class="muted" style="font-size:12px">An HTTP command claims database transactions and spans seen within this window. Shared trace ids join regardless of time.</div>
-            <label class="f" for="llmKind">Interpretation runs on<select id="llmKind"><option value="Ollama">Ollama in your network (local only)</option><option value="Anthropic">Anthropic API (names and metadata leave the network)</option></select></label>
+            <label class="f" for="llmKind">AI pool (Cratis.AI) for interpretation and code analysis<select id="llmKind"><option value="Ollama">Local pool · Ollama in your network (local only)</option><option value="Anthropic">Engineering pool · Anthropic (code and metadata leave the network)</option></select></label>
             <label class="f" for="outKind">Send captures to<select id="outKind"><option value="Api">Receiver → MongoDB (live view)</option><option value="Json">JSON files in ./captures</option></select></label>
           </div>
         </div>
@@ -359,7 +442,7 @@ tr.excluded td { opacity: .4; text-decoration: line-through; }
         <h3>Capture boundary</h3>
         <div class="boundary">
           <div><b style="color:var(--good)">Recorded</b><ul id="bIn"></ul></div>
-          <div><b style="color:var(--bad)">Never recorded</b><ul><li>Row values</li><li>HTTP bodies</li><li>GET and other reads</li><li>Log bodies, metric values</li><li>Non-allowlisted attribute values</li></ul></div>
+          <div><b style="color:var(--bad)">Never recorded</b><ul><li>Row values</li><li>HTTP bodies</li><li>GET and other reads</li><li>Log bodies, metric values</li><li>Non-allowlisted attribute values</li><li>Write access to anything</li></ul></div>
         </div>
         <p class="muted" style="font-size:12px;margin:10px 0 0">Query strings and allowlisted attribute values can still be sensitive. Protect capture storage.</p>
       </div>
@@ -371,11 +454,92 @@ tr.excluded td { opacity: .4; text-decoration: line-through; }
   </div>
 </section>
 
-<!-- ============ 2. CAPTURE ============ -->
-<section class="view" id="v-capture">
+<!-- ============ 2. DISCOVER ============ -->
+<section class="view" id="v-discover">
+  <div class="offbanner" id="off-discover"><b>Discover is off for this prologue.</b><span class="muted">Events will come from runtime capture only.</span><button class="btn small" data-turnon="discover">Turn on</button></div>
   <div class="view-head">
     <div>
-      <div class="eyebrow">Step 2 of 6 · Capture · Library system</div><h1>Watch captures arrive</h1>
+      <div class="eyebrow">Step 2 of 7 · Discover · Optional · Library system</div><h1>Map what the code does</h1>
+      <p>AI agents read each system’s source and map its capabilities, the decisions it makes and what talks to what. Point it at a repository path or a folder on disk. With the local pool, code never leaves your network.</p>
+    </div>
+    <div class="row"><button class="btn" id="shareMap">Share map</button><button class="btn primary" id="runScan">Analyze again</button></div>
+  </div>
+  <div class="tiles">
+    <div class="tile"><span class="k">Files read</span><span class="v"><span id="dFiles">0</span><span class="muted" style="font-size:16px"> / 1,412</span></span><span class="s" id="dAgents">3 agents scanning</span></div>
+    <div class="tile"><span class="k">Capabilities mapped</span><span class="v"><span id="dCaps">0</span><span class="muted" style="font-size:16px"> / 14</span></span><span class="s">across 4 systems</span></div>
+    <div class="tile"><span class="k">Decision points</span><span class="v">19</span><span class="s">rules the code enforces</span></div>
+    <div class="tile"><span class="k">Matched to runtime</span><span class="v">9<span class="muted" style="font-size:16px"> / 12</span></span><span class="s">capabilities also seen in captures</span></div>
+    <div class="tile"><span class="k">Found only in code</span><span class="v" style="color:var(--warn)">3</span><span class="s">never exercised during capture</span></div>
+  </div>
+  <div class="grid g-side">
+    <div class="grid" style="gap:16px;align-content:start">
+      <div class="panel">
+        <h3>Application map <small>Solid: seen at runtime · dashed: found only in code</small></h3>
+        <div class="map" id="appMap"></div>
+        <div id="capDetail" style="margin-top:12px"></div>
+      </div>
+      <div class="panel scroll-x">
+        <h3>Decision points <small>Where the code decides, matched to what the system did</small></h3>
+        <table id="decTable"></table>
+      </div>
+    </div>
+    <div class="grid" style="gap:16px;align-content:start">
+      <div class="panel">
+        <h3>Scanning</h3>
+        <div class="seg" id="sysSeg"></div>
+        <div class="srcline" id="srcLine"></div>
+        <div class="files" id="fileList"></div>
+        <form class="marker" id="folderForm" style="margin-top:12px"><input id="folderIn" placeholder="Or analyze a folder: /srv/legacy/library" aria-label="Folder to analyze"><button class="btn small" type="submit">Analyze folder</button></form>
+      </div>
+      <div class="panel talk">
+        <h3>What talks to what <small>From code, confirmed by spans</small></h3>
+        <svg viewBox="0 0 360 250" role="img" aria-label="Library UI calls Lending and inventory, which writes library-db and calls Notifications. Stock-take job and Catalog search use library-db.">
+          <defs><marker id="ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#94a3b8"/></marker></defs>
+          <g font-family="Inter, sans-serif" font-size="11" font-weight="600">
+            <line x1="180" y1="44" x2="180" y2="88" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#ar)"/>
+            <line x1="180" y1="122" x2="180" y2="176" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#ar)"/>
+            <line x1="240" y1="105" x2="286" y2="105" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#ar)"/>
+            <line x1="68" y1="176" x2="140" y2="190" stroke="#94a3b8" stroke-width="1.5" stroke-dasharray="4 3" marker-end="url(#ar)"/>
+            <line x1="292" y1="176" x2="222" y2="190" stroke="#94a3b8" stroke-width="1.5" stroke-dasharray="2 3" marker-end="url(#ar)"/>
+            <rect x="130" y="14" width="100" height="30" rx="8" fill="rgba(148,163,184,.14)"/><text x="180" y="33" text-anchor="middle" fill="#cbd5e1">Library UI</text>
+            <rect x="120" y="88" width="120" height="34" rx="8" fill="rgba(126,200,240,.16)" stroke="#7ec8f0"/><text x="180" y="109" text-anchor="middle" fill="#f8fafc">Lending &amp; inventory</text>
+            <rect x="288" y="88" width="66" height="34" rx="8" fill="rgba(126,200,240,.1)"/><text x="321" y="109" text-anchor="middle" fill="#7ec8f0">Notifications</text>
+            <rect x="10" y="146" width="96" height="30" rx="8" fill="rgba(184,214,59,.14)"/><text x="58" y="165" text-anchor="middle" fill="#b8d63b">Stock-take job</text>
+            <rect x="254" y="146" width="96" height="30" rx="8" fill="rgba(148,163,184,.14)"/><text x="302" y="165" text-anchor="middle" fill="#cbd5e1">Catalog search</text>
+            <rect x="130" y="178" width="100" height="34" rx="8" fill="rgba(240,160,80,.16)" stroke="#f0a050"/><text x="180" y="199" text-anchor="middle" fill="#f0a050">library-db</text>
+            <text x="186" y="70" fill="#94a3b8" font-weight="500">HTTP · 10 routes</text>
+            <text x="186" y="152" fill="#94a3b8" font-weight="500">writes 7 tables</text>
+            <text x="244" y="98" fill="#94a3b8" font-weight="500" font-size="10">POST /notify</text>
+            <text x="20" y="232" fill="#94a3b8" font-weight="500" font-size="10">- - writes nightly at 02:00</text>
+            <text x="200" y="232" fill="#94a3b8" font-weight="500" font-size="10">··· reads only</text>
+          </g>
+        </svg>
+      </div>
+      <div class="panel">
+        <h3>AI for code analysis <small>Cratis.AI</small></h3>
+        <div class="pool">
+          <div class="row" style="justify-content:space-between"><b id="poolName">Local pool · Deep tier</b><span class="status-pill localpill" id="poolPill">In your network</span></div>
+          <div class="muted" style="font-size:12px" id="poolMembers">1 Ollama · qwen3-coder:32b on llm:11434</div>
+          <div class="capbar"><i style="width:64%"></i></div>
+          <div class="muted" style="font-size:12px">1.28M of 2M tokens used this analysis · ceiling set on the pool</div>
+        </div>
+        <div class="grid" style="gap:8px;margin-top:12px">
+          <div class="agent"><span class="av">Ca</span><span><b>Cartographer</b><span class="muted"> maps capabilities and modules</span></span></div>
+          <div class="agent"><span class="av">Sc</span><span><b>Scout</b><span class="muted"> finds decision points and rules</span></span></div>
+          <div class="agent"><span class="av">Tr</span><span><b>Tracer</b><span class="muted"> follows calls between systems</span></span></div>
+        </div>
+        <p class="muted" style="font-size:12px;margin:10px 0 0">Providers, pools, agents and ceilings come from Cratis.AI. Change the pool in <a href="#define">Systems</a>.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 2. CAPTURE ============ -->
+<section class="view" id="v-capture">
+  <div class="offbanner" id="off-capture"><b>Capture is off for this prologue.</b><span class="muted">Events will come from the code alone, so none of them is backed by observed behavior.</span><button class="btn small" data-turnon="capture">Turn on</button></div>
+  <div class="view-head">
+    <div>
+      <div class="eyebrow">Step 3 of 7 · Capture · Optional · Library system</div><h1>Watch captures arrive</h1>
       <p>Each capture is one HTTP command plus the database transactions and spans correlated with it. Label what you are doing so the interpreter knows the business intent.</p>
     </div>
     <div class="row"><button class="btn" id="pauseBtn">Pause</button><a class="btn primary" href="#explore">Explore captures</a></div>
@@ -403,6 +567,10 @@ tr.excluded td { opacity: .4; text-decoration: line-through; }
         <div id="selDetail" class="muted">Pick a capture from the feed.</div>
       </div>
       <div class="panel">
+        <h3>Business events, with reasons <small>Intent and result joined, matched to the map</small></h3>
+        <div class="biz" id="bizList"></div>
+      </div>
+      <div class="panel">
         <h3>Coverage by route</h3>
         <div class="bars" id="covBars"></div>
       </div>
@@ -414,7 +582,7 @@ tr.excluded td { opacity: .4; text-decoration: line-through; }
 <section class="view" id="v-explore">
   <div class="view-head">
     <div>
-      <div class="eyebrow">Step 3 of 6 · Explore · Library system</div><h1>Explore what the system does</h1>
+      <div class="eyebrow">Step 4 of 7 · Explore · Library system</div><h1>Explore what the system does</h1>
       <p>Captures grouped into command shapes. The matrix shows which tables each command writes; partial cells mean the write happens only in some runs. Exclude noise before interpreting.</p>
     </div>
     <div class="row"><a class="btn primary" href="#events" id="interpretBtn">Interpret into events</a></div>
@@ -445,7 +613,7 @@ tr.excluded td { opacity: .4; text-decoration: line-through; }
 <section class="view" id="v-events">
   <div class="view-head">
     <div>
-      <div class="eyebrow">Step 4 of 6 · Events · Library system</div><h1>Review event suggestions</h1>
+      <div class="eyebrow">Step 5 of 7 · Events · Library system</div><h1>Review event suggestions</h1>
       <p>The interpreter proposes past-tense facts from the evidence. Mechanical names come from tables and routes; refined names come from the language model. Nothing becomes part of the model until you accept it.</p>
     </div>
     <div class="row"><span class="stamp" id="evStats"></span><a class="btn primary" href="#model">Build event model</a></div>
@@ -480,7 +648,7 @@ tr.excluded td { opacity: .4; text-decoration: line-through; }
 <section class="view" id="v-model">
   <div class="view-head">
     <div>
-      <div class="eyebrow">Step 5 of 6 · Model · Library system</div><h1>Provisional event model</h1>
+      <div class="eyebrow">Step 6 of 7 · Model · Library system</div><h1>Provisional event model</h1>
       <p>Accepted events laid out as slices along the story of the Library. Dashed outlines are still open. Select a slice to see its evidence and the Screenplay it will produce.</p>
     </div>
     <div class="row"><button class="btn" data-copy="playOut">Copy .play</button><button class="btn primary" id="handoff">Continue in Screenplay</button></div>
@@ -499,9 +667,10 @@ tr.excluded td { opacity: .4; text-decoration: line-through; }
 </section>
 <!-- ============ 6. REBUILD ============ -->
 <section class="view" id="v-rebuild">
+  <div class="offbanner" id="off-rebuild"><b>Rebuild tracking is off.</b><span class="muted">Turn it on when you start building slices from the model.</span><button class="btn small" data-turnon="rebuild">Turn on</button></div>
   <div class="view-head">
     <div>
-      <div class="eyebrow">Step 6 of 6 · Rebuild · Library system</div><h1>Rebuild piece by piece</h1>
+      <div class="eyebrow">Step 7 of 7 · Rebuild · Optional · Library system</div><h1>Rebuild piece by piece</h1>
       <p>Each slice moves from observed to cut over on its own. Before a route switches, the new slice replays the captured commands and its decisions are compared with what the legacy system decided.</p>
     </div>
     <div class="row"><span class="stamp" id="rbStats"></span></div>
@@ -576,7 +745,7 @@ document.addEventListener("click", e => {
 });
 
 // ------------------------------------------------------------------ routing
-const VIEWS = ["define","capture","explore","events","model","rebuild"];
+const VIEWS = ["define","discover","capture","explore","events","model","rebuild"];
 function route(){
   const v = VIEWS.includes(location.hash.slice(1)) ? location.hash.slice(1) : "capture";
   VIEWS.forEach((name,i) => {
@@ -586,6 +755,7 @@ function route(){
       a.classList.toggle("done", i < VIEWS.indexOf(v));
     });
   });
+  if (v==="discover") renderDiscover();
   if (v==="explore") renderExplore();
   if (v==="events") renderEvents();
   if (v==="model") renderModel();
@@ -606,7 +776,7 @@ function renderDefine(){
   $("#scenOpts").innerHTML = state.scenarios.map(s=>`<option value="${esc(s)}">`).join("");
   const on = id => $("#t-"+id).checked;
   ["http","db","otel"].forEach(id => $("#src-"+id).classList.toggle("off", !on(id)));
-  $("#bIn").innerHTML = [on("http")&&"Method, path with query string, status, trace id", on("db")&&"Changed table and column names per transaction", on("db")&&"Schema: keys, foreign keys, unique constraints", on("otel")&&"Span names, durations, attribute keys", on("otel")&&state.attrs.size&&`Values of ${[...state.attrs].join(", ")}`].filter(Boolean).map(x=>`<li>${esc(x)}</li>`).join("");
+  $("#bIn").innerHTML = [on("http")&&"Method, path with query string, status, trace id", on("db")&&"Changed table and column names per transaction", on("db")&&"Schema: keys, foreign keys, unique constraints", on("otel")&&"Span names, durations, attribute keys", on("otel")&&state.attrs.size&&`Values of ${[...state.attrs].join(", ")}`, on("db")&&"Read from the database transaction log, never by querying tables", state.steps.discover&&"Source code, cloned read-only into your network", state.steps.discover&&"Code sent to the AI pool you choose (local pool keeps it in your network)"].filter(Boolean).map(x=>`<li>${esc(x)}</li>`).join("");
   const pg = $("#dbKind").selectedIndex===0;
   const db = { name:"library", connectionString:"<from secret library-db/connection>" };
   const cfg = { prologue: {
@@ -618,9 +788,17 @@ function renderDefine(){
     },
     ...(on("http") ? { reverseProxy: { routes: { commands: { clusterId:"monitored", match:{ path:"/api/{**catch-all}", methods:["POST","PUT","DELETE"] } } },
       clusters: { monitored: { destinations: { primary: { address: $("#httpTarget").value } } } } } } : {}),
-    llm: $("#llmKind").value==="Ollama" ? { enabled:true, kind:"Ollama", endpoint:"http://llm:11434", modelId:"qwen3:32b" } : { enabled:true, kind:"Anthropic", modelId:"claude-sonnet-5-5", accessToken:"<from secret prologue/llm-key>" }
+    systems: SYSTEMS.map(x => ({ name:x.name, repository:{ host:x.host, repository:x.repo, branch:x.branch, path:x.path }, capture:x.runtime.length>0, analyze:state.steps.discover })),
+    repositories: { cloneDirectory: $("#cloneDir").value, connections: CONNECTIONS.filter(c=>c.on).map(c=>({ host:c.host, ...c.cfg })) },
+    ai: { // Cratis.AI: providers, pools and agents
+      providers: $("#llmKind").value==="Ollama" ? [{ type:"Ollama", endpoint:"http://llm:11434" }] : [{ type:"Anthropic", apiKey:"<from secret prologue/anthropic-key>" }],
+      pools: [{ name: $("#llmKind").value==="Ollama" ? "local" : "engineering", tier:"Deep", members:[$("#llmKind").value==="Ollama" ? "Ollama" : "Anthropic"] }],
+      agents: { cartographer:"Deep", scout:"Deep", tracer:"Balanced", interpreter:"Balanced" },
+      ceiling: { tokensPerAnalysis: 2000000 }
+    }
   };
   $("#cfgOut").textContent = JSON.stringify(cfg, null, 2);
+  renderSystems();
   const local = $("#llmKind").value==="Ollama" && $("#outKind").value==="Api";
   $("#localPill").textContent = local ? "Local only" : "Leaves network"; $("#localPill").className = "status-pill " + (local ? "localpill" : "paused");
 }
@@ -630,9 +808,146 @@ document.addEventListener("click", e => {
   if (r) flip(state.routesOn, r.dataset.route); else if (t) flip(state.tablesOn, t.dataset.table); else if (a) flip(state.attrs, a.dataset.attr); else return;
   renderDefine();
 });
-["#t-http","#t-db","#t-otel","#dbKind","#outKind","#llmKind","#httpTarget","#otelSvc","#otelUp"].forEach(id => $(id).addEventListener("input", renderDefine));
+["#t-http","#t-db","#t-otel","#dbKind","#outKind","#llmKind","#cloneDir","#httpTarget","#otelSvc","#otelUp"].forEach(id => $(id).addEventListener("input", renderDefine));
 $("#win").addEventListener("input", e => { $("#winV").textContent = e.target.value+" ms"; renderDefine(); });
 $("#addScen").addEventListener("click", () => { const v=$("#newScen").value.trim(); if(!v) return; state.scenarios.push(v); $("#newScen").value=""; renderDefine(); });
+
+// ------------------------------------------------------------------ systems & discover
+const SYSTEMS = [
+  { name:"Lending & inventory", host:"GitHub", repo:"cratis/library-platform", branch:"main", path:"services/core", runtime:["HTTP","PostgreSQL","OpenTelemetry"], code:"Analyzed" },
+  { name:"Catalog search", host:"GitHub", repo:"cratis/library-platform", branch:"main", path:"services/search", runtime:[], code:"Analyzed" },
+  { name:"Stock-take job", host:"Azure DevOps", repo:"contoso/library-ops", branch:"main", path:"jobs/stocktake", runtime:["PostgreSQL"], code:"Analyzed" },
+  { name:"Notifications", host:"GitLab", repo:"library/notifications", branch:"master", path:"/", runtime:["OpenTelemetry"], code:"Scanning" }
+];
+const CONNECTIONS = [
+  { host:"GitHub", on:true, detail:"GitHub App installed on cratis · 2 repositories", cfg:{ app:"prologue", installation:"cratis" } },
+  { host:"Azure DevOps", on:true, detail:"dev.azure.com/contoso · token from secret ado/prologue-read", cfg:{ organization:"https://dev.azure.com/contoso", token:"<from secret ado/prologue-read>" } },
+  { host:"GitLab", on:true, detail:"gitlab.com · token from secret gitlab/prologue-read", cfg:{ url:"https://gitlab.com", token:"<from secret gitlab/prologue-read>" } },
+  { host:"Local folder", on:false, detail:"Analyze code already on this machine", cfg:{ path:"/srv/legacy" } }
+];
+const PROV = { "GitHub":["gh","GH"], "Azure DevOps":["ado","Az"], "GitLab":["gl","GL"], "Local folder":["fs","▤"] };
+state.steps = { discover:true, capture:true, rebuild:true };
+function renderSystems(){
+  $("#sysTable").innerHTML = `<tr><th>System</th><th>Repository</th><th>Path</th><th>Capture</th><th>Code</th></tr>` + SYSTEMS.map(x => {
+    const [cls,ab] = PROV[x.host];
+    return `<tr><td><b>${esc(x.name)}</b></td><td><span class="row" style="gap:8px;flex-wrap:nowrap"><span class="prov ${cls}" title="${x.host}">${ab}</span><span><span class="mono" style="white-space:nowrap">${esc(x.repo)}</span><span class="muted mono" style="display:block;font-size:11px">${esc(x.branch)}</span></span></span></td><td class="mono">${esc(x.path)}</td><td>${x.runtime.length? x.runtime.map(r=>`<span class="chip">${r}</span>`).join(" ") : `<span class="muted" style="font-size:12px">Not captured</span>`}</td><td><span class="chip ${x.code==="Analyzed"?"ok":"warn"}">${x.code}</span></td></tr>`;
+  }).join("");
+  $("#connList").innerHTML = CONNECTIONS.map((c,i) => { const [cls,ab] = PROV[c.host]; return `<div class="conn"><span class="prov ${cls}">${ab}</span><span class="grow"><b>${c.host}</b><small>${esc(c.detail)}</small></span>${c.on?`<span class="chip ok">Connected</span><button class="btn small" data-conn="${i}">Manage</button>`:`<button class="btn small" data-conn="${i}">${c.host==="Local folder"?"Choose folder":"Connect"}</button>`}</div>`; }).join("");
+  const T = [["discover","Discover · analyze source code","AI agents map capabilities, decisions and dependencies"],["capture","Capture · watch the running system","HTTP commands, database changes and telemetry"],["rebuild","Rebuild · track the new system","Parity against captured decisions as slices go live"]];
+  $("#stepToggles").innerHTML = T.map(([k,l,d]) => `<div class="scen-item"><span class="grow"><b>${l}</b><span class="muted" style="display:block;font-size:12px">${d}</span></span><label class="toggle"><input type="checkbox" data-step="${k}" ${state.steps[k]?"checked":""} aria-label="${l}"><span></span></label></div>`).join("");
+  document.querySelectorAll(".opt[data-opt]").forEach(o => { const on = state.steps[o.dataset.opt]; o.textContent = on ? "Optional" : "Off"; o.classList.toggle("off", !on); });
+  ["discover","capture","rebuild"].forEach(k => $("#off-"+k).classList.toggle("on", !state.steps[k]));
+  $("#startBtn").setAttribute("href", state.steps.discover ? "#discover" : "#capture");
+  const local = $("#llmKind").value==="Ollama";
+  $("#poolName").textContent = local ? "Local pool · Deep tier" : "Engineering pool · Deep tier";
+  $("#poolMembers").textContent = local ? "1 Ollama · qwen3-coder:32b on llm:11434" : "1 Anthropic · your key · 64% capacity left";
+  $("#poolPill").textContent = local ? "In your network" : "Code leaves the network"; $("#poolPill").className = "status-pill " + (local ? "localpill" : "paused");
+}
+document.addEventListener("change", e => {
+  const t = e.target.closest("[data-step]"); if (!t) return;
+  const k = t.dataset.step, next = { ...state.steps, [k]: t.checked };
+  if (!next.discover && !next.capture) { t.checked = true; toast("Keep Discover or Capture on. Prologue needs some evidence."); return; }
+  state.steps = next; renderDefine();
+});
+document.addEventListener("click", e => {
+  const o = e.target.closest("[data-turnon]"); if (o) { state.steps[o.dataset.turnon] = true; renderDefine(); toast("Step turned on"); }
+  const c = e.target.closest("[data-conn]"); if (c) { const x = CONNECTIONS[+c.dataset.conn]; if (!x.on) { x.on = true; x.detail = x.host==="Local folder" ? "/srv/legacy · read-only" : x.detail; renderDefine(); toast(`${x.host} connected`); } else toast(`${x.host}: read-only access, used to clone ${SYSTEMS.filter(y=>y.host===x.host).length} system(s)`); }
+});
+$("#addSysBtn").addEventListener("click", () => $("#addSys").classList.add("on"));
+$("#cancelSys").addEventListener("click", () => $("#addSys").classList.remove("on"));
+$("#addSys").addEventListener("submit", e => { e.preventDefault(); const n = $("#nsName").value.trim(); if (!n) { toast("Give the system a name"); return; }
+  SYSTEMS.push({ name:n, host:$("#nsProv").value, repo:$("#nsRepo").value.trim()||"cratis/library-platform", branch:$("#nsBranch").value.trim()||"main", path:$("#nsPath").value.trim()||"/", runtime:[], code:"Queued" });
+  $("#addSys").classList.remove("on"); $("#addSys").reset(); renderDefine(); toast(`${n} added. It will be cloned and analyzed on the next run.`); });
+
+const MAP = [
+  { sys:"Lending & inventory", mods:[
+    { name:"Lending", caps:[["Lend a copy","seen","lend"],["Return a copy","seen","return"],["Reserve a title","seen","reserve"],["Mark loans overdue","codeonly","overdue"]] },
+    { name:"Inventory", caps:[["Stock copies","seen","stock"],["Report copies lost","codeonly","lost"]] },
+    { name:"Catalog & people", caps:[["Add a book","seen","add-book"],["Tag a book","seen","tag-book"],["Register a member","seen","reg-member"],["Register an author","seen","reg-author"],["Remove an author","seen","del-author"]] } ] },
+  { sys:"Stock-take job", mods:[ { name:"Reconciliation", caps:[["Reconcile stock counts","seen","orphan"]] } ] },
+  { sys:"Catalog search", mods:[ { name:"Search", caps:[["Search the catalog","codeonly","search"]] } ] },
+  { sys:"Notifications", mods:[ { name:"Messages", caps:[["Notify member","pending","notify"]] } ] }
+];
+const CAPINFO = {
+  lend:["services/core/Loans/LoansController.cs:63","Seen 902 times at runtime. Three decision points, all matched."],
+  return:["services/core/Loans/LoansController.cs:121","Seen 811 times. Also calls Notifications: POST /notify."],
+  reserve:["services/core/Reservations/ReservationsController.cs:61","Seen 349 times. Duplicate reservations are refused."],
+  overdue:["services/core/Loans/OverdueSweep.cs:18","Found only in code. A sweep marks loans overdue after 28 days. No write was observed during capture, so it may be disabled or run rarely."],
+  stock:["services/core/Inventory/InventoryController.cs:65","Seen 366 times. Insert on first stock, update afterwards."],
+  lost:["services/core/Inventory/InventoryController.cs:110","Found only in code. Run “Report copies lost” in Capture to confirm."],
+  "add-book":["services/core/Catalog/CatalogController.cs:68","Seen 473 times. Duplicate ISBNs are refused."],
+  "tag-book":["services/core/Catalog/CatalogController.cs:101","Seen 303 times."],
+  "reg-member":["services/core/Members/MembersController.cs:52","Seen 538 times."],
+  "reg-author":["services/core/Authors/AuthorsController.cs:37","Seen 414 times."],
+  "del-author":["services/core/Authors/AuthorsController.cs:57","Seen 61 times. Refused while the author has books."],
+  orphan:["jobs/stocktake/Reconcile.cs:41","Explains the 14 uncorrelated Inventory updates at 02:00: the job overwrites counts with the physical stock-take."],
+  search:["services/search/CatalogIndex.cs:12","Reads library-db only. Nothing to capture as events, but it is a read model candidate."],
+  notify:["library/notifications · scanning","The Tracer is still reading this repository."]
+};
+const DECISIONS = [
+  ["services/core/Loans/LoansController.cs:71","Refuse a loan when no copy is available","72 refusals (409)","ok","Matches"],
+  ["services/core/Loans/LoansController.cs:88","Remove the member’s reservation when lending","165 of 902 loans","ok","Matches"],
+  ["services/core/Authors/AuthorsController.cs:61","Refuse removing an author who has books","23 refusals (409)","ok","Matches"],
+  ["services/core/Reservations/ReservationsController.cs:54","Refuse a second reservation for the same book","35 refusals (409)","ok","Matches"],
+  ["jobs/stocktake/Reconcile.cs:41","Overwrite available copies with the physical count","14 nightly writes","ok","Explains uncorrelated writes"],
+  ["services/core/Loans/LoanPolicy.cs:22","Refuse a loan when the member has 5 open loans","never seen","warn","Code only"],
+  ["services/core/Loans/OverdueSweep.cs:18","Mark loans overdue after 28 days","never seen","warn","Code only"]
+];
+const FILES = {
+  "Lending & inventory":["Loans/LoansController.cs","Loans/LoanPolicy.cs","Loans/OverdueSweep.cs","Inventory/InventoryController.cs","Reservations/ReservationsController.cs","Catalog/CatalogController.cs","Members/MembersController.cs","Authors/AuthorsController.cs","Database/LibraryDbContext.cs","Program.cs"],
+  "Catalog search":["CatalogIndex.cs","SearchController.cs","Program.cs"],
+  "Stock-take job":["Reconcile.cs","PhysicalCountImport.cs","Schedule.yml"],
+  "Notifications":["src/notify/handler.ts","src/notify/templates.ts","src/queue/consumer.ts","README.md"]
+};
+state.scanSys = "Lending & inventory"; state.scanPos = { "Lending & inventory":10, "Catalog search":3, "Stock-take job":3, "Notifications":1 }; state.selCapId = "orphan";
+function renderDiscover(){
+  $("#sysSeg").innerHTML = SYSTEMS.filter(x=>FILES[x.name]).map(x=>`<button aria-pressed="${state.scanSys===x.name}" data-scan="${esc(x.name)}">${esc(x.name)}</button>`).join("");
+  const x = SYSTEMS.find(y=>y.name===state.scanSys); const [cls,ab] = PROV[x.host]; const files = FILES[x.name], pos = state.scanPos[x.name];
+  $("#srcLine").innerHTML = `<span class="prov ${cls}">${ab}</span><span class="mono">${esc(x.repo)}</span><span class="muted">@ ${esc(x.branch)}</span><span class="chip">${esc(x.path)}</span><span class="muted" style="margin-left:auto;font-size:12px">${pos>=files.length?"cloned 4 min ago · a41c9e2":"cloning done · scanning"}</span>`;
+  $("#fileList").innerHTML = files.map((f,i)=>`<div class="file ${i<pos?"done":i===pos?"cur":""}"><span class="knob"></span><span>${esc(f)}</span><span>${i<pos?"✓":i===pos?"reading":""}</span></div>`).join("");
+  const done = Object.entries(state.scanPos).reduce((a,[k,v])=>a+v,0), total = Object.values(FILES).reduce((a,f)=>a+f.length,0);
+  $("#dFiles").textContent = Math.round(1412*done/total).toLocaleString();
+  const scanning = Object.entries(state.scanPos).filter(([k,v])=>v<FILES[k].length).length;
+  $("#dAgents").textContent = scanning ? `${scanning+2} agents scanning` : "Analysis complete";
+  let mapped = 0;
+  $("#appMap").innerHTML = MAP.map(m => `<div class="mapsys"><h4>${esc(m.sys)}<span class="chip">${SYSTEMS.find(y=>y.name===m.sys).path}</span></h4>${m.mods.map(md=>`<div class="mapmod"><b>${esc(md.name)}</b><div class="caps">${md.caps.map(([l,k,id])=>{ const pend = k==="pending" && state.scanPos.Notifications<FILES.Notifications.length; if(!pend) mapped++; return `<button class="cap-chip ${pend?"pending":k}" aria-pressed="${state.selCapId===id}" data-capid="${id}">${esc(l)}</button>`; }).join("")}</div></div>`).join("")}</div>`).join("");
+  $("#dCaps").textContent = mapped;
+  const ci = CAPINFO[state.selCapId];
+  $("#capDetail").innerHTML = ci ? `<div class="answer" style="margin-top:0"><div class="codeev">${esc(ci[0])}</div><div>${esc(ci[1])}</div></div>` : "";
+  $("#decTable").innerHTML = `<tr><th>Where</th><th>Decision</th><th>At runtime</th><th></th></tr>` + DECISIONS.map(([w,d,r,k,l])=>`<tr><td class="codeev">${esc(w)}</td><td>${esc(d)}</td><td class="num">${esc(r)}</td><td><span class="chip ${k}">${esc(l)}</span>${k==="warn"?` <a href="#capture" class="btn small ghost">Run a scenario</a>`:""}</td></tr>`).join("");
+}
+function scanTick(){
+  if (!state.steps.discover) return;
+  const k = Object.keys(state.scanPos).find(n => state.scanPos[n] < FILES[n].length);
+  if (k && Math.random() < .5) { state.scanPos[k]++; if (state.scanPos.Notifications >= FILES.Notifications.length) SYSTEMS.find(y=>y.name==="Notifications").code = "Analyzed"; }
+  if (location.hash === "#discover") renderDiscover();
+}
+document.addEventListener("click", e => {
+  const sc = e.target.closest("[data-scan]"); if (sc) { state.scanSys = sc.dataset.scan; renderDiscover(); }
+  const cp = e.target.closest("[data-capid]"); if (cp) { state.selCapId = cp.dataset.capid; renderDiscover(); }
+});
+$("#runScan").addEventListener("click", () => { state.scanPos = { "Lending & inventory":2, "Catalog search":0, "Stock-take job":1, "Notifications":0 }; SYSTEMS.find(y=>y.name==="Notifications").code="Scanning"; toast("Pulling the latest commits and analyzing again"); renderDiscover(); });
+$("#shareMap").addEventListener("click", () => toast("Map shared with your organization. The link opens a read-only view."));
+$("#folderForm").addEventListener("submit", e => { e.preventDefault(); const v = $("#folderIn").value.trim(); if (!v) { toast("Type a folder path first"); return; }
+  SYSTEMS.push({ name: v.split("/").filter(Boolean).pop() || v, host:"Local folder", repo:v, branch:"—", path:"/", runtime:[], code:"Queued" }); $("#folderIn").value=""; toast(`${v} queued for analysis. Nothing is uploaded with the local pool.`); renderDefine(); });
+
+const REASON = {
+  lend:{ ok:["BookLent","a copy was available"], no:["Loan refused","no copy was available · LoansController.cs:71"], cap:"Lend a copy" },
+  return:{ ok:["BookReturned","the member brought the copy back"], cap:"Return a copy" },
+  reserve:{ ok:["BookReserved","every copy was out on loan"], no:["Reservation refused","the member already reserved it"], cap:"Reserve a title" },
+  "reg-member":{ ok:["MemberRegistered","staff registered a new member"], cap:"Register a member" },
+  "reg-author":{ ok:["AuthorRegistered","staff registered a new author"], cap:"Register an author" },
+  "del-author":{ ok:["AuthorRemoved","the author had no books"], no:["Removal refused","the author still has books · AuthorsController.cs:61"], cap:"Remove an author" },
+  "add-book":{ ok:["BookAddedToCatalog","the ISBN was new"], no:["Book refused","the ISBN already exists"], cap:"Add a book" },
+  "tag-book":{ ok:["BookTagged","staff tagged the book"], cap:"Tag a book" },
+  stock:{ ok:["CopiesAdded","new copies arrived"], cap:"Stock copies" },
+  lost:{ ok:["CopiesReportedLost","copies were reported lost"], cap:"Report copies lost" }
+};
+function renderBiz(){
+  const el = $("#bizList"); if (!el) return;
+  el.innerHTML = state.feed.slice(0,5).map(c => { const r = REASON[c.shape.id]; if (!r) return ""; const refused = c.status>=400; const [n,why] = (refused ? r.no : r.ok) || r.ok;
+    return `<div class="b"><b>${esc(n)}</b> <span class="muted mono" style="font-size:11px">${esc(c.path.match(/\d{4,}/)?.[0] ? "#"+c.path.match(/\d{4,}/)[0] : "")}</span><div><span class="because">because</span> ${esc(why)}</div><div class="meta"><span class="chip ${refused?"bad":"ok"}">${refused?"Refused":"Accepted"}</span><span class="chip">${esc(r.cap)}</span></div></div>`; }).join("");
+}
 
 // ------------------------------------------------------------------ 2. capture
 function makeCapture(forceShape){
@@ -707,6 +1022,7 @@ function tick(){
   if (state.live) {
     const n = 1 + Math.floor(Math.random()*3); state.perMin.push(n); state.perMin = state.perMin.slice(-30);
     for (let i=0;i<n;i++) pushCapture(makeCapture());
+    renderBiz();
     if (++tickCount % 9 === 0 && !COUNTS.lost && state.scenario==="Report copies lost") pushCapture(makeCapture(SHAPES.find(s=>s.id==="lost")));
   }
   renderCaptureStats();
@@ -817,10 +1133,11 @@ const EVENTS = [
   { id:"CopiesAdded", mech:"InventoryUpdated", module:"Inventory", stream:"Book", props:[["copies","Count"]], from:["stock"], src:"UPDATE Inventory (TotalCount, AvailableCount) · 200 only", conf:.71, status:"question", q:"stock" },
   { id:"CopiesReportedLost", mech:"InventoryUpdated", module:"Inventory", stream:"Book", props:[["copies","Count"]], from:["lost"], src:"Inferred from route only. No captures yet", conf:.38, status:"suggested", note:"No evidence captured. Run “Report copies lost” in Capture to confirm." },
   { id:"BookReserved", mech:"ReservationsInserted", module:"Lending", stream:"Member", props:[["isbn","Isbn"]], from:["reserve"], src:"INSERT Reservations (BookId, MemberId, ReservedOn)", conf:.91, status:"accepted", note:"ReservedOn maps to the event’s occurred time, so it is not a property." },
-  { id:"BookLent", mech:"LoansInserted", module:"Lending", stream:"Loan", props:[["isbn","Isbn"],["memberId","MemberId"]], from:["lend"], src:"INSERT Loans (BookId, MemberId, LentOn) + UPDATE Inventory.AvailableCount", conf:.94, status:"accepted" },
+  { id:"BookLent", mech:"LoansInserted", module:"Lending", stream:"Loan", props:[["isbn","Isbn"],["memberId","MemberId"]], from:["lend"], src:"INSERT Loans (BookId, MemberId, LentOn) + UPDATE Inventory.AvailableCount", code:"LoansController.cs:63", conf:.97, status:"accepted", note:"Code also refuses a loan when the member has 5 open loans (LoanPolicy.cs:22). That rule was never triggered during capture." },
+  { id:"LoanMarkedOverdue", mech:"(code only)", module:"Lending", stream:"Loan", props:[], from:[], src:"Found in code only · no write observed", code:"OverdueSweep.cs:18", conf:.45, status:"suggested", note:"Found only in the source. Confirm the sweep is still enabled before accepting it." },
   { id:"ReservationFulfilled", mech:"ReservationsDeleted", module:"Lending", stream:"Member", props:[["isbn","Isbn"]], from:["lend"], src:"DELETE Reservations inside 18% of POST /api/loans", conf:.62, status:"question", q:"resv" },
   { id:"BookReturned", mech:"LoansUpdated", module:"Lending", stream:"Loan", props:[], from:["return"], src:"UPDATE Loans (ReturnedOn) + UPDATE Inventory.AvailableCount", conf:.92, status:"accepted" },
-  { id:"StockReconciled", mech:"InventoryUpdated (no command)", module:"Inventory", stream:"Book", props:[["totalCopies","Count"]], from:[], src:"14 nightly UPDATE Inventory with no HTTP command", conf:.4, status:"question", q:"orphan" }
+  { id:"StockReconciled", mech:"InventoryUpdated (no command)", module:"Inventory", stream:"Book", props:[["totalCopies","Count"]], from:[], src:"14 nightly UPDATE Inventory with no HTTP command", code:"jobs/stocktake/Reconcile.cs:41", conf:.81, status:"question", q:"orphan" }
 ];
 const QUESTIONS = [
   { id:"resv", text:"When a member borrows a book they had reserved, the reservation row is deleted in the same transaction. Is fulfilling a reservation a fact the library cares about?",
@@ -828,7 +1145,7 @@ const QUESTIONS = [
   { id:"stock", text:"POST /api/inventory inserts the first time a title is stocked and updates afterwards. Are these two different things to the library?",
     opts:[["yes","Yes. Keep BookStocked and CopiesAdded"],["no","No. Merge into one CopiesAdded event"]], evidence:"201 in 55%, 200 in 45%" },
   { id:"orphan", text:"Inventory counts change every night at 02:00 without any command. What is that?",
-    opts:[["job","A stock-take job. Record it as StockReconciled"],["sql","Staff fix counts with SQL. Model a correction command"],["ignore","Ignore it. Not part of the domain"]], evidence:"14 transactions, 02:00–02:05" }
+    opts:[["job","A stock-take job. Record it as StockReconciled"],["sql","Staff fix counts with SQL. Model a correction command"],["ignore","Ignore it. Not part of the domain"]], evidence:"14 transactions, 02:00–02:05 · Discover found jobs/stocktake/Reconcile.cs:41, which overwrites counts with the physical stock-take" }
 ];
 function renderEvents(){
   const fs = [["all","All"],["suggested","To review"],["question","Needs an answer"],["accepted","Accepted"],["rejected","Rejected"]];
@@ -851,7 +1168,7 @@ function renderEvents(){
         <button class="btn small" data-act="rename" data-id="${e.id}">Rename</button>
         ${e.status!=="rejected"?`<button class="btn small ghost" data-act="reject" data-id="${e.id}">Reject</button>`:`<button class="btn small ghost" data-act="restore" data-id="${e.id}">Restore</button>`}
       </div>
-      <div class="evidence"><span>Evidence: <span class="mono">${esc(e.src)}</span></span><span class="num">${n} captures</span>${shapes.map(s=>`<a href="#explore" class="mono" data-goto="${s.id}">${s.method} ${esc(s.path)}</a>`).join("")}</div>
+      <div class="evidence"><span>Evidence: <span class="mono">${esc(e.src)}</span></span>${e.code?`<a href="#discover" class="codeev">Code: ${esc(e.code)}</a>`:""}<span class="num">${n} captures</span>${shapes.map(s=>`<a href="#explore" class="mono" data-goto="${s.id}">${s.method} ${esc(s.path)}</a>`).join("")}</div>
       ${e.note?`<div class="note">${esc(e.note)}</div>`:""}
     </article>`;
   }).join("") || `<p class="muted">Nothing in this filter.</p>`;
@@ -901,7 +1218,7 @@ document.addEventListener("click", e => {
 
 // ------------------------------------------------------------------ 5. model
 const COMMAND_FOR = { AuthorRegistered:"RegisterAuthor", AuthorRemoved:"RemoveAuthor", MemberRegistered:"RegisterMember", BookAddedToCatalog:"AddBook", BookTagged:"TagBook",
-  BookStocked:"StockBook", CopiesAdded:"AddCopies", CopiesReportedLost:"ReportLost", BookReserved:"ReserveBook", BookLent:"LendBook", ReservationFulfilled:"LendBook", BookReturned:"ReturnBook", StockReconciled:"(nightly job)", StockCountCorrected:"CorrectStockCount" };
+  BookStocked:"StockBook", CopiesAdded:"AddCopies", CopiesReportedLost:"ReportLost", BookReserved:"ReserveBook", BookLent:"LendBook", ReservationFulfilled:"LendBook", BookReturned:"ReturnBook", LoanMarkedOverdue:"(overdue sweep)", StockReconciled:"(nightly job)", StockCountCorrected:"CorrectStockCount" };
 const SCREEN_FOR = { RegisterAuthor:"Authors", RemoveAuthor:"Authors", RegisterMember:"Members", AddBook:"Catalog", TagBook:"Book details", StockBook:"Inventory", AddCopies:"Inventory", ReportLost:"Inventory", ReserveBook:"Reservations", LendBook:"Lending desk", ReturnBook:"Lending desk" };
 const VIEWS_FOR = { Authors:["AuthorList"], Members:["MemberList"], Catalog:["CatalogEntry"], Inventory:["Availability"], Lending:["ActiveLoans","ReservationQueue"] };
 const MODULE_ORDER = ["Authors","Members","Catalog","Inventory","Lending"];
@@ -958,7 +1275,7 @@ function play(sl){
     L.push(`module ${m}`, `  feature ${m}`);
     sl.filter(s=>s.module===m).forEach(s => {
       if (s.type==="StateView") { s.views.forEach(v => { L.push(`    slice StateView ${v}`, `      readmodel ${v}`, `        // columns to confirm: no GET traffic captured`); }); return; }
-      const name = s.command.startsWith("(") ? "NightlyStockTake" : s.command;
+      const name = s.command==="(nightly job)" ? "NightlyStockTake" : s.command==="(overdue sweep)" ? "OverdueSweep" : s.command;
       L.push(`    slice ${s.type} ${name}`);
       s.events.forEach(e => { L.push(`      event ${e.id}${e.status!=="accepted"?"  // open":""}`); e.props.forEach(([p,t]) => L.push(`        ${p} ${t}`)); });
       if (s.type==="StateChange") {
@@ -1025,6 +1342,8 @@ state.perMin = [2,3,1,2,4,3,2,2,3,1,2,3,4,2,3,2,1,3,2,2];
 renderCaptureStats(); selectCapture(state.feed.find(c=>c.shape.id==="lend")?.id || state.feed[0].id);
 route();
 setInterval(tick, 1800);
+setInterval(scanTick, 1500);
+renderBiz(); renderDiscover();
 </script>
 </body>
 </html>
