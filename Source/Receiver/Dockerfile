@@ -16,9 +16,9 @@ WORKDIR /src
 
 RUN corepack enable
 
-COPY package.json .yarnrc.yml ./
+COPY package.json yarn.lock .yarnrc.yml ./
 COPY Source/Workbench/package.json ./Source/Workbench/
-RUN yarn install
+RUN yarn install --immutable
 
 COPY Source/Workbench/ ./Source/Workbench/
 RUN yarn build
@@ -39,9 +39,12 @@ WORKDIR /src
 
 # Copy project files and restore
 COPY Directory.Build.props Directory.Packages.props global.json .editorconfig .globalconfig ./
-COPY Source/Directory.Build.props ./Source/
+COPY Source/Directory.Build.props Source/Directory.Build.targets ./Source/
 COPY Source/Configuration/Configuration.csproj ./Source/Configuration/
 COPY Source/Contracts/Contracts.csproj ./Source/Contracts/
+COPY Source/Interpreter.Contracts/Interpreter.Contracts.csproj ./Source/Interpreter.Contracts/
+COPY Source/Interpretation/Interpretation.csproj ./Source/Interpretation/
+COPY Source/Screenplay/Screenplay.csproj ./Source/Screenplay/
 COPY Source/Storage/Storage.csproj ./Source/Storage/
 COPY Source/Workbench/Workbench.csproj ./Source/Workbench/
 COPY Source/Receiver/Receiver.csproj ./Source/Receiver/
@@ -52,6 +55,9 @@ RUN dotnet restore ./Source/Receiver/Receiver.csproj -p:Configuration=Release
 COPY README.md ./
 COPY Source/Configuration/ ./Source/Configuration/
 COPY Source/Contracts/ ./Source/Contracts/
+COPY Source/Interpreter.Contracts/ ./Source/Interpreter.Contracts/
+COPY Source/Interpretation/ ./Source/Interpretation/
+COPY Source/Screenplay/ ./Source/Screenplay/
 COPY Source/Storage/ ./Source/Storage/
 COPY Source/Workbench/ ./Source/Workbench/
 COPY Source/Receiver/ ./Source/Receiver/
@@ -75,10 +81,17 @@ RUN apt-get update \
     && apt-get install -y --no-install-recommends git \
     && rm -rf /var/lib/apt/lists/*
 
+# Clones live under /var/prologue/repos (the default Prologue:Repositories:CloneDirectory); the image runs as the
+# non-root aspnet user, so that directory must belong to it. Mount a volume there to keep clones across restarts.
+RUN mkdir -p /var/prologue/repos \
+    && chown -R $APP_UID /var/prologue
+
 WORKDIR /app
 COPY --from=builder /app/out ./
 
 ENV ASPNETCORE_URLS=http://0.0.0.0:8080
 EXPOSE 8080
+
+USER $APP_UID
 
 ENTRYPOINT ["dotnet", "Cratis.Prologue.Receiver.dll"]
