@@ -75,6 +75,8 @@
     <PackageVersion Include="Roslynator.Analyzers" Version="5.0.1" />
     <PackageVersion Include="Meziantou.Analyzer" Version="3.0.317" />
     <!-- Testing & Specifications -->
+    <PackageVersion Include="Cratis.Arc.Chronicle.Testing" Version="22.153.1" />
+    <PackageVersion Include="Cratis.Chronicle.Testing" Version="19.114.0" />
     <PackageVersion Include="Cratis.Specifications" Version="5.1.0" />
     <PackageVersion Include="Cratis.Specifications.XUnit.v3" Version="5.1.0" />
     <PackageVersion Include="xunit.v3.mtp-off" Version="4.0.2" />
