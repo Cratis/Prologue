@@ -14,9 +14,10 @@ namespace Cratis.Prologue.Workbench.Explore.Journeys;
 /// </summary>
 /// <param name="Id">The prologue.</param>
 /// <param name="Trails">The things being followed, the one touched last at the end. Bounded by <see cref="JourneyInference.TrailsKept"/>.</param>
-/// <param name="Sequences">The sequences, described: most common first within each kind.</param>
+/// <param name="Sequences">The sequences, described: most common first within each kind. At most <see cref="JourneyInference.SequencesKept"/> per kind; a sequence without steps counts the things in the sequences that are not listed.</param>
+/// <param name="Evicted">The things no longer followed, remembered so they are not counted again when they return. Bounded by <see cref="JourneyInference.EvictedKept"/>; the query leaves it out.</param>
 [ReadModel]
-public record Journeys(PrologueId Id, IEnumerable<EntityTrail> Trails, IEnumerable<JourneySequence> Sequences)
+public record Journeys(PrologueId Id, IEnumerable<EntityTrail> Trails, IEnumerable<JourneySequence> Sequences, IEnumerable<EvictedEntity> Evicted)
 {
     /// <summary>
     /// Observes the journeys of a prologue.
@@ -25,7 +26,7 @@ public record Journeys(PrologueId Id, IEnumerable<EntityTrail> Trails, IEnumerab
     /// <param name="readModels">Observes the stored journeys.</param>
     /// <returns>The journeys, pushed again whenever a capture extends one.</returns>
     public static ISubject<Journeys> ObserveJourneys(PrologueId id, IReadModels readModels) =>
-        readModels.Observe<Journeys>(journeys => journeys.Id == id).FirstItem();
+        readModels.Observe<Journeys>(journeys => journeys.Id == id).FirstItem().Mapped(journeys => journeys is null ? null! : journeys with { Evicted = [] });
 
     /// <summary>
     /// Reduces a capture arriving.
@@ -36,13 +37,13 @@ public record Journeys(PrologueId Id, IEnumerable<EntityTrail> Trails, IEnumerab
     /// <returns>The new state.</returns>
     public static Journeys Reduce(CaptureRecorded @event, Journeys? current, EventContext context)
     {
-        var journeys = current ?? new(new PrologueId(Guid.Parse(context.EventSourceId.Value)), [], []);
+        var journeys = current ?? new(new PrologueId(Guid.Parse(context.EventSourceId.Value)), [], [], []);
         if (!JourneyInference.IsStep(@event.Http))
         {
             return journeys;
         }
 
-        var (trails, sequences) = JourneyInference.Link(journeys.Trails, journeys.Sequences, @event.Http);
-        return journeys with { Trails = trails, Sequences = JourneyInference.Describe(sequences) };
+        var (trails, evicted, sequences) = JourneyInference.Link(journeys.Trails, journeys.Evicted ?? [], journeys.Sequences, @event.Http);
+        return journeys with { Trails = trails, Evicted = evicted, Sequences = JourneyInference.Describe(sequences) };
     }
 }

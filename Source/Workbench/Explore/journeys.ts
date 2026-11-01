@@ -33,6 +33,8 @@ export const endingLabel = (next: string): string => `(not ${lastSegment(next)} 
  */
 export const journeyRows = (sequences: readonly SequenceLike[], limit: number = journeysShown): JourneyRow[] =>
     [...sequences]
+        // A sequence without steps only counts the things in sequences that are not listed; it is not a journey.
+        .filter(sequence => sequence.steps.length > 0)
         .sort((a, b) => b.entities - a.entities || a.kind.localeCompare(b.kind))
         .slice(0, limit)
         .map(sequence => {

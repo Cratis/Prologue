@@ -14,11 +14,12 @@ public class when_more_things_arrive_than_are_followed : Specification
     void Because()
     {
         IEnumerable<EntityTrail> trails = [];
+        IEnumerable<EvictedEntity> evicted = [];
         IEnumerable<JourneySequence> sequences = [];
         for (var loan = 0; loan < JourneyInference.TrailsKept + 5; loan++)
         {
             var command = new RecordedCommand("POST", $"/api/loans/{loan}/lend", 200, TraceId.None, CommandShape.From("POST", "/api/loans/1/lend"), 0);
-            (trails, sequences) = JourneyInference.Link(trails, sequences, command);
+            (trails, evicted, sequences) = JourneyInference.Link(trails, evicted, sequences, command);
         }
 
         _trails = [.. trails];

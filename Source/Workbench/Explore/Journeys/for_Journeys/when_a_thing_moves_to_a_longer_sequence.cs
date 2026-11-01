@@ -15,11 +15,12 @@ public class when_a_thing_moves_to_a_longer_sequence : Specification
     void Because()
     {
         IEnumerable<EntityTrail> trails = [];
+        IEnumerable<EvictedEntity> evicted = [];
         IEnumerable<JourneySequence> sequences = [];
         foreach (var step in new[] { "reserve", "lend", "return" })
         {
             var command = new RecordedCommand("POST", $"/api/loans/9/{step}", 200, TraceId.None, CommandShape.From("POST", $"/api/loans/9/{step}"), 0);
-            (trails, sequences) = JourneyInference.Link(trails, sequences, command);
+            (trails, evicted, sequences) = JourneyInference.Link(trails, evicted, sequences, command);
         }
 
         _trails = [.. trails];

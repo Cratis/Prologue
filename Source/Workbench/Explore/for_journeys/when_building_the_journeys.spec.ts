@@ -18,6 +18,7 @@ describe('when building the journeys', () => {
     it('keeps the step the others went on to', () => expect(rows[1].unfinishedBefore).toBe('POST /api/loans/{id}/return'));
     it('counts the things of a finished sequence', () => expect(rows[0].note).toBe('312 loans.'));
     it('labels the ending of an unfinished journey', () => expect(endingLabel('POST /api/loans/{id}/return')).toBe('(not return yet)'));
+    it('leaves out the count of sequences that are not listed', () => expect(journeyRows([{ kind: 'loans', steps: [], entities: 30, share: 5, continuedBy: '' }])).toEqual([]));
     it('shows at most the limit', () => expect(journeyRows([], 3)).toEqual([]));
     it('limits the number of journeys', () => expect(journeyRows(Array.from({ length: 9 }, (_, index) => ({ kind: 'a', steps: [`step${index}`], entities: index, share: 1, continuedBy: '' })), 4)).toHaveLength(4));
 });
