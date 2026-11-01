@@ -8,7 +8,7 @@ import { EmitMetadataPlugin } from '@cratis/arc.vite';
 
 // The Receiver serves what is built here from its wwwroot, with an SPA fallback.
 const receiver = fileURLToPath(new URL('../Receiver', import.meta.url));
-const backend = 'http://localhost:5000';
+const backend = process.env.PROLOGUE_BACKEND ?? 'http://localhost:5000';
 
 export default defineConfig({
     root: fileURLToPath(new URL('./', import.meta.url)),

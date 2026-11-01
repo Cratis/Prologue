@@ -27,8 +27,9 @@ export const useDiscoverMap = (prologue: Guid): DiscoverMap => {
     const [dependencies] = ObserveDependencies.use({ prologue });
 
     return {
-        loaded: map.hasData && decisionPoints.hasData && dependencies.hasData,
-        map: map.hasData ? map.data : undefined,
+        // An empty list has no data, so loaded means every query has answered: a map with no dependencies is still a map.
+        loaded: map.hasData && !decisionPoints.isPerforming && !dependencies.isPerforming,
+        map: map.hasData && map.data?.systems ? map.data : undefined,
         decisionPoints: decisionPoints.data,
         dependencies: dependencies.data
     };

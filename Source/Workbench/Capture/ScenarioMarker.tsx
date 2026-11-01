@@ -18,7 +18,7 @@ export const ScenarioMarker = ({ scenarios, active, typed, onTyped, onStart, onE
     <form className="marker" onSubmit={event => { event.preventDefault(); if (active) onEnd(); else onStart(); }}>
         <input
             list="scenario-options"
-            placeholder="I'm now running\u2026 (pick a scenario)"
+            placeholder={`I'm now running\u2026 (pick a scenario)`}
             aria-label="Current scenario"
             value={active || typed}
             disabled={active !== ''}

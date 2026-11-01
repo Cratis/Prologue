@@ -70,7 +70,7 @@ export const discoverKpis = (map: ApplicationMap | undefined, statuses: readonly
     filesTotal: statuses.reduce((sum, status) => sum + status.totalFiles, 0),
     activeAnalyses: statuses.filter(status => isActive(status.state)).length,
     capabilities: map?.capabilities ?? 0,
-    systems: map?.systems.length ?? 0,
+    systems: map?.systems?.length ?? 0,
     decisionPoints: map?.decisionPoints ?? 0,
     matched: map?.matchedToRuntime ?? 0,
     codeOnly: map?.codeOnly ?? 0

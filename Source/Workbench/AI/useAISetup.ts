@@ -72,12 +72,13 @@ export const useAISetup = (): AISetup => {
         };
 
         return {
-            loaded: providersResult.hasData && poolsResult.hasData && arrangementsResult.hasData && positionsResult.hasData,
+            // An empty list has no data, so loaded means every query has answered, not that every query holds something.
+            loaded: !providersResult.isPerforming && !poolsResult.isPerforming && !arrangementsResult.isPerforming && !positionsResult.isPerforming,
             providers,
             pools: poolViews,
             agents,
             isInside,
             isMarked: (providerId: string) => marks.has(providerId)
         };
-    }, [providers, pools, agents, arrangements, positions, providersResult.hasData, poolsResult.hasData, arrangementsResult.hasData, positionsResult.hasData]);
+    }, [providers, pools, agents, arrangements, positions, providersResult.isPerforming, poolsResult.isPerforming, arrangementsResult.isPerforming, positionsResult.isPerforming]);
 };
