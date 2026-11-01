@@ -39,7 +39,17 @@ These are the keys the capture endpoints and the Interpreter's service mode use;
 | `Prologue:Repositories:CloneDirectory` | `/var/prologue/repos` | Where repositories are cloned |
 | `Prologue:Secrets:<name>` | none | The value of the secret a connection names |
 
-The image installs the `git` command line, which cloning needs. Mount `CloneDirectory` on a volume if you want clones to survive a restart.
+The image installs the `git` command line, which cloning needs, and runs as the non-root `app` user, which owns `/var/prologue/repos`. Mount `CloneDirectory` on a volume if you want clones to survive a restart, and make the volume writable by that user (uid 1654).
+
+A connection's token is sent only to the host of that connection and only over https; see [Security and exposure](../guides/running-the-workbench.md#security-and-exposure).
+
+## Discover
+
+| Key | Default | Purpose |
+|---|---|---|
+| `Prologue:Discover:AllowedRoots` | none | The folders **Analyze folder** and local-folder systems may read. When set, a folder has to be one of them or inside one (`.` and `..` segments and links are resolved first); when not set, any folder the Receiver can read is allowed |
+
+Set it as a list, for example `Prologue__Discover__AllowedRoots__0=/srv/code` in the environment.
 
 ### How secrets are resolved
 
