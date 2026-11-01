@@ -30,9 +30,9 @@ public class when_analyzing_again_and_the_code_changed : Specification
     [Fact] void should_record_the_capability_that_is_gone() => _events.OfType<CapabilityRemoved>().Single().Capability.Value.ShouldEqual("Lend copy");
     [Fact] void should_record_the_decision_point_that_moved() => _events.OfType<DecisionPointFound>().Single().Line.Value.ShouldEqual(80);
     [Fact] void should_record_the_decision_point_that_is_gone() => _events.OfType<DecisionPointRemoved>().Single().Rule.Value.ShouldContain("5 open loans");
-    [Fact] void should_record_the_dependency_whose_detail_changed() => _events.OfType<DependencyFound>().Single().Detail.Value.ShouldEqual("POST /notify/v2");
+    [Fact] void should_not_record_a_dependency_only_because_its_detail_was_worded_differently() => _events.OfType<DependencyFound>().ShouldBeEmpty();
     [Fact] void should_not_record_a_dependency_that_is_unchanged() => _events.OfType<DependencyRemoved>().ShouldBeEmpty();
     [Fact] void should_complete_at_the_new_commit() => _events.OfType<CodeAnalysisCompleted>().Single().Source.Value.ShouldEqual("b52dd10");
-    [Fact] void should_record_exactly_the_changes() => _events.Count.ShouldEqual(6);
+    [Fact] void should_record_exactly_the_changes() => _events.Count.ShouldEqual(5);
 }
 #endif

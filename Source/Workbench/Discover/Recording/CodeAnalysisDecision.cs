@@ -46,81 +46,107 @@ public static class CodeAnalysisDecision
 
     static IEnumerable<object> Capabilities(AnalysisOutcome outcome, CodeFindings known, bool complete)
     {
-        var existing = known.Capabilities.Where(_ => _.Subject == outcome.Subject).ToDictionary(_ => FindingKeys.Capability(_.Module, _.Capability));
+        // A capability is its module and the routes it serves (or, with none, the file): the name is the model's wording and may change
+        // from one analysis of unchanged code to the next.
+        var recorded = known.Capabilities.Where(_ => _.Subject == outcome.Subject).ToList();
         var found = outcome.Findings.Capabilities.GroupBy(_ => FindingKeys.Capability(_.Module, _.Capability)).Select(_ => _.First()).ToList();
+        var pairs = FindingPairs.Of(
+            found,
+            recorded,
+            (item, before) => FindingKeys.Capability(item.Module, item.Capability) == FindingKeys.Capability(before.Module, before.Capability),
+            (item, before) => SameModule(item.Module, before.Module) && item.Shapes.Any() && FindingKeys.SameShapes(item.Shapes, before.Shapes),
+            (item, before) => SameModule(item.Module, before.Module) && !item.Shapes.Any() && !before.Shapes.Any() && SameFile(item.File, before.File));
 
-        foreach (var item in found)
+        foreach (var (item, before) in pairs.Pairs.Where(pair => !(SameFile(pair.Found.File, pair.Recorded.File) && FindingKeys.SameShapes(pair.Found.Shapes, pair.Recorded.Shapes))))
         {
-            var same = existing.TryGetValue(FindingKeys.Capability(item.Module, item.Capability), out var before)
-                && string.Equals(before.File.Value, item.File.Value, StringComparison.OrdinalIgnoreCase) && FindingKeys.SameShapes(before.Shapes, item.Shapes);
-            if (!same)
+            yield return new CapabilityMapped(outcome.Subject, item.Module, item.Capability, [.. item.Shapes], item.File);
+            if (FindingKeys.Capability(item.Module, item.Capability) != FindingKeys.Capability(before.Module, before.Capability))
             {
-                yield return new CapabilityMapped(outcome.Subject, item.Module, item.Capability, [.. item.Shapes], item.File);
+                yield return new CapabilityRemoved(outcome.Subject, before.Module, before.Capability);
             }
         }
 
-        if (!complete)
+        foreach (var item in pairs.New)
         {
-            yield break;
+            yield return new CapabilityMapped(outcome.Subject, item.Module, item.Capability, [.. item.Shapes], item.File);
         }
 
-        var kept = found.Select(_ => FindingKeys.Capability(_.Module, _.Capability)).ToHashSet();
-        foreach (var gone in existing.Where(_ => !kept.Contains(_.Key)).Select(_ => _.Value))
+        if (complete)
         {
-            yield return new CapabilityRemoved(outcome.Subject, gone.Module, gone.Capability);
+            foreach (var gone in pairs.Gone)
+            {
+                yield return new CapabilityRemoved(outcome.Subject, gone.Module, gone.Capability);
+            }
         }
     }
 
     static IEnumerable<object> DecisionPoints(AnalysisOutcome outcome, CodeFindings known, bool complete)
     {
-        var existing = known.DecisionPoints.Where(_ => _.Subject == outcome.Subject).ToDictionary(_ => FindingKeys.DecisionPoint(_.Rule, _.File));
+        // A decision point is the place in the code: its file and line. The rule text is the model's wording of it.
+        var recorded = known.DecisionPoints.Where(_ => _.Subject == outcome.Subject).ToList();
         var found = outcome.Findings.DecisionPoints.GroupBy(_ => FindingKeys.DecisionPoint(_.Rule, _.File)).Select(_ => _.First()).ToList();
+        var pairs = FindingPairs.Of(
+            found,
+            recorded,
+            (item, before) => FindingKeys.DecisionPoint(item.Rule, item.File) == FindingKeys.DecisionPoint(before.Rule, before.File),
+            (item, before) => SameFile(item.File, before.File) && item.Line == before.Line);
 
-        foreach (var item in found)
+        foreach (var (item, before) in pairs.Pairs.Where(pair => !SameDecisionPoint(pair.Found, pair.Recorded)))
         {
-            var same = existing.TryGetValue(FindingKeys.DecisionPoint(item.Rule, item.File), out var before)
-                && before.Line == item.Line && string.Equals(before.Shape.Value, item.Shape.Value, StringComparison.OrdinalIgnoreCase) && before.Kind == item.Kind;
-            if (!same)
+            yield return new DecisionPointFound(outcome.Subject, item.Rule, item.File, item.Line, item.Shape, item.Kind);
+            if (FindingKeys.DecisionPoint(item.Rule, item.File) != FindingKeys.DecisionPoint(before.Rule, before.File))
             {
-                yield return new DecisionPointFound(outcome.Subject, item.Rule, item.File, item.Line, item.Shape, item.Kind);
+                yield return new DecisionPointRemoved(outcome.Subject, before.Rule, before.File);
             }
         }
 
-        if (!complete)
+        foreach (var item in pairs.New)
         {
-            yield break;
+            yield return new DecisionPointFound(outcome.Subject, item.Rule, item.File, item.Line, item.Shape, item.Kind);
         }
 
-        var kept = found.Select(_ => FindingKeys.DecisionPoint(_.Rule, _.File)).ToHashSet();
-        foreach (var gone in existing.Where(_ => !kept.Contains(_.Key)).Select(_ => _.Value))
+        if (complete)
         {
-            yield return new DecisionPointRemoved(outcome.Subject, gone.Rule, gone.File);
+            foreach (var gone in pairs.Gone)
+            {
+                yield return new DecisionPointRemoved(outcome.Subject, gone.Rule, gone.File);
+            }
         }
     }
 
     static IEnumerable<object> Dependencies(AnalysisOutcome outcome, CodeFindings known, bool complete)
     {
-        var existing = known.Dependencies.Where(_ => _.Subject == outcome.Subject).ToDictionary(_ => FindingKeys.Dependency(_.Target, _.Kind));
+        // A dependency is what is depended on and how. Its detail is wording: it is only recorded when none is yet.
+        var recorded = known.Dependencies.Where(_ => _.Subject == outcome.Subject).ToList();
         var found = outcome.Findings.Dependencies.GroupBy(_ => FindingKeys.Dependency(_.Target, _.Kind)).Select(_ => _.First()).ToList();
+        var pairs = FindingPairs.Of(
+            found,
+            recorded,
+            (item, before) => FindingKeys.Dependency(item.Target, item.Kind) == FindingKeys.Dependency(before.Target, before.Kind));
 
-        foreach (var item in found)
+        foreach (var (item, _) in pairs.Pairs.Where(pair => string.IsNullOrWhiteSpace(pair.Recorded.Detail.Value) && !string.IsNullOrWhiteSpace(pair.Found.Detail.Value)))
         {
-            var same = existing.TryGetValue(FindingKeys.Dependency(item.Target, item.Kind), out var before) && before.Detail == item.Detail;
-            if (!same)
+            yield return new DependencyFound(outcome.Subject, item.Target, item.Kind, item.Detail);
+        }
+
+        foreach (var item in pairs.New)
+        {
+            yield return new DependencyFound(outcome.Subject, item.Target, item.Kind, item.Detail);
+        }
+
+        if (complete)
+        {
+            foreach (var gone in pairs.Gone)
             {
-                yield return new DependencyFound(outcome.Subject, item.Target, item.Kind, item.Detail);
+                yield return new DependencyRemoved(outcome.Subject, gone.Target, gone.Kind);
             }
         }
-
-        if (!complete)
-        {
-            yield break;
-        }
-
-        var kept = found.Select(_ => FindingKeys.Dependency(_.Target, _.Kind)).ToHashSet();
-        foreach (var gone in existing.Where(_ => !kept.Contains(_.Key)).Select(_ => _.Value))
-        {
-            yield return new DependencyRemoved(outcome.Subject, gone.Target, gone.Kind);
-        }
     }
+
+    static bool SameModule(ModuleName left, ModuleName right) => FindingKeys.Normalize(left.Value) == FindingKeys.Normalize(right.Value);
+
+    static bool SameFile(SourcePath left, SourcePath right) => string.Equals(left.Value, right.Value, StringComparison.OrdinalIgnoreCase);
+
+    static bool SameDecisionPoint(FoundDecisionPoint item, MappedDecisionPoint before) =>
+        item.Line == before.Line && string.Equals(item.Shape.Value, before.Shape.Value, StringComparison.OrdinalIgnoreCase) && item.Kind == before.Kind;
 }
