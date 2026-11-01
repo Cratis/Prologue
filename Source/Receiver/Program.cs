@@ -5,6 +5,7 @@ using System.Globalization;
 using Cratis.Prologue.Storage;
 using Cratis.Prologue.Workbench;
 using Cratis.Prologue.Workbench.Captures.Recording;
+using Cratis.Prologue.Workbench.Rebuild.Parity;
 
 // Force invariant culture for the backend
 CultureInfo.DefaultThreadCurrentCulture = CultureInfo.InvariantCulture;
@@ -49,6 +50,13 @@ app.MapPost("/prologues/{prologueId:guid}/captures", async (Guid prologueId, Cap
     var associated = capture with { PrologueId = prologueId };
     await store.Store(associated, cancellationToken);
     await recorder.Record(associated, cancellationToken);
+    return Results.Accepted();
+});
+
+// Endpoint the Prologue Extractor posts to after it mirrored a command to the shadow system and compared the two answers.
+app.MapPost("/prologues/{prologueId:guid}/parity", async (Guid prologueId, ParityObservation observation, IParityRecorder recorder, CancellationToken cancellationToken) =>
+{
+    await recorder.Record(prologueId, observation, cancellationToken);
     return Results.Accepted();
 });
 

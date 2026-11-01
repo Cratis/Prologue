@@ -34,19 +34,19 @@ public record CommandShape(string Value) : ConceptAs<string>(Value)
     /// <param name="method">The HTTP method.</param>
     /// <param name="path">The request path, with or without a query string.</param>
     /// <returns>The shape.</returns>
-    public static CommandShape From(string method, string path)
-    {
-        const string idSegment = "{id}";
-        var withoutQuery = path.Split('?', '#')[0].Trim();
-        var segments = withoutQuery
-            .Split('/', StringSplitOptions.RemoveEmptyEntries)
-            .Select(segment => IsIdentifier(segment) ? idSegment : segment);
+    public static CommandShape From(string method, string path) => new(CommandShapes.From(method, path));
 
-        return new($"{method.Trim().ToUpperInvariant()} /{string.Join('/', segments)}");
-    }
+    /// <summary>
+    /// Gets the identities in a path, such as the loan number in "/api/loans/4412/return".
+    /// </summary>
+    /// <param name="path">The request path.</param>
+    /// <returns>The identity segments.</returns>
+    public static IEnumerable<string> IdentifiersIn(string path) => CommandShapes.IdentifiersIn(path);
 
-    internal static bool IsIdentifier(string segment) =>
-        segment.All(char.IsAsciiDigit) ||
-        Guid.TryParse(segment, out _) ||
-        (segment.Length >= 4 && segment.Any(char.IsAsciiDigit));
+    /// <summary>
+    /// Gets a value indicating whether a path segment is an identity that the shape replaces with "{id}".
+    /// </summary>
+    /// <param name="segment">The path segment.</param>
+    /// <returns>True when the segment is an identity.</returns>
+    internal static bool IsIdentifier(string segment) => CommandShapes.IsIdentifier(segment);
 }

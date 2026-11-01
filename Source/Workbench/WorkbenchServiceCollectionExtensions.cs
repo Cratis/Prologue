@@ -9,6 +9,7 @@ using Cratis.Prologue.Workbench.AI.Asking;
 using Cratis.Prologue.Workbench.Captures;
 using Cratis.Prologue.Workbench.Discover;
 using Cratis.Prologue.Workbench.Identity;
+using Cratis.Prologue.Workbench.Rebuild;
 using Cratis.Prologue.Workbench.Repositories;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.DependencyInjection;
@@ -64,6 +65,7 @@ public static class WorkbenchServiceCollectionExtensions
         builder.AddCaptures();
         builder.AddAsking();
         builder.AddDiscover();
+        builder.AddRebuild();
 
         return builder;
     }

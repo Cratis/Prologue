@@ -4,6 +4,7 @@
 using System.Globalization;
 using Cratis.Prologue.Configuration;
 using Cratis.Prologue.Extractor.Capturing;
+using Cratis.Prologue.Extractor.Shadowing;
 using Cratis.Prologue.Extractor.Sources.Http;
 using Cratis.Prologue.Extractor.Sources.OpenTelemetry;
 using Cratis.Prologue.Extractor.Sources.Postgres;
@@ -62,6 +63,10 @@ else
         client.BaseAddress = new Uri(prologue.Output.Api.Endpoint.TrimEnd('/') + "/"));
 }
 
+// Shadowing — commands that match a configured rule are mirrored to the new system after the legacy system answered, and
+// the two decisions are compared and reported to the Receiver as parity. Without rules nothing here is registered.
+var shadowing = builder.Services.AddShadowing(prologue);
+
 // HTTP command source — reverse proxy with a command-capturing transform
 builder.Services.AddReverseProxy().LoadFromConfig(builder.Configuration.GetSection("ReverseProxy"));
 builder.Services.AddSingleton<ITransformProvider, CommandCaptureTransform>();
@@ -117,7 +122,20 @@ if (prologue.OpenTelemetry.Enabled)
 
 var app = builder.Build();
 
-app.MapReverseProxy();
+if (shadowing.Any)
+{
+    app.MapReverseProxy(pipeline =>
+    {
+        pipeline.UseMiddleware<ShadowMiddleware>();
+        pipeline.UseSessionAffinity();
+        pipeline.UseLoadBalancing();
+        pipeline.UsePassiveHealthChecks();
+    });
+}
+else
+{
+    app.MapReverseProxy();
+}
 
 if (prologue.OpenTelemetry.Enabled)
 {

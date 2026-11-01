@@ -21,7 +21,14 @@ public static class DecisionRules
     /// </summary>
     /// <param name="http">The command of the capture.</param>
     /// <returns>The outcome.</returns>
-    public static DecisionOutcome Classify(RecordedCommand http) => http.Shape.IsNone ? DecisionOutcome.NotDecided : http.Status.Value switch
+    public static DecisionOutcome Classify(RecordedCommand http) => http.Shape.IsNone ? DecisionOutcome.NotDecided : Classify(http.Status);
+
+    /// <summary>
+    /// Classifies a status the same way: 2xx and 3xx accept, 4xx and 5xx refuse, anything else decides nothing.
+    /// </summary>
+    /// <param name="status">The status a command was answered with.</param>
+    /// <returns>The outcome.</returns>
+    public static DecisionOutcome Classify(HttpStatus status) => status.Value switch
     {
         >= FirstAccepted and < FirstRefused => DecisionOutcome.Accepted,
         >= FirstRefused and < AfterLastRefused => DecisionOutcome.Refused,
