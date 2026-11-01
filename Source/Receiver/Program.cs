@@ -27,6 +27,9 @@ var app = builder.Build();
 // Serve the Workbench frontend built into wwwroot.
 app.UseDefaultFiles();
 app.UseStaticFiles();
+
+// Observable queries reach the browser over the WebSocket hub Arc maps; without this the upgrade is a 500.
+app.UseWebSockets();
 app.UseCratis();
 
 // Public-facing endpoint the Prologue Extractor posts correlated captures to when it is not associated with a Prologue.
