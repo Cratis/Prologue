@@ -9,11 +9,11 @@ namespace Cratis.Prologue.Workbench.Rebuild.Parity;
 public interface IParityRecordingQueue
 {
     /// <summary>
-    /// Queues an observation to be recorded. When the queue is full the observation is dropped and logged.
+    /// Queues an observation to be recorded. When the queue is full the observation is dropped and logged. An observation whose id was queued recently is a retry and is not queued again.
     /// </summary>
     /// <param name="prologue">The prologue the Extractor is configured for.</param>
     /// <param name="observation">The observation.</param>
-    /// <returns>True when it was queued; false when it was dropped.</returns>
+    /// <returns>True when it was queued or is a retry of one that was; false when it was dropped.</returns>
     bool TryEnqueue(Guid prologue, ParityObservation observation);
 
     /// <summary>
