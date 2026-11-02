@@ -52,13 +52,22 @@ public static class InterpretationDecision
         }
 
         var raised = questions.ToList();
-        if (!Same(current?.Raised ?? [], raised))
+        if (!SameQuestions(current?.Raised ?? [], raised))
         {
             yield return new RaisedQuestionsRecorded(raised);
         }
     }
 
+    // A question is the same question while it is about the same thing and offers the same answers. Its prompt and context carry counts that move with every
+    // capture, and recording the question again for a count would append an event for looking, not for a change.
+    static bool SameQuestions(IEnumerable<RaisedQuestion> left, IEnumerable<RaisedQuestion> right) =>
+        Same(left.Select(Identity), right.Select(Identity));
+
+    static QuestionIdentity Identity(RaisedQuestion question) => new(question.Key.Value, question.Choices);
+
     static bool Same<T>(IEnumerable<T> left, IEnumerable<T> right) => JsonSerializer.Serialize(left) == JsonSerializer.Serialize(right);
 
     static bool Same(InterpretedModel left, InterpretedModel right) => JsonSerializer.Serialize(left) == JsonSerializer.Serialize(right);
+
+    sealed record QuestionIdentity(string Key, IEnumerable<QuestionOption> Choices);
 }
