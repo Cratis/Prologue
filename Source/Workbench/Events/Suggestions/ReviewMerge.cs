@@ -23,6 +23,8 @@ public static class ReviewMerge
     /// <returns>The suggestions after the merge, in the order of the interpretation followed by the withdrawn ones.</returns>
     public static IEnumerable<ReviewedSuggestion> Merge(IEnumerable<ReviewedSuggestion> reviewed, IEnumerable<SuggestedEvent> found)
     {
+        reviewed = Deduplicate(reviewed);
+        found = [.. found.GroupBy(suggestion => suggestion.Key).Select(group => group.First())];
         var known = reviewed.ToDictionary(suggestion => suggestion.Suggestion.Key);
         var foundKeys = found.Select(suggestion => suggestion.Key).ToHashSet();
         var superseded = new HashSet<SuggestionKey>();
@@ -45,6 +47,17 @@ public static class ReviewMerge
         var evidenced = found.Where(suggestion => suggestion.Origin == SuggestionOrigin.Captured).SelectMany(suggestion => suggestion.Evidence.Shapes.Select(shape => shape.Shape.Value.ToLowerInvariant())).ToHashSet();
         return [.. merged, .. reviewed.Where(suggestion => !foundKeys.Contains(suggestion.Suggestion.Key) && !superseded.Contains(suggestion.Suggestion.Key) && !Replaced(suggestion, evidenced)).Select(suggestion => suggestion with { Withdrawn = true })];
     }
+
+    /// <summary>
+    /// Collapses suggestions stored under the same key, so a store that already holds duplicates recovers: the one a person decided on
+    /// (a status other than suggested, or a name they chose) wins, and among equals the first stored wins.
+    /// </summary>
+    /// <param name="reviewed">The suggestions as stored.</param>
+    /// <returns>One suggestion per key, in the order the keys first appear.</returns>
+    public static IReadOnlyList<ReviewedSuggestion> Deduplicate(IEnumerable<ReviewedSuggestion> reviewed) =>
+        [.. reviewed
+            .GroupBy(suggestion => suggestion.Suggestion.Key)
+            .Select(group => group.OrderByDescending(suggestion => suggestion.Status != SuggestionStatus.Suggested || suggestion.Renamed).First())];
 
     // A code-only suggestion nobody decided on, whose command the captures evidence now, has nothing left to carry over: the captured suggestion is the one to review.
     static bool Replaced(ReviewedSuggestion suggestion, HashSet<string> evidenced) =>

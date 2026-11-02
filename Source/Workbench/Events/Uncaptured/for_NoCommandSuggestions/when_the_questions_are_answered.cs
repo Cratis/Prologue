@@ -32,7 +32,7 @@ public class when_the_questions_are_answered : an_uncaptured_library
         result.Suggestions.Select(item => item.Suggestion).Single(suggestion => suggestion.Stream.Value == "Reminder");
 
     [Fact] void should_stop_asking_once_it_is_answered() => _job.Questions.ShouldBeEmpty();
-    [Fact] void should_suggest_an_event_for_a_scheduled_job() => Reminder(_job).Key.Value.ShouldEqual("Background/ReminderUpdated");
+    [Fact] void should_suggest_an_event_for_a_scheduled_job() => Reminder(_job).Key.Value.ShouldEqual("Background/dbo.Reminders.ReminderUpdated");
     [Fact] void should_say_no_code_explains_it() => Reminder(_job).Notes.Single().Text.ShouldContain("No code explains it. You answered: A scheduled job.");
     [Fact] void should_have_no_job_to_tie_it_to() => _job.Suggestions.Single(item => item.Suggestion.Stream.Value == "Reminder").Job.ShouldBeNull();
     [Fact] void should_suggest_a_correction_for_staff_correcting_data() => Reminder(_correction).Mechanical.Value.ShouldEqual("ReminderCorrected");

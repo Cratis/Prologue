@@ -29,8 +29,8 @@ public class an_uncaptured_library : a_library_interpretation
     protected static MappedCapability Capability(string module, string capability, params string[] shapes) =>
         new(new AnalysisSubjectId(Guid.Empty), module, capability, [.. shapes.Select(shape => new RouteShape(shape))], $"{module}/{capability.Replace(' ', '-')}.cs");
 
-    protected static UncorrelatedTable Written(string table, int transactions, int hour, ChangeOperation operation = ChangeOperation.Update) =>
-        new(new TableWrite("dbo", table, [new OperationRuns(operation, transactions)], [new Captures.ColumnName("Quantity")]), transactions, [new HourCount(hour, transactions)]);
+    protected static UncorrelatedTable Written(string table, int transactions, int hour, ChangeOperation operation = ChangeOperation.Update, string schema = "dbo") =>
+        new(new TableWrite(schema, table, [new OperationRuns(operation, transactions)], [new Captures.ColumnName("Quantity")]), transactions, [new HourCount(hour, transactions)]);
 
     protected virtual IEnumerable<MappedCapability> Capabilities() => [_lend, _list, _reserve, _renew, _sweep];
 

@@ -21,7 +21,7 @@ public class when_writes_arrive_with_no_command : an_uncaptured_library
         _inventory = _suggestions2.Single().Suggestion;
     }
 
-    [Fact] void should_suggest_an_event_for_the_table_a_job_explains() => _inventory.Key.Value.ShouldEqual("Background/InventoryUpdated");
+    [Fact] void should_suggest_an_event_for_the_table_a_job_explains() => _inventory.Key.Value.ShouldEqual("Background/dbo.Inventory.InventoryUpdated");
     [Fact] void should_tie_it_to_the_job() => _suggestions2.Single().Job.ShouldEqual(_job);
     [Fact] void should_mark_it_as_written_with_no_command() => _inventory.Origin.ShouldEqual(SuggestionOrigin.NoCommand);
     [Fact] void should_keep_the_mechanical_name_from_the_table_and_the_operation() => _inventory.Mechanical.Value.ShouldEqual("InventoryUpdated");

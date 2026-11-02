@@ -30,7 +30,7 @@ public static class NoCommandSuggestions
     /// <returns>The suggestions with the job each is tied to (none when no job is), and the questions raised.</returns>
     public static (IReadOnlyList<(SuggestedEvent Suggestion, CodeJob? Job)> Suggestions, IReadOnlyList<RaisedQuestion> Questions) From(EvidenceFacts facts, IReadOnlyList<QuestionAnswer> answers)
     {
-        var suggestions = new List<(SuggestedEvent, CodeJob?)>();
+        var suggestions = new List<(SuggestedEvent Suggestion, CodeJob? Job)>();
         var questions = new List<RaisedQuestion>();
         foreach (var table in facts.Uncorrelated.Where(table => table.Transactions > 0))
         {
@@ -52,11 +52,29 @@ public static class NoCommandSuggestions
                 continue;
             }
 
-            suggestions.Add((Suggest(table, job, meaning == UncorrelatedMeaning.Correction, answer?.Answer ?? string.Empty, facts), job));
+            var suggestion = Suggest(table, job, meaning == UncorrelatedMeaning.Correction, answer?.Answer ?? string.Empty, facts);
+            var duplicate = suggestions.FindIndex(item => item.Suggestion.Key == suggestion.Key);
+            if (duplicate < 0)
+            {
+                suggestions.Add((suggestion, job));
+                continue;
+            }
+
+            suggestions[duplicate] = (SuggestionCombining.Combine(suggestions[duplicate].Suggestion, suggestion), suggestions[duplicate].Job);
         }
 
         return (suggestions, questions);
     }
+
+    /// <summary>
+    /// Gets the key of the suggestion for a table. It names the schema and the table as well as the event, so two tables that map to the same
+    /// entity and operation ("Orders" and "Order", or one name in two schemas) never share a key, and it stays the same whatever Discover finds later.
+    /// </summary>
+    /// <param name="table">The table the writes changed.</param>
+    /// <param name="mechanical">The mechanical name of the event.</param>
+    /// <returns>The key.</returns>
+    public static SuggestionKey KeyOf(UncorrelatedTable table, string mechanical) =>
+        CaptureAttribution.KeyOf(KeyModule, $"{table.Write.Schema.Value}.{table.Write.Table.Value}.{mechanical}");
 
     static SuggestedEvent Suggest(UncorrelatedTable table, CodeJob? job, bool correction, string answer, EvidenceFacts facts)
     {
@@ -68,7 +86,7 @@ public static class NoCommandSuggestions
         var columns = table.Write.Columns.Select(column => column.Value).Where(column => !column.Equals("Id", StringComparison.OrdinalIgnoreCase) && !column.Equals($"{entity}Id", StringComparison.OrdinalIgnoreCase)).Distinct().Order();
         var module = ModuleOf(job);
         return new SuggestedEvent(
-            CaptureAttribution.KeyOf(KeyModule, mechanical),
+            KeyOf(table, mechanical),
             mechanical,
             refined,
             module,

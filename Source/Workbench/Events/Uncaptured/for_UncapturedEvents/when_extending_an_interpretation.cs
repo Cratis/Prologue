@@ -27,7 +27,7 @@ public class when_extending_an_interpretation : an_uncaptured_library
     [Fact] void should_describe_a_code_only_command_as_a_state_change_slice() => SliceOf("Reservations/ReservationCreated").Type.ShouldEqual(ExtractedSliceType.StateChange);
     [Fact] void should_give_the_slice_a_command_named_after_the_capability() => SliceOf("Reservations/ReservationCreated").Commands.Single().Name.Value.ShouldEqual("ReserveABook");
     [Fact] void should_describe_a_capability_without_a_route_as_an_automation() => SliceOf("Lending/OverdueSweepCompleted").Type.ShouldEqual(ExtractedSliceType.Automation);
-    [Fact] void should_describe_the_writes_of_a_job_as_an_automation() => SliceOf("Background/InventoryUpdated").Type.ShouldEqual(ExtractedSliceType.Automation);
+    [Fact] void should_describe_the_writes_of_a_job_as_an_automation() => SliceOf("Background/dbo.Inventory.InventoryUpdated").Type.ShouldEqual(ExtractedSliceType.Automation);
     [Fact] void should_keep_the_slices_of_the_captures() => _extended.Slices.Count().ShouldEqual(_model.Slices.Count() + 4);
     [Fact] void should_not_change_the_structure_without_uncaptured_evidence() => UncapturedEvents.Extend(_suggestions, _model, _facts, []).Model.ShouldEqual(_model);
 }

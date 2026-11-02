@@ -48,10 +48,20 @@ public static class CodeOnlySuggestions
 
             var module = Interpretation.Naming.Pascalize(capability.Module.Value);
             var key = CaptureAttribution.KeyOf(module.Length == 0 ? "Code" : module, mechanical);
-            if (!taken.Contains(key) && !found.ContainsKey(key))
+            if (taken.Contains(key))
             {
-                found[key] = (Suggest(key, mechanical, module, capability, shapes, facts), capability);
+                continue;
             }
+
+            var suggestion = Suggest(key, mechanical, module, capability, shapes, facts);
+            if (found.TryGetValue(key, out var existing))
+            {
+                var also = new SuggestionNote(NoteKind.Observation, $"The same event also follows from {capability.Capability.Value} ({capability.File.Value}).");
+                found[key] = (SuggestionCombining.Combine(existing.Item1, suggestion with { Notes = [.. suggestion.Notes, also] }), existing.Item2);
+                continue;
+            }
+
+            found[key] = (suggestion, capability);
         }
 
         return [.. found.Values];
