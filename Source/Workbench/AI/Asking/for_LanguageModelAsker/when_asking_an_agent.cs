@@ -14,6 +14,8 @@ public class when_asking_an_agent : Specification
     AgentReply _paused;
     AgentReply _ceiling;
     AgentReply _down;
+    AgentReply _timedOut;
+    Exception _cancelled;
 
     LanguageModelAsker AskerOf(Func<IChatClient> client)
     {
@@ -37,6 +39,10 @@ public class when_asking_an_agent : Specification
         _paused = await AskerOf(() => Failing(new AgentDispatchPaused("Code analysis", "Local", "Cloud"))).Ask(PrologueAgents.Interpreter, "why?", CancellationToken.None);
         _ceiling = await AskerOf(() => Failing(new PoolCeilingReached("Code analysis", 1000, 1000))).Ask(PrologueAgents.Interpreter, "why?", CancellationToken.None);
         _down = await AskerOf(() => Failing(new InvalidOperationException("boom"))).Ask(PrologueAgents.Interpreter, "why?", CancellationToken.None);
+        _timedOut = await AskerOf(() => Failing(new TaskCanceledException("timed out"))).Ask(PrologueAgents.Interpreter, "why?", CancellationToken.None);
+        using var source = new CancellationTokenSource();
+        await source.CancelAsync();
+        _cancelled = await Cratis.Specifications.Catch.Exception(() => AskerOf(() => Failing(new OperationCanceledException(source.Token))).Ask(PrologueAgents.Interpreter, "why?", source.Token));
     }
 
     [Fact] void should_return_the_answer() => _answered.Text.ShouldEqual("an answer");
@@ -44,6 +50,9 @@ public class when_asking_an_agent : Specification
     [Fact] void should_carry_the_message_a_person_can_act_on() => _paused.Reason.ShouldContain("Systems page");
     [Fact] void should_say_a_pool_at_its_ceiling_is_at_its_ceiling() => _ceiling.Stopped.ShouldEqual(AgentDispatchOutcome.CeilingReached);
     [Fact] void should_not_fail_the_ask_for_an_unexpected_error() => _down.Succeeded.ShouldBeFalse();
+    [Fact] void should_report_a_vendor_timeout_as_unavailable() => _timedOut.Succeeded.ShouldBeFalse();
+    [Fact] void should_not_call_a_vendor_timeout_a_stop() => _timedOut.Stopped.ShouldBeNull();
+    [Fact] void should_let_the_callers_cancellation_through() => _cancelled.ShouldBeOfExactType<OperationCanceledException>();
     [Fact] void should_not_call_an_unexpected_error_a_stop() => _down.Stopped.ShouldBeNull();
 }
 #endif

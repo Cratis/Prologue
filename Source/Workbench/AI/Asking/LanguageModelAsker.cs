@@ -35,10 +35,10 @@ public class LanguageModelAsker(IAIChatClients clients, ILogger<LanguageModelAsk
             logger.CouldNotAsk(agent.Name, unavailable.Reason);
             return AgentReply.Unavailable(unavailable.Reason);
         }
-        catch (Exception exception) when (exception is not OperationCanceledException)
+        catch (Exception exception) when (!(exception is OperationCanceledException && cancellationToken.IsCancellationRequested))
         {
             logger.AskingFailed(agent.Name, exception);
-            return AgentReply.Unavailable("The agent could not be reached");
+            return AgentReply.Unavailable(exception is OperationCanceledException ? "The agent took too long to answer" : "The agent could not be reached");
         }
     }
 }

@@ -61,11 +61,15 @@ public static class PoolWalker
         {
             return (new Holder<T>(await attempt(member)), string.Empty);
         }
-        catch (Exception exception) when (exception is not (OperationCanceledException or AgentDispatchStopped))
+        catch (Exception exception) when (exception is not AgentDispatchStopped && !IsCancelledByCaller(exception, cancellationToken))
         {
             return (null, string.IsNullOrWhiteSpace(exception.Message) ? "could not be reached" : exception.Message);
         }
     }
+
+    // A vendor's HttpClient timeout surfaces as a TaskCanceledException, which is a member's failure; only a cancelled token is the caller's.
+    static bool IsCancelledByCaller(Exception exception, CancellationToken cancellationToken) =>
+        exception is OperationCanceledException && cancellationToken.IsCancellationRequested;
 
     sealed record Holder<T>(T Value);
 }
