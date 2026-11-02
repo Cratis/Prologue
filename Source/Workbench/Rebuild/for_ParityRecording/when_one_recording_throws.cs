@@ -37,7 +37,7 @@ public class when_one_recording_throws : Specification
             }
 
             _recorded.Add((call.Arg<Guid>(), observation.Id));
-            return Task.CompletedTask;
+            return Task.FromResult(true);
         });
 
         var services = new ServiceCollection().AddScoped(_ => recorder).BuildServiceProvider();

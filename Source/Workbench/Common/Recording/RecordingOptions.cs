@@ -18,4 +18,14 @@ public class RecordingOptions
     /// The stored capture or observation stays; only its recording for the Workbench is lost.
     /// </summary>
     public TimeSpan ItemTimeout { get; set; } = TimeSpan.FromSeconds(10);
+
+    /// <summary>
+    /// Gets or sets how many times a parity observation that could not be recorded is tried before it is dropped.
+    /// </summary>
+    public int ParityAttempts { get; set; } = 3;
+
+    /// <summary>
+    /// Gets or sets the pause before the second attempt at a parity observation; each further attempt waits one more of it.
+    /// </summary>
+    public TimeSpan ParityBackoff { get; set; } = TimeSpan.FromSeconds(1);
 }

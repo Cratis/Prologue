@@ -17,6 +17,12 @@ public interface IParityRecordingQueue
     bool TryEnqueue(Guid prologue, ParityObservation observation);
 
     /// <summary>
+    /// Forgets an observation that could not be recorded, so the Extractor reporting it again is queued again rather than taken for a retry of one that was recorded.
+    /// </summary>
+    /// <param name="observation">The id of the observation.</param>
+    void Forget(Guid observation);
+
+    /// <summary>
     /// Reads the queued observations as they arrive, until cancelled.
     /// </summary>
     /// <param name="cancellationToken">A <see cref="CancellationToken"/> that ends the reading.</param>

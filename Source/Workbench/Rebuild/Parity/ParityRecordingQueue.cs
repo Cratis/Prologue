@@ -65,6 +65,15 @@ public class ParityRecordingQueue : IParityRecordingQueue
     /// <inheritdoc/>
     public IAsyncEnumerable<QueuedParity> ReadAll(CancellationToken cancellationToken) => _channel.Reader.ReadAllAsync(cancellationToken);
 
+    /// <inheritdoc/>
+    public void Forget(Guid observation)
+    {
+        lock (_seenLock)
+        {
+            _seen.Remove(observation);
+        }
+    }
+
     bool Remember(Guid id)
     {
         lock (_seenLock)
@@ -81,14 +90,6 @@ public class ParityRecordingQueue : IParityRecordingQueue
             }
 
             return true;
-        }
-    }
-
-    void Forget(Guid id)
-    {
-        lock (_seenLock)
-        {
-            _seen.Remove(id);
         }
     }
 }

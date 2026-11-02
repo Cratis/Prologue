@@ -32,11 +32,11 @@ public class when_one_recording_never_completes : Specification
             var observation = call.Arg<ParityObservation>();
             if (observation.Id == _first.Id)
             {
-                return new TaskCompletionSource().Task;
+                return new TaskCompletionSource<bool>().Task;
             }
 
             _recorded.Add(observation.Id);
-            return Task.CompletedTask;
+            return Task.FromResult(true);
         });
 
         var services = new ServiceCollection().AddScoped(_ => recorder).BuildServiceProvider();
