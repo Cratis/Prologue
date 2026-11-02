@@ -76,7 +76,7 @@ const EventsPage = () => {
                         questions={data.questions}
                         answers={data.answers}
                         busy={actions.isBusy}
-                        onAnswer={(question, answer) => void actions.answer(question, answer)}
+                        onAnswer={(question, answer) => void actions.answer(question, answer, data.questions.some(open => open.id.toString() === question && open.standalone))}
                         interpreting={isInterpreting(data.status)} />
                     <BoundariesPanel boundaries={data.boundaries} choices={data.choices} busy={actions.isBusy} onChoose={(boundary, option) => void actions.choose(boundary, option)} />
                     <NotEventsPanel notEvents={data.notEvents} />

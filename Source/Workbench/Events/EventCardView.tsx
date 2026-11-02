@@ -6,8 +6,9 @@ import { Button, Chip } from '../Components';
 import { Link } from '../Shell/Router';
 import { EventCard } from './Suggestions/EventCard';
 import { NoteKind } from './Suggestions/NoteKind';
+import { SuggestionOrigin } from './Suggestions/SuggestionOrigin';
 import { SuggestionStatus } from './Suggestions/SuggestionStatus';
-import { isLowConfidence, percent } from './eventFilters';
+import { isLowConfidence, originLabel, percent } from './eventFilters';
 
 export interface EventCardViewProps {
     readonly card: EventCard;
@@ -66,6 +67,7 @@ export const EventCardView = ({ card, busy, onAccept, onReject, onRestore, onRen
                     <Chip>{card.module}</Chip>
                     <Chip>stream: {card.stream}</Chip>
                     <Chip variant={statusChip(card)}>{statusLabel(card)}</Chip>
+                    {originLabel(card) && <Chip variant={card.origin === SuggestionOrigin.codeOnly ? 'drift' : 'http'}>{originLabel(card)}</Chip>}
                     {card.withdrawn && <Chip variant="drift">No longer found</Chip>}
                 </div>
                 <div className="props">
@@ -87,10 +89,15 @@ export const EventCardView = ({ card, busy, onAccept, onReject, onRestore, onRen
             </div>
             {card.advice && <div className="advice">{card.advice}</div>}
             <div className="evidence">
-                {tables.length > 0 && <span>Evidence: <span className="mono">{tables.map(table => `${table.operation.toUpperCase()} ${table.table} (${table.columns.join(', ')})`).join(' + ')}</span></span>}
+                {tables.length > 0 && (
+                    <span>
+                        Evidence: <span className="mono">{tables.map(table => `${table.operation.toUpperCase()} ${table.table} (${table.columns.join(', ')})`).join(' + ')}</span>
+                        {card.origin === SuggestionOrigin.noCommand && <> <Link to="/explore">Table in Explore</Link></>}
+                    </span>
+                )}
                 {code.map(place => <Link key={`${place.file}:${place.line}`} to="/discover" className="codeev">Code: {place.file}{place.line > 0 ? `:${place.line}` : ''}</Link>)}
-                <span className="num">{card.evidence.captures} {card.evidence.captures === 1 ? 'capture' : 'captures'}</span>
-                {card.evidence.shapes.map(shape => <Link key={shape.shape} to="/explore" className="mono">{shape.shape} ({shape.captures})</Link>)}
+                {card.origin === SuggestionOrigin.captured && <span className="num">{card.evidence.captures} {card.evidence.captures === 1 ? 'capture' : 'captures'}</span>}
+                {card.evidence.shapes.map(shape => <Link key={shape.shape} to="/explore" className="mono">{shape.shape}{card.origin === SuggestionOrigin.captured ? ` (${shape.captures})` : ''}</Link>)}
                 {card.evidence.scenarios.map(scenario => <Chip key={scenario} variant="http">{scenario}</Chip>)}
             </div>
             {card.notes.length > 0 && (
