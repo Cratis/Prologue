@@ -40,6 +40,7 @@ public class WorkbenchEvidenceSource(ICaptureStore captures, IReadModels readMod
             points,
             recent is null ? [] : [.. BusinessDecision.From(recent, points)])
         {
+            CapturedShapes = [.. stored.Select(ScopedCaptures.ShapeOf).Where(shape => !shape.IsNone).Distinct()],
             Capabilities = [.. findings?.Capabilities ?? []],
             Jobs = findings is null ? [] : CodeJobs.From(findings),
             Uncorrelated = [.. uncorrelated?.Tables ?? []]

@@ -28,6 +28,12 @@ public record EvidenceFacts(
     public static readonly EvidenceFacts None = new([], [], [], []);
 
     /// <summary>
+    /// Gets the command shapes found in the captures themselves. The capture store is always current, while the matrix in <see cref="Shapes"/>
+    /// trails the captures, so a capability is only code-only when neither has seen its command.
+    /// </summary>
+    public IReadOnlyList<Captures.CommandShape> CapturedShapes { get; init; } = [];
+
+    /// <summary>
     /// Gets the capabilities Discover mapped in the code, with the command shapes that reach them.
     /// </summary>
     public IReadOnlyList<MappedCapability> Capabilities { get; init; } = [];

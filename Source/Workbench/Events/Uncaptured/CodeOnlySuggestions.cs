@@ -30,7 +30,7 @@ public static class CodeOnlySuggestions
     /// <returns>The suggestions, each with the capability it came from.</returns>
     public static IReadOnlyList<(SuggestedEvent Suggestion, MappedCapability Capability)> From(EvidenceFacts facts, IReadOnlySet<SuggestionKey> taken, IReadOnlySet<string> jobFiles)
     {
-        var captured = facts.Shapes.Select(profile => profile.Shape).ToList();
+        var captured = facts.Shapes.Select(profile => profile.Shape).Concat(facts.CapturedShapes).ToList();
         var found = new Dictionary<SuggestionKey, (SuggestedEvent, MappedCapability)>();
         foreach (var capability in facts.Capabilities.OrderBy(capability => capability.Module.Value, StringComparer.OrdinalIgnoreCase).ThenBy(capability => capability.Capability.Value, StringComparer.OrdinalIgnoreCase))
         {

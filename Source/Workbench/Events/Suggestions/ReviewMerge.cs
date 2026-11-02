@@ -42,8 +42,16 @@ public static class ReviewMerge
             superseded.Add(predecessor.Suggestion.Key);
             return new ReviewedSuggestion(suggestion, predecessor.Status, predecessor.Renamed ? predecessor.Name : suggestion.Refined, predecessor.Renamed, false);
         }).ToList();
-        return [.. merged, .. reviewed.Where(suggestion => !foundKeys.Contains(suggestion.Suggestion.Key) && !superseded.Contains(suggestion.Suggestion.Key)).Select(suggestion => suggestion with { Withdrawn = true })];
+        var evidenced = found.Where(suggestion => suggestion.Origin == SuggestionOrigin.Captured).SelectMany(suggestion => suggestion.Evidence.Shapes.Select(shape => shape.Shape.Value.ToLowerInvariant())).ToHashSet();
+        return [.. merged, .. reviewed.Where(suggestion => !foundKeys.Contains(suggestion.Suggestion.Key) && !superseded.Contains(suggestion.Suggestion.Key) && !Replaced(suggestion, evidenced)).Select(suggestion => suggestion with { Withdrawn = true })];
     }
+
+    // A code-only suggestion nobody decided on, whose command the captures evidence now, has nothing left to carry over: the captured suggestion is the one to review.
+    static bool Replaced(ReviewedSuggestion suggestion, HashSet<string> evidenced) =>
+        suggestion.Suggestion.Origin == SuggestionOrigin.CodeOnly
+        && suggestion.Status == SuggestionStatus.Suggested
+        && !suggestion.Renamed
+        && suggestion.Suggestion.Evidence.Shapes.Any(shape => evidenced.Contains(shape.Shape.Value.ToLowerInvariant()));
 
     static ReviewedSuggestion? Predecessor(IEnumerable<ReviewedSuggestion> reviewed, SuggestedEvent captured, HashSet<SuggestionKey> foundKeys, HashSet<SuggestionKey> superseded) =>
         reviewed

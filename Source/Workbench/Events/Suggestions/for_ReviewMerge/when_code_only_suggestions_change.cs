@@ -20,6 +20,7 @@ public class when_code_only_suggestions_change : an_uncaptured_library
     EventReview _backedByCaptures;
     EventReview _backedUnderTheSameKey;
     EventReview _backedAfterARejection;
+    EventReview _undecidedBackedByCaptures;
 
     SuggestedEvent Captured(string key, string shape, string module = "Lending", string name = "LoanRenewedAgain") =>
         _suggestions[0] with { Key = key, Mechanical = name, Refined = name, Module = module, Evidence = new SuggestionEvidence([new ShapeEvidence(new CommandShape(shape), 3)], [], [], []), Origin = SuggestionOrigin.Captured };
@@ -45,6 +46,9 @@ public class when_code_only_suggestions_change : an_uncaptured_library
 
         var elsewhere = _suggestions.Append(Captured("Reservations/ReservationBooked", "POST /api/reservations", "Reservations", "ReservationBooked"));
         _backedAfterARejection = EventReview.Reduce(new EventSuggestionsInterpreted(elsewhere), _decided, _context);
+
+        var undecided = EventReview.Reduce(new EventSuggestionsInterpreted(all), null, _context);
+        _undecidedBackedByCaptures = EventReview.Reduce(new EventSuggestionsInterpreted(elsewhere), undecided, _context);
     }
 
     [Fact] void should_keep_the_decisions_when_the_code_still_has_the_capability() => Reviewed(_stillOnlyInCode, _renewal).Status.ShouldEqual(SuggestionStatus.Accepted);
@@ -60,6 +64,7 @@ public class when_code_only_suggestions_change : an_uncaptured_library
     [Fact] void should_keep_the_decision_when_the_captured_suggestion_has_the_same_key() => Reviewed(_backedUnderTheSameKey, _renewal).Status.ShouldEqual(SuggestionStatus.Accepted);
     [Fact] void should_take_the_captures_as_the_evidence_under_the_same_key() => Reviewed(_backedUnderTheSameKey, _renewal).Suggestion.Origin.ShouldEqual(SuggestionOrigin.Captured);
     [Fact] void should_carry_a_rejection_to_the_captured_suggestion() => Reviewed(_backedAfterARejection, "Reservations/ReservationBooked").Status.ShouldEqual(SuggestionStatus.Rejected);
+    [Fact] void should_drop_an_undecided_code_only_suggestion_once_its_command_is_captured() => EventReview.Find(_undecidedBackedByCaptures, _reservation).ShouldBeNull();
     [Fact] void should_not_list_a_suggestion_twice() => _backedByCaptures.Suggestions.Select(suggestion => suggestion.Suggestion.Key).Distinct().Count().ShouldEqual(_backedByCaptures.Suggestions.Count());
 }
 #endif
