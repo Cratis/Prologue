@@ -33,18 +33,14 @@ public class PoolPlans(IReadModels readModels, IAIProviderCapacities capacities,
     /// <inheritdoc/>
     public async Task<PoolPlan?> For(LanguageModelPurpose purpose, CancellationToken cancellationToken)
     {
-        var agent = await Cratis.AI.Agents.Listing.Agent.For(readModels, purpose);
+        var agent = await FindAgent(purpose);
         if (agent?.PoolId is null)
         {
             return null;
         }
 
         var key = agent.PoolId.Value.ToString();
-        var pool = await readModels.GetInstanceById<AIProviderPool>((EventSourceId)key);
-        if (pool is null)
-        {
-            return null;
-        }
+        var pool = await readModels.GetInstanceById<AIProviderPool>((EventSourceId)key) ?? throw new PoolNotReady(agent.Name.Value, key);
 
         var arrangement = await readModels.GetInstanceById<PoolArrangement>((EventSourceId)key);
         var ceiling = await readModels.GetInstanceById<PoolCeiling>((EventSourceId)key);
@@ -67,6 +63,13 @@ public class PoolPlans(IReadModels readModels, IAIProviderCapacities capacities,
         var target = new ChatAgentTarget(agent.Name.Value, agent.Description.Value, agent.Tier, null, null, agent.Skills);
         return new(key, pool.Name.Value, arrangement?.Fallback ?? PoolFallback.ContinueOnNext, members, target, ceiling?.TokensPerDay.Value ?? 0, spend?.On(DayOf(time)) ?? 0);
     }
+
+    /// <summary>
+    /// Finds the agent behind a purpose.
+    /// </summary>
+    /// <param name="purpose">The purpose, the agent's identity.</param>
+    /// <returns>The agent; null when none is known.</returns>
+    protected virtual Task<Cratis.AI.Agents.Listing.Agent?> FindAgent(LanguageModelPurpose purpose) => Cratis.AI.Agents.Listing.Agent.For(readModels, purpose);
 
     async Task<DispatchMember> MemberFor(AIProviderId id, AIProviderCapacity capacity)
     {

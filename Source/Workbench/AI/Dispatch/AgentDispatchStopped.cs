@@ -84,3 +84,14 @@ public class PoolExhausted(string pool, IReadOnlyList<string> reasons) : AgentDi
     /// </summary>
     public IReadOnlyList<string> Reasons { get; } = reasons;
 }
+
+/// <summary>
+/// The exception that is thrown when an agent is set to draw from a pool the dispatcher cannot read yet, for example while the pool is still being
+/// projected or after it was deleted. The work stops rather than going around the pool's order, pause and ceiling.
+/// </summary>
+/// <param name="agent">The name of the agent.</param>
+/// <param name="pool">The id of the pool, the only thing known of it.</param>
+public class PoolNotReady(string agent, string pool) : AgentDispatchStopped(
+    AgentDispatchOutcome.NotReady,
+    pool,
+    $"The pool {agent} draws from is not ready yet, so {agent} was not run. Try again in a moment; if it keeps happening, pick a pool for {agent} on the Systems page.");

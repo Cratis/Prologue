@@ -15,6 +15,7 @@ public interface IPoolPlans
     /// </summary>
     /// <param name="purpose">The purpose, the agent's identity.</param>
     /// <param name="cancellationToken">A <see cref="CancellationToken"/> for the operation.</param>
-    /// <returns>The plan; null when the agent does not draw from an existing pool, which Cratis.AI then dispatches as it always did.</returns>
+    /// <returns>The plan; null only when the agent draws from no pool at all, which Cratis.AI then dispatches as it always did.</returns>
+    /// <exception cref="PoolNotReady">The agent draws from a pool that cannot be read.</exception>
     Task<PoolPlan?> For(LanguageModelPurpose purpose, CancellationToken cancellationToken);
 }

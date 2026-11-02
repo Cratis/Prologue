@@ -22,4 +22,9 @@ public enum AgentDispatchOutcome
     /// Every provider the pool was allowed to try failed.
     /// </summary>
     Exhausted = 2,
+
+    /// <summary>
+    /// The agent draws from a pool whose arrangement could not be read, so the dispatcher would not know the order, pause or ceiling to hold.
+    /// </summary>
+    NotReady = 3,
 }
