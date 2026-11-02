@@ -21,4 +21,7 @@ internal static partial class ParityRecorderLogMessages
 
     [LoggerMessage(LogLevel.Error, "Recording parity observation {Observation} failed unexpectedly")]
     internal static partial void ParityCrashed(this ILogger<ParityRecordingWorker> logger, Guid observation, Exception exception);
+
+    [LoggerMessage(LogLevel.Error, "Recording parity observation {Observation} did not finish within {Timeout}; Chronicle may be unreachable. The observation is not recorded")]
+    internal static partial void ParityTimedOut(this ILogger<ParityRecordingWorker> logger, Guid observation, TimeSpan timeout);
 }

@@ -2,10 +2,12 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Cratis.Arc.Commands;
+using Cratis.Prologue.Workbench.Common.Recording;
 using Cratis.Prologue.Workbench.Discover.Recording;
 using Cratis.Prologue.Workbench.Repositories.Cloning;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 
 namespace Cratis.Prologue.Workbench.Discover.Running;
 
@@ -17,8 +19,9 @@ namespace Cratis.Prologue.Workbench.Discover.Running;
 /// <param name="runner">Runs an analysis.</param>
 /// <param name="progress">Where progress is reported.</param>
 /// <param name="pipeline">Executes the command that records the outcome.</param>
+/// <param name="options">The recording options; recording an outcome waits at most <see cref="RecordingOptions.ItemTimeout"/> for Chronicle.</param>
 /// <param name="logger">The logger.</param>
-public class AnalysisWorker(IAnalysisQueue queue, IAnalysisRunner runner, IAnalysisProgress progress, ICommandPipeline pipeline, ILogger<AnalysisWorker> logger) : BackgroundService
+public class AnalysisWorker(IAnalysisQueue queue, IAnalysisRunner runner, IAnalysisProgress progress, ICommandPipeline pipeline, IOptions<RecordingOptions> options, ILogger<AnalysisWorker> logger) : BackgroundService
 {
     /// <inheritdoc/>
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
@@ -78,8 +81,20 @@ public class AnalysisWorker(IAnalysisQueue queue, IAnalysisRunner runner, IAnaly
             outcome = new(job.Target.Subject, job.Target.Name, job.Target.Source, new FileCount(0), AnalysisFindings.Empty, new FailureReason(exception.Message));
         }
 
-        var recorded = await pipeline.Execute(
-            new RecordCodeAnalysis(job.Prologue, outcome.Subject, outcome.Name, outcome.Source, outcome.Files, outcome.Findings.Capabilities, outcome.Findings.DecisionPoints, outcome.Findings.Dependencies, outcome.Failure));
+        CommandResult recorded;
+        try
+        {
+            // The analysis itself may run for as long as it needs; only the Chronicle command is bounded, so an unreachable Chronicle cannot hold the queue.
+            recorded = await pipeline
+                .Execute(new RecordCodeAnalysis(job.Prologue, outcome.Subject, outcome.Name, outcome.Source, outcome.Files, outcome.Findings.Capabilities, outcome.Findings.DecisionPoints, outcome.Findings.Dependencies, outcome.Failure))
+                .WaitAsync(options.Value.ItemTimeout, cancellationToken);
+        }
+        catch (TimeoutException)
+        {
+            logger.RecordingTimedOut(job.Target.Name.Value, options.Value.ItemTimeout);
+            Fail(job, "Chronicle did not answer in time, so the analysis was not recorded");
+            return;
+        }
 
         var reason = outcome.Failure ?? (recorded.IsSuccess ? null : new FailureReason(recorded.ValidationResults.FirstOrDefault()?.Message ?? recorded.ExceptionMessages.FirstOrDefault() ?? "Recording the analysis failed"));
         var latest = progress.Get(job.Target.Subject) ?? current;

@@ -70,6 +70,8 @@ public class an_interpretation_runner : a_library_interpretation
         _runner = Build();
     }
 
+    protected Common.Recording.RecordingOptions Recording { get; } = new();
+
     protected InterpretationRunner Build() => new(
         _evidence,
         _heuristics,
@@ -77,6 +79,7 @@ public class an_interpretation_runner : a_library_interpretation
         _sessions,
         _progress,
         _pipeline,
+        Microsoft.Extensions.Options.Options.Create(Recording),
         Microsoft.Extensions.Logging.Abstractions.NullLoggerFactory.Instance,
         Microsoft.Extensions.Logging.Abstractions.NullLogger<InterpretationRunner>.Instance);
 

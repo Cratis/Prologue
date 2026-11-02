@@ -15,4 +15,7 @@ internal static partial class AnalysisWorkerLogMessages
 
     [LoggerMessage(LogLevel.Error, "Recording the analysis of {Subject} failed unexpectedly")]
     internal static partial void RecordingFailed(this ILogger<AnalysisWorker> logger, string subject, Exception exception);
+
+    [LoggerMessage(LogLevel.Error, "Recording the analysis of {Subject} did not finish within {Timeout}; Chronicle may be unreachable")]
+    internal static partial void RecordingTimedOut(this ILogger<AnalysisWorker> logger, string subject, TimeSpan timeout);
 }

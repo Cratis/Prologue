@@ -48,7 +48,7 @@ public class when_recording_one_analysis_throws : Specification
             return _recorded == 1 ? throw new InvalidOperationException("the event store is unavailable") : Task.FromResult(CommandResult.Success(CorrelationId.New()));
         });
 
-        var worker = new AnalysisWorker(queue, runner, _progress, pipeline, Microsoft.Extensions.Logging.Abstractions.NullLogger<AnalysisWorker>.Instance);
+        var worker = new AnalysisWorker(queue, runner, _progress, pipeline, Microsoft.Extensions.Options.Options.Create(new Common.Recording.RecordingOptions()), Microsoft.Extensions.Logging.Abstractions.NullLogger<AnalysisWorker>.Instance);
         await worker.StartAsync(CancellationToken.None);
         using var timeout = new CancellationTokenSource(TimeSpan.FromSeconds(10));
         while (_progress.Get(_second.Target.Subject)?.State != AnalysisState.Complete && !timeout.IsCancellationRequested)

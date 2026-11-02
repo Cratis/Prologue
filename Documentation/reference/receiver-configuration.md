@@ -43,6 +43,14 @@ The image installs the `git` command line, which cloning needs, and runs as the 
 
 A connection's token is sent only to the host of that connection and only over https; see [Security and exposure](../guides/running-the-workbench.md#security-and-exposure).
 
+## Recording
+
+| Key | Default | Purpose |
+|---|---|---|
+| `Prologue:Recording:ItemTimeout` | `00:00:10` | How long a background worker waits for Chronicle to record one item before it gives up on it and moves to the next |
+
+The Receiver stores a capture or parity observation first and records it for the Workbench from a background queue. If Chronicle is unreachable, an item that does not finish within `ItemTimeout` is logged as an error and dropped from the queue, so the items behind it still get recorded once Chronicle is back. The capture itself stays stored and the Interpreter still reads it, but the Workbench does not show it until it is captured again. The same limit applies to Discover recording an analysis and to Events recording an interpretation; those two show the run as failed with the reason, and you can run them again.
+
 ## Discover
 
 | Key | Default | Purpose |

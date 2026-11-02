@@ -4,12 +4,14 @@
 using Cratis.Arc.Commands;
 using Cratis.Prologue.Configuration;
 using Cratis.Prologue.Interpretation;
+using Cratis.Prologue.Workbench.Common.Recording;
 using Cratis.Prologue.Workbench.Events.Boundaries;
 using Cratis.Prologue.Workbench.Events.NotEvents;
 using Cratis.Prologue.Workbench.Events.Questions;
 using Cratis.Prologue.Workbench.Events.Uncaptured;
 using Cratis.Prologue.Workbench.Prologues;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 
 namespace Cratis.Prologue.Workbench.Events.Interpreting;
 
@@ -24,6 +26,7 @@ namespace Cratis.Prologue.Workbench.Events.Interpreting;
 /// <param name="sessions">Holds interpretations that wait for answers.</param>
 /// <param name="progress">Holds how the interpretations are going.</param>
 /// <param name="pipeline">Executes the command that records the result.</param>
+/// <param name="recording">The recording options; recording the result waits at most <see cref="RecordingOptions.ItemTimeout"/> for Chronicle.</param>
 /// <param name="loggers">Creates the loggers sessions log through.</param>
 /// <param name="logger">The logger.</param>
 public class InterpretationRunner(
@@ -33,6 +36,7 @@ public class InterpretationRunner(
     IInterpretationSessions sessions,
     IInterpretationProgress progress,
     ICommandPipeline pipeline,
+    IOptions<RecordingOptions> recording,
     ILoggerFactory loggers,
     ILogger<InterpretationRunner> logger) : IInterpretationRunner
 {
@@ -142,7 +146,18 @@ public class InterpretationRunner(
         var (suggestions, model, questions) = UncapturedEvents.Extend(captured, heuristicModel, context.Facts, context.Answers);
         var boundaries = BoundaryDetection.Detect(context.Facts, context.Scope);
         var notEvents = NotEventDetection.Detect(context.Facts, context.Scope);
-        var result = await pipeline.Execute(new RecordInterpretation(prologue, suggestions, model, boundaries, notEvents, questions));
+        CommandResult result;
+        try
+        {
+            result = await pipeline.Execute(new RecordInterpretation(prologue, suggestions, model, boundaries, notEvents, questions)).WaitAsync(recording.Value.ItemTimeout);
+        }
+        catch (TimeoutException)
+        {
+            logger.RecordingTimedOut(prologue.Value, recording.Value.ItemTimeout);
+            Report(prologue, InterpretationState.Failed, "Chronicle did not answer in time, so the interpretation was not recorded", false, 0);
+            return;
+        }
+
         if (!result.IsSuccess)
         {
             Report(prologue, InterpretationState.Failed, result.ValidationResults.FirstOrDefault()?.Message ?? "Recording the interpretation failed", false, 0);
