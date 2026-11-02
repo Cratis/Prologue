@@ -12,4 +12,7 @@ internal static partial class RepositoryClonerLogMessages
 {
     [LoggerMessage(LogLevel.Warning, "Cloning {Repository} failed: {Reason}")]
     internal static partial void CloneFailed(this ILogger<RepositoryCloner> logger, string repository, string reason);
+
+    [LoggerMessage(LogLevel.Warning, "Minting an installation token for GitHub App {App} failed: {Reason}")]
+    internal static partial void TokenRequestFailed(this ILogger<InstallationTokens> logger, long app, string reason);
 }

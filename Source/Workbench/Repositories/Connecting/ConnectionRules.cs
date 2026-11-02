@@ -31,6 +31,33 @@ public static class ConnectionRules
         url.IsValid ? null : ValidationResult.Error("Give the address of the server, starting with https://");
 
     /// <summary>
+    /// Gets why a GitHub App connection cannot be recorded, when it cannot. The app signs requests with its private key, so the API
+    /// has to be reached over https and be the API of the server the repositories are cloned from.
+    /// </summary>
+    /// <param name="url">The GitHub server.</param>
+    /// <param name="api">The address of the GitHub API.</param>
+    /// <param name="app">The app.</param>
+    /// <param name="installation">The installation.</param>
+    /// <returns>The refusal, or null when the connection can be recorded.</returns>
+    public static ValidationResult? RefuseApp(ServerUrl url, ServerUrl api, AppId app, InstallationId installation)
+    {
+        if (app.Value <= 0 || installation.Value <= 0)
+        {
+            return ValidationResult.Error("Give the id of the GitHub App and of its installation");
+        }
+
+        if (!api.IsValid || !Uri.TryCreate(api.Value, UriKind.Absolute, out var apiUri) || apiUri.Scheme != Uri.UriSchemeHttps)
+        {
+            return ValidationResult.Error("The GitHub API address has to start with https://");
+        }
+
+        return Uri.TryCreate(url.Value, UriKind.Absolute, out var server)
+            && (string.Equals(apiUri.Host, server.Host, StringComparison.OrdinalIgnoreCase) || string.Equals(apiUri.Host, $"api.{server.Host}", StringComparison.OrdinalIgnoreCase))
+            ? null
+            : ValidationResult.Error("The GitHub API has to be on the server's own host, such as https://api.github.com for github.com or https://<host>/api/v3 for GitHub Enterprise");
+    }
+
+    /// <summary>
     /// Gets why a secret name cannot be recorded, when it cannot. Only the name of a secret is ever recorded, so a value
     /// that looks like a credential is refused rather than written into the event log.
     /// </summary>
@@ -41,7 +68,7 @@ public static class ConnectionRules
         var value = name.Value.Trim();
         if (value.Length == 0)
         {
-            return ValidationResult.Error("Name the secret that holds the access token");
+            return ValidationResult.Error("Name the secret that holds the access token or private key");
         }
 
         if (LooksLikeCredential(value))

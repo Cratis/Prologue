@@ -17,6 +17,7 @@ namespace Cratis.Prologue.Workbench.Repositories.Cloning;
 /// <param name="Server">The server or organization address from the connection; empty to use the host's public default.</param>
 /// <param name="Secret">The name of the secret holding the access token, when the connection uses one.</param>
 /// <param name="Installation">The GitHub App installation, when the connection uses one.</param>
+/// <param name="App">What the GitHub App signs in with, when the connection uses one.</param>
 public record CloneRequest(
     RepositoryHost Host,
     RepositoryName Repository,
@@ -25,4 +26,5 @@ public record CloneRequest(
     IEnumerable<SubPath> SharedSubPaths,
     ServerUrl? Server,
     SecretName? Secret,
-    InstallationId? Installation);
+    InstallationId? Installation,
+    GitHubAppIdentity? App = null);

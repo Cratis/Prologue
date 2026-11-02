@@ -78,7 +78,7 @@ The Extractor posts each observation to the Receiver:
 POST /prologues/{prologueId}/parity
 ```
 
-The body is a `ParityObservation`: an id, when the legacy system answered, the method, the path without its query string, the command shape, the trace id (or empty), the legacy status, the shadow status (`0` when it did not answer) and the outcome. It never holds a request or response body. The Receiver answers `202 Accepted`. See [Receiver API](receiver.md#endpoints).
+The body is a `ParityObservation`: an id, when the legacy system answered, the method, the path without its query string, the command shape, the trace id (or empty), the legacy status, the shadow status (`0` when it did not answer) and the outcome. It never holds a request or response body. The Receiver answers `202 Accepted` before the observation is recorded; a bounded background queue records it, and an observation that cannot be recorded is logged and dropped, never retried by the Extractor. An id the Receiver has already recorded recently (a retry) is not counted again. See [Receiver API](receiver.md#endpoints).
 
 ## Using it from Rebuild
 

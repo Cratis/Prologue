@@ -28,6 +28,6 @@ public static class ClonePlan
             .Select(other => other.SubPath)
             .ToList();
 
-        return new CloneRequest(location.Host, location.Repository, location.Branch, location.SubPath, shared, connection?.Url, connection?.Secret, connection?.Installation);
+        return new CloneRequest(location.Host, location.Repository, location.Branch, location.SubPath, shared, connection?.Url, connection?.Secret, connection?.Installation, connection?.App);
     }
 }

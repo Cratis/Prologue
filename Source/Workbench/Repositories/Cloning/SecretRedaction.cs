@@ -21,8 +21,17 @@ public static partial class SecretRedaction
     [GeneratedRegex(@"(?<header>authorization:\s*(?:basic|bearer)\s+)\S+", RegexOptions.IgnoreCase, matchTimeoutMilliseconds: 1000)]
     private static partial Regex AuthorizationHeader { get; }
 
+    [GeneratedRegex(@"-----BEGIN [A-Z ]*PRIVATE KEY-----.*?(?:-----END [A-Z ]*PRIVATE KEY-----|$)", RegexOptions.Singleline, matchTimeoutMilliseconds: 1000)]
+    private static partial Regex PrivateKeyBlock { get; }
+
+    [GeneratedRegex(@"eyJ[A-Za-z0-9_-]{5,}\.eyJ[A-Za-z0-9_-]{5,}\.[A-Za-z0-9_-]*", RegexOptions.None, matchTimeoutMilliseconds: 1000)]
+    private static partial Regex SignedToken { get; }
+
+    [GeneratedRegex(@"\b(?:gh[pousr]_[A-Za-z0-9]{20,}|github_pat_[A-Za-z0-9_]{20,})", RegexOptions.None, matchTimeoutMilliseconds: 1000)]
+    private static partial Regex GitHubToken { get; }
+
     /// <summary>
-    /// Redacts known secret values and any credentials in addresses from a text.
+    /// Redacts known secret values, credentials in addresses, authorization headers, private key blocks, signed tokens and GitHub tokens from a text.
     /// </summary>
     /// <param name="text">The text.</param>
     /// <param name="secrets">The secret values known to be in play.</param>
@@ -35,6 +44,9 @@ public static partial class SecretRedaction
             redacted = redacted.Replace(secret, Mask, StringComparison.Ordinal);
         }
 
+        redacted = PrivateKeyBlock.Replace(redacted, Mask);
+        redacted = SignedToken.Replace(redacted, Mask);
+        redacted = GitHubToken.Replace(redacted, Mask);
         redacted = UserInfo.Replace(redacted, "${scheme}" + Mask + "@");
         return AuthorizationHeader.Replace(redacted, "${header}" + Mask);
     }
