@@ -14,7 +14,7 @@ namespace Cratis.Prologue.Workbench.Events.Suggestions;
 internal static class ReviewState
 {
     internal static EventReview Existing(EventReview? current, EventContext context) =>
-        current ?? new(new PrologueId(Guid.Parse(context.EventSourceId.Value)), [], InterpretedModel.Empty, [], [], [], []);
+        current ?? new(new PrologueId(Guid.Parse(context.EventSourceId.Value)), [], InterpretedModel.Empty, [], [], [], [], []);
 
     internal static EventReview Update(EventReview? current, EventContext context, SuggestionKey key, Func<ReviewedSuggestion, ReviewedSuggestion> change)
     {

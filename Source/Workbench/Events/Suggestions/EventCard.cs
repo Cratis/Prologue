@@ -27,6 +27,7 @@ namespace Cratis.Prologue.Workbench.Events.Suggestions;
 /// <param name="NeedsAnswer">Whether it is still to review and a question of the interpreter is about it.</param>
 /// <param name="Withdrawn">Whether the last interpretation no longer finds evidence for it.</param>
 /// <param name="Advice">Advice about the name; empty when it reads as a past-tense fact.</param>
+/// <param name="Origin">Where the evidence comes from.</param>
 [ReadModel]
 public record EventCard(
     SuggestionKey Key,
@@ -41,7 +42,8 @@ public record EventCard(
     SuggestionStatus Status,
     bool NeedsAnswer,
     bool Withdrawn,
-    string Advice)
+    string Advice,
+    SuggestionOrigin Origin)
 {
     /// <summary>
     /// Observes the suggested events of a prologue.
@@ -80,7 +82,8 @@ public record EventCard(
                 reviewed.Status,
                 reviewed.Status == SuggestionStatus.Suggested && asked.Contains(reviewed.Suggestion.Key),
                 reviewed.Withdrawn,
-                EventNames.Advice(reviewed.Name.Value)))
+                EventNames.Advice(reviewed.Name.Value),
+                reviewed.Suggestion.Origin))
         ];
     }
 }

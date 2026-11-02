@@ -54,12 +54,18 @@ export const useEventActions = (prologue: PrologueDefinition) => {
         return run(`event-${key}`, command);
     };
 
-    const answer = (question: string, text: string) => {
+    /**
+     * Answers a question. A question the Workbench raised itself (standalone) has no interpretation waiting for it, so the answer is fed
+     * back by interpreting again; the interpreter's own questions carry on the interpretation that waits.
+     */
+    const answer = async (question: string, text: string, standalone = false) => {
         const command = new AnswerInterpreterQuestion();
         command.prologue = prologue.id;
         command.question = Guid.parse(question);
         command.answer = text;
-        return run(`question-${question}`, command, 'Answer recorded. The interpreter carries on with it.');
+        const answered = await run(`question-${question}`, command, standalone ? 'Answer recorded. Interpreting again with it.' : 'Answer recorded. The interpreter carries on with it.');
+        if (answered && standalone) await interpret();
+        return answered;
     };
 
     const choose = (boundary: string, option: string) => {

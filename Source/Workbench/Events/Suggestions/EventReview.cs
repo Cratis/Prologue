@@ -22,6 +22,7 @@ namespace Cratis.Prologue.Workbench.Events.Suggestions;
 /// <param name="Boundaries">The consistency boundaries derived from the evidence.</param>
 /// <param name="Choices">The options chosen for the boundaries.</param>
 /// <param name="NotEvents">What the evidence shows is not an event.</param>
+/// <param name="Raised">The questions the Workbench raised from its own evidence that nobody has answered yet.</param>
 [ReadModel]
 public partial record EventReview(
     PrologueId Id,
@@ -30,7 +31,8 @@ public partial record EventReview(
     IEnumerable<QuestionAnswer> Answers,
     IEnumerable<ConsistencyBoundary> Boundaries,
     IEnumerable<BoundaryChoice> Choices,
-    IEnumerable<NotEvent> NotEvents)
+    IEnumerable<NotEvent> NotEvents,
+    IEnumerable<RaisedQuestion> Raised)
 {
     /// <summary>
     /// Observes the review of a prologue.
