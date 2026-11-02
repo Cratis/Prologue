@@ -1,7 +1,9 @@
 // Copyright (c) Cratis. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using Cratis.Arc.Chronicle.ReadModels;
 using Cratis.Prologue.Workbench.Events.Interpreting;
+using Cratis.Prologue.Workbench.Events.Suggestions;
 using Cratis.Prologue.Workbench.Prologues;
 
 namespace Cratis.Prologue.Workbench.Events.Questions;
@@ -21,8 +23,9 @@ public record AnswerInterpreterQuestion(PrologueId Prologue, QuestionId Question
     /// </summary>
     /// <param name="sessions">Holds the interpretation that waits for the answer.</param>
     /// <param name="queue">Queues the interpretation to carry on.</param>
+    /// <param name="review">The review, which holds the questions the Workbench raised itself.</param>
     /// <returns>The recorded answer, or a refusal.</returns>
-    public Result<InterpreterQuestionAnswered, ValidationResult> Handle(IInterpretationSessions sessions, IInterpretationQueue queue)
+    public Result<InterpreterQuestionAnswered, ValidationResult> Handle(IInterpretationSessions sessions, IInterpretationQueue queue, [Unprotected("Only reads which questions the Workbench raised; an answer to one that was answered meanwhile is recorded again with the same meaning")] EventReview? review)
     {
         if (string.IsNullOrWhiteSpace(Answer))
         {
@@ -30,6 +33,11 @@ public record AnswerInterpreterQuestion(PrologueId Prologue, QuestionId Question
         }
 
         var outcome = sessions.Answer(Prologue, Question, Answer.Trim());
+        if (outcome.Question is null && RaisedQuestions.Find(review, Question) is { } raised)
+        {
+            return new InterpreterQuestionAnswered(raised.Key, raised.Prompt, Answer.Trim());
+        }
+
         if (outcome.Question is null)
         {
             return ValidationResult.Error("This question is not waiting for an answer anymore. Interpret again to get the current ones");

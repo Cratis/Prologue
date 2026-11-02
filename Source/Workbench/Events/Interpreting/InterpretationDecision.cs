@@ -4,6 +4,7 @@
 using System.Text.Json;
 using Cratis.Prologue.Workbench.Events.Boundaries;
 using Cratis.Prologue.Workbench.Events.NotEvents;
+using Cratis.Prologue.Workbench.Events.Questions;
 using Cratis.Prologue.Workbench.Events.Suggestions;
 
 namespace Cratis.Prologue.Workbench.Events.Interpreting;
@@ -21,13 +22,15 @@ public static class InterpretationDecision
     /// <param name="model">The structure the interpretation found.</param>
     /// <param name="boundaries">The consistency boundaries the evidence raises.</param>
     /// <param name="notEvents">What the evidence shows is not an event.</param>
+    /// <param name="questions">The questions the Workbench raises from its own evidence.</param>
     /// <returns>The events; none when nothing differs.</returns>
     public static IEnumerable<object> Decide(
         EventReview? current,
         IEnumerable<SuggestedEvent> suggestions,
         InterpretedModel model,
         IEnumerable<ConsistencyBoundary> boundaries,
-        IEnumerable<NotEvent> notEvents)
+        IEnumerable<NotEvent> notEvents,
+        IEnumerable<RaisedQuestion> questions)
     {
         var found = suggestions.ToList();
         var known = current?.Suggestions.Where(suggestion => !suggestion.Withdrawn).Select(suggestion => suggestion.Suggestion) ?? [];
@@ -46,6 +49,12 @@ public static class InterpretationDecision
         if (!Same(current?.Boundaries ?? [], derived) || !Same(current?.NotEvents ?? [], notes))
         {
             yield return new InterpretationFindingsRecorded(derived, notes);
+        }
+
+        var raised = questions.ToList();
+        if (!Same(current?.Raised ?? [], raised))
+        {
+            yield return new RaisedQuestionsRecorded(raised);
         }
     }
 

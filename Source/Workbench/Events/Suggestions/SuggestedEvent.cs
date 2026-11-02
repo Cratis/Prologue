@@ -17,6 +17,7 @@ namespace Cratis.Prologue.Workbench.Events.Suggestions;
 /// <param name="Confidence">How strongly the evidence supports it.</param>
 /// <param name="Evidence">What the suggestion rests on.</param>
 /// <param name="Notes">The rules and constraints the evidence suggests.</param>
+/// <param name="Origin">Where the evidence comes from; captured commands unless the suggestion rests on code alone or on writes with no command.</param>
 public record SuggestedEvent(
     SuggestionKey Key,
     EventName Mechanical,
@@ -26,4 +27,5 @@ public record SuggestedEvent(
     IEnumerable<SuggestedProperty> Properties,
     Confidence Confidence,
     SuggestionEvidence Evidence,
-    IEnumerable<SuggestionNote> Notes);
+    IEnumerable<SuggestionNote> Notes,
+    SuggestionOrigin Origin = SuggestionOrigin.Captured);

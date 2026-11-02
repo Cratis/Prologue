@@ -33,12 +33,12 @@ public class when_answering : Specification
 
     void Because()
     {
-        _blank = new AnswerInterpreterQuestion(_prologue, _first.Id, "  ").Handle(_sessions, _queue);
-        _unknown = new AnswerInterpreterQuestion(_prologue, Guid.NewGuid(), "Yes").Handle(_sessions, _queue);
-        _firstAnswer = new AnswerInterpreterQuestion(_prologue, _first.Id, " Yes ").Handle(_sessions, _queue);
+        _blank = new AnswerInterpreterQuestion(_prologue, _first.Id, "  ").Handle(_sessions, _queue, null);
+        _unknown = new AnswerInterpreterQuestion(_prologue, Guid.NewGuid(), "Yes").Handle(_sessions, _queue, null);
+        _firstAnswer = new AnswerInterpreterQuestion(_prologue, _first.Id, " Yes ").Handle(_sessions, _queue, null);
         var queuedAfterTheFirst = _queue.ReceivedCalls().Count();
-        _again = new AnswerInterpreterQuestion(_prologue, _first.Id, "Yes").Handle(_sessions, _queue);
-        _secondAnswer = new AnswerInterpreterQuestion(_prologue, _second.Id, "They are the same thing").Handle(_sessions, _queue);
+        _again = new AnswerInterpreterQuestion(_prologue, _first.Id, "Yes").Handle(_sessions, _queue, null);
+        _secondAnswer = new AnswerInterpreterQuestion(_prologue, _second.Id, "They are the same thing").Handle(_sessions, _queue, null);
         _queuedBeforeTheLast = queuedAfterTheFirst;
     }
 

@@ -3,6 +3,7 @@
 
 using System.Text;
 using Cratis.Prologue.Workbench.Decisions;
+using Cratis.Prologue.Workbench.Events.Uncaptured;
 
 namespace Cratis.Prologue.Workbench.Events.Interpreting;
 
@@ -39,6 +40,16 @@ public static class EvidenceText
         foreach (var point in facts.CodePoints.Take(Limit))
         {
             builder.AppendLine($"- Code {(point.Outcome == DecisionOutcome.Refused ? "refuses" : "accepts")} on {point.Shape.Value}: {point.Rule.Value} ({point.File.Value}:{point.Line.Value})");
+        }
+
+        foreach (var table in facts.Uncorrelated.Take(Limit))
+        {
+            builder.AppendLine($"- {table.Write.Table.Value} is written by {table.Transactions} transactions with no command{UncorrelatedQuestions.When(table)} (UTC); a job in the code may explain it");
+        }
+
+        foreach (var job in facts.Jobs.Take(Limit))
+        {
+            builder.AppendLine($"- Code runs a job on its own: {job.Name}{(job.Detail.Length > 0 ? $" ({job.Detail})" : string.Empty)}");
         }
 
         return builder.ToString().TrimEnd();

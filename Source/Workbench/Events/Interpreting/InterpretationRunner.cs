@@ -7,6 +7,7 @@ using Cratis.Prologue.Interpretation;
 using Cratis.Prologue.Workbench.Events.Boundaries;
 using Cratis.Prologue.Workbench.Events.NotEvents;
 using Cratis.Prologue.Workbench.Events.Questions;
+using Cratis.Prologue.Workbench.Events.Uncaptured;
 using Cratis.Prologue.Workbench.Prologues;
 using Microsoft.Extensions.Logging;
 
@@ -137,10 +138,11 @@ public class InterpretationRunner(
             return;
         }
 
-        var (suggestions, model) = SuggestionExtraction.From(context.Partitions, context.Heuristic, state.Model, state.Renames ?? new Dictionary<string, string>(), context.Facts);
+        var (captured, heuristicModel) = SuggestionExtraction.From(context.Partitions, context.Heuristic, state.Model, state.Renames ?? new Dictionary<string, string>(), context.Facts);
+        var (suggestions, model, questions) = UncapturedEvents.Extend(captured, heuristicModel, context.Facts, context.Answers);
         var boundaries = BoundaryDetection.Detect(context.Facts, context.Scope);
         var notEvents = NotEventDetection.Detect(context.Facts, context.Scope);
-        var result = await pipeline.Execute(new RecordInterpretation(prologue, suggestions, model, boundaries, notEvents));
+        var result = await pipeline.Execute(new RecordInterpretation(prologue, suggestions, model, boundaries, notEvents, questions));
         if (!result.IsSuccess)
         {
             Report(prologue, InterpretationState.Failed, result.ValidationResults.FirstOrDefault()?.Message ?? "Recording the interpretation failed", false, 0);

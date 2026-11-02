@@ -7,8 +7,10 @@ using Cratis.Prologue.Workbench.Captures.Live;
 using Cratis.Prologue.Workbench.Decisions;
 using Cratis.Prologue.Workbench.Discover.Findings;
 using Cratis.Prologue.Workbench.Events.Suggestions;
+using Cratis.Prologue.Workbench.Events.Uncaptured;
 using Cratis.Prologue.Workbench.Explore.Matrix;
 using Cratis.Prologue.Workbench.Explore.Scope;
+using Cratis.Prologue.Workbench.Explore.Uncorrelated;
 using Cratis.Prologue.Workbench.Prologues;
 
 namespace Cratis.Prologue.Workbench.Events.Interpreting;
@@ -29,13 +31,19 @@ public class WorkbenchEvidenceSource(ICaptureStore captures, IReadModels readMod
         var findings = await readModels.GetInstanceById<CodeFindings>((EventSourceId)prologue);
         var recent = await readModels.GetInstanceById<RecentCaptures>((EventSourceId)prologue);
         var review = await readModels.GetInstanceById<EventReview>((EventSourceId)prologue);
+        var uncorrelated = await readModels.GetInstanceById<UncorrelatedWrites>((EventSourceId)prologue);
 
         var points = findings is null ? [] : FindingsDecisionPoints.From(findings);
         var facts = new EvidenceFacts(
             Schema(stored),
             [.. matrix?.Shapes ?? []],
             points,
-            recent is null ? [] : [.. BusinessDecision.From(recent, points)]);
+            recent is null ? [] : [.. BusinessDecision.From(recent, points)])
+        {
+            Capabilities = [.. findings?.Capabilities ?? []],
+            Jobs = findings is null ? [] : CodeJobs.From(findings),
+            Uncorrelated = [.. uncorrelated?.Tables ?? []]
+        };
 
         return new InterpretationInput(stored, scope?.Excluded is null ? null : scope, facts, [.. review?.Answers ?? []]);
     }

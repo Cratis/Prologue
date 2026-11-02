@@ -20,8 +20,8 @@ public class when_the_evidence_changed : a_library_interpretation
         var notEvents = NotEventDetection.Detect(_facts, _scope);
         var review = EventReview.Reduce(new InterpretationFindingsRecorded(boundaries, notEvents), _review, _context);
         var changed = _suggestions.Select((suggestion, index) => index == 0 ? suggestion with { Confidence = 0.11 } : suggestion).ToList();
-        _events = InterpretationDecision.Decide(review, changed, _model, boundaries, notEvents);
-        _withdrawn = InterpretationDecision.Decide(review, _suggestions.Skip(1), _model, boundaries, notEvents);
+        _events = InterpretationDecision.Decide(review, changed, _model, boundaries, notEvents, []);
+        _withdrawn = InterpretationDecision.Decide(review, _suggestions.Skip(1), _model, boundaries, notEvents, []);
     }
 
     [Fact] void should_record_the_suggestions() => _events.OfType<EventSuggestionsInterpreted>().Count().ShouldEqual(1);

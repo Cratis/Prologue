@@ -19,8 +19,9 @@ namespace Cratis.Prologue.Workbench.Events.Questions;
 /// <param name="Context">Why the interpreter is unsure.</param>
 /// <param name="Choices">The choices; the page always adds free text.</param>
 /// <param name="Affects">The suggestions the question is about.</param>
+/// <param name="Standalone">Whether the Workbench raised the question from its own evidence; answering it needs a new interpretation, because no interpretation waits for it.</param>
 [ReadModel]
-public record OpenQuestion(QuestionId Id, QuestionKey Key, string Prompt, string Context, IEnumerable<QuestionOption> Choices, IEnumerable<SuggestionKey> Affects)
+public record OpenQuestion(QuestionId Id, QuestionKey Key, string Prompt, string Context, IEnumerable<QuestionOption> Choices, IEnumerable<SuggestionKey> Affects, bool Standalone)
 {
     /// <summary>
     /// Observes the questions that wait for an answer.
@@ -49,6 +50,8 @@ public record OpenQuestion(QuestionId Id, QuestionKey Key, string Prompt, string
             question.Prompt,
             question.Context,
             [.. question.Choices.Select(choice => new QuestionOption(choice.Label, choice.Description))],
-            [.. QuestionLinks.Affected(question, review?.Suggestions ?? [])]))
+            [.. QuestionLinks.Affected(question, review?.Suggestions ?? [])],
+            false)),
+        .. RaisedQuestions.Open(review).Select(raised => new OpenQuestion(raised.Id, raised.Key, raised.Prompt, raised.Context, [.. raised.Choices], [], true))
     ];
 }
