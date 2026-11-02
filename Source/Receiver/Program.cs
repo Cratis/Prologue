@@ -61,9 +61,10 @@ app.MapPost("/prologues/{prologueId:guid}/captures", async (Guid prologueId, Cap
 });
 
 // Endpoint the Prologue Extractor posts to after it mirrored a command to the shadow system and compared the two answers.
-app.MapPost("/prologues/{prologueId:guid}/parity", async (Guid prologueId, ParityObservation observation, IParityRecorder recorder, CancellationToken cancellationToken) =>
+app.MapPost("/prologues/{prologueId:guid}/parity", (Guid prologueId, ParityObservation observation, IParityRecordingQueue recordings) =>
 {
-    await recorder.Record(prologueId, observation, cancellationToken);
+    // Recording happens in the background, so the Extractor is never held up by a slow or unavailable event store.
+    recordings.TryEnqueue(prologueId, observation);
     return Results.Accepted();
 });
 
