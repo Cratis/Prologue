@@ -88,7 +88,7 @@ jobs:
         run: python3 .github/scripts/run-specs.py Source/Storage/Storage.csproj -trait- Category=Integration
 
       - name: Run Workbench specs
-        run: python3 .github/scripts/run-specs.py Source/Workbench/Workbench.csproj -trait- Category=Integration
+        run: python3 .github/scripts/run-specs.py Source/Workbench.Specs/Workbench.Specs.csproj -trait- Category=Integration
 
       - name: Run Interpretation specs
         run: python3 .github/scripts/run-specs.py Source/Interpretation/Interpretation.csproj -trait- Category=Integration
