@@ -66,6 +66,9 @@ public static class ReviewMerge
         && !suggestion.Renamed
         && suggestion.Suggestion.Evidence.Shapes.Any(shape => evidenced.Contains(shape.Shape.Value.ToLowerInvariant()));
 
+    // A withdrawn code-only suggestion is a candidate too, on purpose. Withdrawal only says the code no longer shows the capability; it takes nothing back from
+    // what a person decided (accept, reject, rename). When the same command shape then appears in the captures, the decision is still about that command, so it
+    // carries over, as it would have had the code-only suggestion not been withdrawn in between. Undecided withdrawn ones carry nothing but are retired all the same.
     static ReviewedSuggestion? Predecessor(IEnumerable<ReviewedSuggestion> reviewed, SuggestedEvent captured, HashSet<SuggestionKey> foundKeys, HashSet<SuggestionKey> superseded) =>
         reviewed
             .Where(candidate => candidate.Suggestion.Origin == SuggestionOrigin.CodeOnly
