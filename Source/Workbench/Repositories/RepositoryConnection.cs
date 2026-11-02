@@ -9,15 +9,16 @@ using Cratis.Prologue.Workbench.Systems;
 namespace Cratis.Prologue.Workbench.Repositories;
 
 /// <summary>
-/// The connection to a repository host. Only the name of the secret holding the access token is kept, never the token.
+/// The connection to a repository host. Only the name of the secret holding the access token or the app's private key is kept, never the secret.
 /// </summary>
 /// <param name="Id">The connection, one per host.</param>
 /// <param name="Host">The host.</param>
 /// <param name="Url">The server or organization address.</param>
 /// <param name="Secret">The name of the secret holding the access token, when the connection uses one.</param>
 /// <param name="Installation">The GitHub App installation, when the connection uses one.</param>
+/// <param name="App">What the GitHub App signs in with, when the connection uses one. Absent on a connection recorded before the app's id and private key were asked for.</param>
 [ReadModel]
-public record RepositoryConnection(RepositoryConnectionId Id, RepositoryHost Host, ServerUrl Url, SecretName? Secret, InstallationId? Installation)
+public record RepositoryConnection(RepositoryConnectionId Id, RepositoryHost Host, ServerUrl Url, SecretName? Secret, InstallationId? Installation, GitHubAppIdentity? App = null)
 {
     /// <summary>
     /// Observes the connected hosts.
@@ -46,6 +47,16 @@ public record RepositoryConnection(RepositoryConnectionId Id, RepositoryHost Hos
     /// <returns>The new state.</returns>
     public static RepositoryConnection Reduce(GitHubAppConnected @event, RepositoryConnection? current, EventContext context) =>
         new(new RepositoryConnectionId(context.EventSourceId.Value), RepositoryHost.GitHub, @event.Url, null, @event.Installation);
+
+    /// <summary>
+    /// Reduces GitHub being connected through an app with its id and private key.
+    /// </summary>
+    /// <param name="event">The event.</param>
+    /// <param name="current">The current state.</param>
+    /// <param name="context">The context of the event.</param>
+    /// <returns>The new state.</returns>
+    public static RepositoryConnection Reduce(GitHubAppInstallationConnected @event, RepositoryConnection? current, EventContext context) =>
+        new(new RepositoryConnectionId(context.EventSourceId.Value), RepositoryHost.GitHub, @event.Url, null, @event.Installation, @event.App);
 
     /// <summary>
     /// Reduces Azure DevOps being connected.
