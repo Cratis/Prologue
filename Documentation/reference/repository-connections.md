@@ -9,7 +9,7 @@ Discover reads each system's source code. The Systems step records where a syste
 
 | Host | Connect with | Notes |
 |---|---|---|
-| GitHub | A secret name and a server URL, or an app installation | The server URL also covers GitHub Enterprise; without a connection, `owner/name` resolves to github.com |
+| GitHub | A secret name and a server URL, or a GitHub App installation | The server URL also covers GitHub Enterprise; without a connection, `owner/name` resolves to github.com |
 | Azure DevOps | A secret name and the organization URL | A repository is written `project/repository`; one part alone means a repository named like the project |
 | GitLab | A secret name and a server URL | gitlab.com is the default |
 | Local folder | Nothing | The Receiver reads the folder where it is. It has to exist on the Receiver's filesystem |
@@ -20,7 +20,15 @@ The token itself is supplied to the Receiver as described in [How secrets are re
 
 ### GitHub App installations
 
-You can record a GitHub connection as an app installation id instead of a token. **Cloning through an app installation is not implemented.** A clone for a system on such a connection fails with the message `Cloning through a GitHub App installation is not available yet; connect GitHub with an access token`. Connect GitHub with a token to clone.
+Instead of a personal access token, GitHub can be connected through a GitHub App installation. Record:
+
+- the **app id** and the **installation id**;
+- the **name of the secret** that holds the app's private key in PEM form (resolved like any other secret, see [How secrets are resolved](receiver-configuration.md#how-secrets-are-resolved)); a key whose line breaks were written as `\n` is accepted;
+- optionally the **API address**, for GitHub Enterprise. It defaults to `https://api.github.com`. It has to be `https` and on the connection's host (`api.<host>` or `<host>/api/v3`).
+
+Each time it clones, the Receiver signs a short JWT (RS256, issuer the app id, valid from 60 seconds ago for nine minutes) with the private key and exchanges it at `POST {api}/app/installations/{id}/access_tokens` for an installation token. The token is used for that clone only, through the same git environment as an access token, and only for repository addresses on the connection's host over `https`. It is kept in memory until five minutes before it expires, so clones in quick succession mint one token; it is never stored in an event or read model, logged or returned. The private key, the JWT and the token are redacted from every failure message.
+
+A clone fails with a message that says which step failed: the secret is not configured, the secret does not hold a PEM RSA private key, GitHub rejected the sign-in (401, check the app id and key), refused the installation (403) or does not know it (404, check the installation id and API address), or could not be reached. A GitHub connection recorded earlier with only an installation id has no key to sign with and asks you to connect again.
 
 ## What a clone does
 
