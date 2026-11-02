@@ -63,18 +63,27 @@ public class a_github_app : Specification
 
         public Exception? Throws { get; set; }
 
-        protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
+        public string? Body { get; set; }
+
+        public Func<HttpRequestMessage, Task>? Before { get; set; }
+
+        protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
         {
             Requests.Add(request);
+            if (Before is not null)
+            {
+                await Before(request);
+            }
+
             if (Throws is not null)
             {
                 throw Throws;
             }
 
-            var body = Status == HttpStatusCode.Created
+            var body = Body ?? (Status == HttpStatusCode.Created
                 ? $"{{\"token\":\"{Token}\",\"expires_at\":\"{ExpiresAt:yyyy-MM-ddTHH:mm:ssZ}\"}}"
-                : "{\"message\":\"Bad credentials\"}";
-            return Task.FromResult(new HttpResponseMessage(Status) { Content = new StringContent(body, Encoding.UTF8, "application/json") });
+                : "{\"message\":\"Bad credentials\"}");
+            return new HttpResponseMessage(Status) { Content = new StringContent(body, Encoding.UTF8, "application/json") };
         }
     }
 }

@@ -16,4 +16,11 @@ public interface IInstallationTokens
     /// <param name="cancellationToken">A <see cref="CancellationToken"/> for the operation.</param>
     /// <returns>The token, or why none could be minted.</returns>
     Task<InstallationTokenResult> Mint(GitHubAppIdentity app, InstallationId installation, CancellationToken cancellationToken);
+
+    /// <summary>
+    /// Forgets the token held for an installation, for example after GitHub rejected it, so the next clone mints a new one.
+    /// </summary>
+    /// <param name="app">What the app signs in with.</param>
+    /// <param name="installation">The installation.</param>
+    void Evict(GitHubAppIdentity app, InstallationId installation);
 }

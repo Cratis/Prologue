@@ -27,34 +27,46 @@ public class InstallationTokens(IHttpClientFactory http, ISecretResolver secrets
     public static readonly TimeSpan RefreshMargin = TimeSpan.FromMinutes(5);
 
     readonly ConcurrentDictionary<string, CachedToken> _cache = new(StringComparer.Ordinal);
-    readonly SemaphoreSlim _minting = new(1, 1);
+    readonly ConcurrentDictionary<string, SemaphoreSlim> _gates = new(StringComparer.Ordinal);
 
     /// <inheritdoc/>
     public async Task<InstallationTokenResult> Mint(GitHubAppIdentity app, InstallationId installation, CancellationToken cancellationToken)
     {
-        var key = $"{app.Api.Value}|{app.App.Value}|{installation.Value}|{app.PrivateKey.Value}";
+        var key = KeyOf(app, installation);
+        EvictExpired();
         if (Cached(key) is { } cached)
         {
             return InstallationTokenResult.Minted(cached);
         }
 
-        await _minting.WaitAsync(cancellationToken);
+        // One gate per installation, so a slow GitHub for one installation does not hold up every other clone.
+        var gate = _gates.GetOrAdd(key, _ => new SemaphoreSlim(1, 1));
+        await gate.WaitAsync(cancellationToken);
         try
         {
             return Cached(key) is { } minted ? InstallationTokenResult.Minted(minted) : await Request(key, app, installation, cancellationToken);
         }
         finally
         {
-            _minting.Release();
+            gate.Release();
         }
     }
 
     /// <inheritdoc/>
+    public void Evict(GitHubAppIdentity app, InstallationId installation) => _cache.TryRemove(KeyOf(app, installation), out _);
+
+    /// <inheritdoc/>
     public void Dispose()
     {
-        _minting.Dispose();
+        foreach (var gate in _gates.Values)
+        {
+            gate.Dispose();
+        }
+
         GC.SuppressFinalize(this);
     }
+
+    static string KeyOf(GitHubAppIdentity app, InstallationId installation) => $"{app.Api.Value}|{app.App.Value}|{installation.Value}|{app.PrivateKey.Value}";
 
     static string Describe(HttpStatusCode status, GitHubAppIdentity app, InstallationId installation, Uri address) => status switch
     {
@@ -63,6 +75,15 @@ public class InstallationTokens(IHttpClientFactory http, ISecretResolver secrets
         HttpStatusCode.NotFound => $"GitHub found no installation {installation.Value} for app {app.App.Value} at {address.Host} (404). Check the installation id and the API address",
         _ => $"GitHub answered {(int)status} when asked for a token for installation {installation.Value}"
     };
+
+    void EvictExpired()
+    {
+        var now = time.GetUtcNow();
+        foreach (var entry in _cache.Where(entry => entry.Value.ExpiresAt <= now))
+        {
+            _cache.TryRemove(entry);
+        }
+    }
 
     string? Cached(string key) =>
         _cache.TryGetValue(key, out var cached) && cached.ExpiresAt - RefreshMargin > time.GetUtcNow() ? cached.Token : null;
@@ -120,15 +141,25 @@ public class InstallationTokens(IHttpClientFactory http, ISecretResolver secrets
         }
 
         await using var body = await response.Content.ReadAsStreamAsync(cancellationToken);
-        using var document = await JsonDocument.ParseAsync(body, cancellationToken: cancellationToken);
-        if (!document.RootElement.TryGetProperty("token", out var token) || token.GetString() is not { Length: > 0 } value
-            || !document.RootElement.TryGetProperty("expires_at", out var expires) || !DateTimeOffset.TryParse(expires.GetString(), CultureInfo.InvariantCulture, DateTimeStyles.AssumeUniversal, out var expiresAt))
+        try
         {
-            return InstallationTokenResult.Failed("GitHub answered without an installation token");
-        }
+            using var document = await JsonDocument.ParseAsync(body, cancellationToken: cancellationToken);
+            if (!document.RootElement.TryGetProperty("token", out var token) || token.GetString() is not { Length: > 0 } value
+                || !document.RootElement.TryGetProperty("expires_at", out var expires) || !DateTimeOffset.TryParse(expires.GetString(), CultureInfo.InvariantCulture, DateTimeStyles.AssumeUniversal, out var expiresAt))
+            {
+                return InstallationTokenResult.Failed("GitHub answered without an installation token");
+            }
 
-        _cache[key] = new CachedToken(value, expiresAt);
-        return InstallationTokenResult.Minted(value);
+            _cache[key] = new CachedToken(value, expiresAt);
+            return InstallationTokenResult.Minted(value);
+        }
+        catch (Exception exception) when (exception is JsonException or InvalidOperationException)
+        {
+            // A 200 whose body is not the JSON object GitHub documents (a proxy's page, a changed shape): a failure to report, never an exception out of Mint.
+            var failure = SecretRedaction.Redact($"GitHub answered with a body that is not an installation token ({exception.GetType().Name})", secretsInPlay);
+            logger.TokenRequestFailed(app.App.Value, failure);
+            return InstallationTokenResult.Failed(failure);
+        }
     }
 
     sealed record CachedToken(string Token, DateTimeOffset ExpiresAt);

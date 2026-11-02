@@ -48,7 +48,7 @@ public class RepositoryCloner(IGitRunner git, ISecretResolver secrets, IInstalla
             return CloneResult.Failed(refusal);
         }
 
-        var (token, failure) = await Authenticate(request, url, cancellationToken);
+        var (token, failure) = await TryAuthenticate(request, url, cancellationToken);
         if (failure is not null)
         {
             return CloneResult.Failed(failure);
@@ -90,6 +90,12 @@ public class RepositoryCloner(IGitRunner git, ISecretResolver secrets, IInstalla
             : null;
     }
 
+    static bool RejectedCredentials(string error) =>
+        error.Contains("401", StringComparison.Ordinal)
+        || error.Contains("403", StringComparison.Ordinal)
+        || error.Contains("Authentication failed", StringComparison.OrdinalIgnoreCase)
+        || error.Contains("Invalid username or token", StringComparison.OrdinalIgnoreCase);
+
     static string Redact(string text, CloneRequest request, string? token) =>
         SecretRedaction.Redact(text, token is null ? [] : [token, GitCredentials.Encode(request.Host, token)]);
 
@@ -105,6 +111,20 @@ public class RepositoryCloner(IGitRunner git, ISecretResolver secrets, IInstalla
         var text = $"git {step.Arguments[0]} failed ({result.ExitCode}): {string.Join(' ', lines)}";
         var redacted = Redact(text, request, token);
         return redacted.Length > 500 ? redacted[..500] : redacted;
+    }
+
+    // Whatever goes wrong while getting a credential ends as a failed clone with a redacted reason, never as an exception out of Clone.
+    async Task<(string? Token, string? Failure)> TryAuthenticate(CloneRequest request, string url, CancellationToken cancellationToken)
+    {
+        try
+        {
+            return await Authenticate(request, url, cancellationToken);
+        }
+        catch (Exception exception) when (exception is not OperationCanceledException)
+        {
+            logger.CloneFailed(request.Repository.Value, exception.GetType().Name);
+            return (null, $"Getting the credential to clone {request.Repository.Value} failed ({exception.GetType().Name})");
+        }
     }
 
     async Task<(string? Token, string? Failure)> Authenticate(CloneRequest request, string url, CancellationToken cancellationToken)
@@ -172,6 +192,12 @@ public class RepositoryCloner(IGitRunner git, ISecretResolver secrets, IInstalla
             var result = await git.Run(step.Arguments, step.InDirectory ? directory : null, environment, cancellationToken);
             if (!result.Succeeded)
             {
+                if (request.Installation is { } installation && request.App is { } app && RejectedCredentials(result.Error))
+                {
+                    // The cached installation token may have been revoked or may belong to a suspended installation; mint a fresh one next time.
+                    installationTokens.Evict(app, installation);
+                }
+
                 return CloneResult.Failed(Describe(step, result, request, token));
             }
         }
