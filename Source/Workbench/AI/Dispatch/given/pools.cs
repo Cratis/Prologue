@@ -21,6 +21,17 @@ public static class pools
 
     public static PoolPlan Plan(PoolFallback fallback, long ceiling, long used, params DispatchMember[] members) => new(Guid.NewGuid().ToString(), "Code analysis", fallback, members, Agent, ceiling, used);
 
+    public static IChatClient Answering(long tokens, int delayMilliseconds = 0)
+    {
+        var client = Substitute.For<IChatClient>();
+        client.GetResponseAsync(Arg.Any<IEnumerable<ChatMessage>>(), Arg.Any<ChatOptions?>(), Arg.Any<CancellationToken>()).Returns(async _ =>
+        {
+            await Task.Delay(delayMilliseconds);
+            return new ChatResponse(new ChatMessage(ChatRole.Assistant, "ok")) { Usage = new UsageDetails { TotalTokenCount = tokens } };
+        });
+        return client;
+    }
+
     public static Func<DispatchMember, Task<string>> Attempts(List<string> tried, params string[] failing) => member =>
     {
         tried.Add(member.Name);

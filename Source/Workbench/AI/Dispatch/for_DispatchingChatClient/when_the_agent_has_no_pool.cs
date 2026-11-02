@@ -11,7 +11,7 @@ namespace Cratis.Prologue.Workbench.AI.Dispatch.for_DispatchingChatClient;
 
 public class when_the_agent_has_no_pool : Specification
 {
-    IPoolSpendRecorder _spend;
+    IPoolSpendLedger _spend;
     ChatResponse _response;
 
     async Task Because()
@@ -23,11 +23,11 @@ public class when_the_agent_has_no_pool : Specification
         inner.For(purpose).Returns(direct);
         var plans = Substitute.For<IPoolPlans>();
         plans.For(purpose, Arg.Any<CancellationToken>()).Returns(Task.FromResult<PoolPlan?>(null));
-        _spend = Substitute.For<IPoolSpendRecorder>();
+        _spend = Substitute.For<IPoolSpendLedger>();
         _response = await new DispatchingChatClient(purpose, inner, plans, _spend).GetResponseAsync(pools.Hello, null, TestContext.Current.CancellationToken);
     }
 
     [Fact] void should_leave_the_call_to_cratis_ai() => _response.Text.ShouldEqual("directly");
-    [Fact] void should_record_no_spend() => _spend.DidNotReceiveWithAnyArgs().Record(default!, default, TestContext.Current.CancellationToken);
+    [Fact] void should_record_no_spend() => _spend.DidNotReceiveWithAnyArgs().Reserve(default!);
 }
 #endif

@@ -4,17 +4,17 @@
 using Cratis.AI.Providers.Pools;
 using Cratis.Prologue.Workbench.AI.Pools.Spending;
 using Microsoft.Extensions.AI;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 
 namespace Cratis.Prologue.Workbench.AI.Dispatch;
 
 /// <summary>
-/// Records a pool's spend through the command pipeline. The tokens are the ones the provider reported on the answer.
+/// Records a pool's spend through the command pipeline, in its own scope so the singleton ledger can call it from any thread.
 /// </summary>
-/// <param name="pipeline">Executes the command.</param>
-/// <param name="time">Tells the day.</param>
+/// <param name="scopes">Creates the scope the command runs in.</param>
 /// <param name="logger">The logger.</param>
-public class PoolSpendRecorder(ICommandPipeline pipeline, TimeProvider time, ILogger<PoolSpendRecorder> logger) : IPoolSpendRecorder
+public class PoolSpendRecorder(IServiceScopeFactory scopes, ILogger<PoolSpendRecorder> logger) : IPoolSpendRecorder
 {
     /// <summary>
     /// Counts the tokens a usage reported: its total, or its input and output when there is no total.
@@ -24,25 +24,29 @@ public class PoolSpendRecorder(ICommandPipeline pipeline, TimeProvider time, ILo
     public static long TokensOf(UsageDetails? usage) => usage is null ? 0 : usage.TotalTokenCount ?? ((usage.InputTokenCount ?? 0) + (usage.OutputTokenCount ?? 0));
 
     /// <inheritdoc/>
-    public async Task Record(string poolKey, UsageDetails? usage, CancellationToken cancellationToken)
+    public async Task<bool> Record(string poolKey, string day, long tokens, CancellationToken cancellationToken)
     {
-        var tokens = TokensOf(usage);
         if (tokens <= 0)
         {
-            return;
+            return true;
         }
 
         try
         {
-            var result = await pipeline.Execute(new RecordPoolSpend(new AIProviderPoolId(Guid.Parse(poolKey)), PoolPlans.DayOf(time), tokens), cancellationToken);
+            using var scope = scopes.CreateScope();
+            var pipeline = scope.ServiceProvider.GetRequiredService<ICommandPipeline>();
+            var result = await pipeline.Execute(new RecordPoolSpend(new AIProviderPoolId(Guid.Parse(poolKey)), day, tokens), cancellationToken);
             if (!result.IsSuccess)
             {
                 logger.SpendNotRecorded(poolKey);
             }
+
+            return result.IsSuccess;
         }
-        catch (Exception exception) when (exception is not OperationCanceledException)
+        catch (Exception exception) when (!(exception is OperationCanceledException && cancellationToken.IsCancellationRequested))
         {
             logger.SpendNotRecorded(poolKey, exception);
+            return false;
         }
     }
 }

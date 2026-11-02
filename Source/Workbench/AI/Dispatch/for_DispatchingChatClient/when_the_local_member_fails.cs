@@ -13,7 +13,8 @@ namespace Cratis.Prologue.Workbench.AI.Dispatch.for_DispatchingChatClient;
 public class when_the_local_member_fails : Specification
 {
     IAIChatClients _inner;
-    IPoolSpendRecorder _spend;
+    IPoolSpendRecorder _recorder;
+    PoolSpendLedger _spend;
     DispatchMember _local;
     DispatchMember _cloud;
     List<AIProviderId> _called;
@@ -32,7 +33,9 @@ public class when_the_local_member_fails : Specification
         _local = pools.Inside("Local");
         _cloud = pools.Outside("Cloud");
         _called = [];
-        _spend = Substitute.For<IPoolSpendRecorder>();
+        _recorder = Substitute.For<IPoolSpendRecorder>();
+        _recorder.Record(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<long>(), Arg.Any<CancellationToken>()).Returns(true);
+        _spend = new PoolSpendLedger(_recorder, TimeProvider.System, Microsoft.Extensions.Logging.Abstractions.NullLogger<PoolSpendLedger>.Instance);
         _inner = Substitute.For<IAIChatClients>();
         _inner.For(Arg.Any<Cratis.AI.LanguageModels.LanguageModelPurpose>(), Arg.Any<ChatAgentTarget>()).Returns(call =>
         {
@@ -58,6 +61,7 @@ public class when_the_local_member_fails : Specification
         _called.Clear();
         _continued = await ClientFor(PoolFallback.ContinueOnNext).GetResponseAsync(pools.Hello, null, TestContext.Current.CancellationToken);
         _calledWhilePaused = calledWhilePaused;
+        await _spend.FlushAll(TestContext.Current.CancellationToken);
     }
 
     List<AIProviderId> _calledWhilePaused;
@@ -66,6 +70,6 @@ public class when_the_local_member_fails : Specification
     [Fact] void should_only_have_called_the_local_provider_while_paused() => _calledWhilePaused.SequenceEqual([_local.Provider]).ShouldBeTrue();
     [Fact] void should_continue_to_the_provider_outside_when_the_pool_continues() => _continued.Text.ShouldEqual("from the cloud");
     [Fact] void should_call_the_providers_in_order_when_continuing() => _called.SequenceEqual([_local.Provider, _cloud.Provider]).ShouldBeTrue();
-    [Fact] void should_record_the_tokens_the_answer_used_against_the_pool() => _spend.Received(1).Record(Arg.Any<string>(), Arg.Is<UsageDetails?>(usage => usage!.TotalTokenCount == 42), Arg.Any<CancellationToken>());
+    [Fact] void should_record_the_tokens_the_answer_used_against_the_pool() => _recorder.Received(1).Record(Arg.Any<string>(), Arg.Any<string>(), 42, Arg.Any<CancellationToken>());
 }
 #endif

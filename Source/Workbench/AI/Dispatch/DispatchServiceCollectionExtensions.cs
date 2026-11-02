@@ -4,6 +4,7 @@
 using Cratis.AI.Conversations;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
+using Microsoft.Extensions.Hosting;
 
 namespace Cratis.Prologue.Workbench.AI.Dispatch;
 
@@ -24,13 +25,15 @@ public static class DispatchServiceCollectionExtensions
         var lifetime = services.LastOrDefault(_ => _.ServiceType == typeof(IAIChatClients))?.Lifetime ?? ServiceLifetime.Scoped;
         services.TryAddSingleton(TimeProvider.System);
         services.TryAddScoped<IPoolPlans, PoolPlans>();
-        services.TryAddScoped<IPoolSpendRecorder, PoolSpendRecorder>();
+        services.TryAddSingleton<IPoolSpendRecorder, PoolSpendRecorder>();
+        services.TryAddSingleton<IPoolSpendLedger, PoolSpendLedger>();
+        services.AddHostedService<PoolSpendFlushing>();
         services.Replace(new ServiceDescriptor(
             typeof(IAIChatClients),
             provider => new DispatchingAIChatClients(
                 ActivatorUtilities.CreateInstance<AIChatClients>(provider),
                 provider.GetRequiredService<IPoolPlans>(),
-                provider.GetRequiredService<IPoolSpendRecorder>()),
+                provider.GetRequiredService<IPoolSpendLedger>()),
             lifetime == ServiceLifetime.Singleton ? ServiceLifetime.Scoped : lifetime));
         return builder;
     }

@@ -20,7 +20,7 @@ public class when_the_pool_reached_its_ceiling : Specification
         _inner = Substitute.For<IAIChatClients>();
         var plans = Substitute.For<IPoolPlans>();
         plans.For(purpose, Arg.Any<CancellationToken>()).Returns(Task.FromResult<PoolPlan?>(pools.Plan(PoolFallback.ContinueOnNext, 100, 120, pools.Inside("Local"))));
-        _exception = await Cratis.Specifications.Catch.Exception(() => new DispatchingChatClient(purpose, _inner, plans, Substitute.For<IPoolSpendRecorder>()).GetResponseAsync(pools.Hello, null, TestContext.Current.CancellationToken));
+        _exception = await Cratis.Specifications.Catch.Exception(() => new DispatchingChatClient(purpose, _inner, plans, new PoolSpendLedger(Substitute.For<IPoolSpendRecorder>(), TimeProvider.System, Microsoft.Extensions.Logging.Abstractions.NullLogger<PoolSpendLedger>.Instance)).GetResponseAsync(pools.Hello, null, TestContext.Current.CancellationToken));
     }
 
     [Fact] void should_fail_with_the_ceiling_outcome() => _exception.ShouldBeOfExactType<PoolCeilingReached>();

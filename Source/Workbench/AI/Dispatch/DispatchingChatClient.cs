@@ -16,8 +16,8 @@ namespace Cratis.Prologue.Workbench.AI.Dispatch;
 /// <param name="purpose">The purpose, the agent's identity.</param>
 /// <param name="inner">Cratis.AI's chat clients.</param>
 /// <param name="plans">Plans the dispatch of each call.</param>
-/// <param name="spend">Records what each answer cost.</param>
-public class DispatchingChatClient(LanguageModelPurpose purpose, IAIChatClients inner, IPoolPlans plans, IPoolSpendRecorder spend) : IChatClient
+/// <param name="spend">Holds the pool's use for the day and records what each answer cost.</param>
+public class DispatchingChatClient(LanguageModelPurpose purpose, IAIChatClients inner, IPoolPlans plans, IPoolSpendLedger spend) : IChatClient
 {
     /// <inheritdoc/>
     public async Task<ChatResponse> GetResponseAsync(IEnumerable<ChatMessage> messages, ChatOptions? options = null, CancellationToken cancellationToken = default)
@@ -30,15 +30,16 @@ public class DispatchingChatClient(LanguageModelPurpose purpose, IAIChatClients 
             return await direct.GetResponseAsync(chat, options, cancellationToken);
         }
 
+        using var reservation = spend.Reserve(plan);
         var response = await PoolWalker.Walk(
-            plan,
+            plan with { Used = reservation.UsedBefore },
             async member =>
             {
                 using var client = inner.For(purpose, plan.Agent with { ProviderId = member.Provider });
                 return await client.GetResponseAsync(chat, options, cancellationToken);
             },
             cancellationToken);
-        await spend.Record(plan.PoolKey, response.Usage, cancellationToken);
+        reservation.Settle(response.Usage);
         return response;
     }
 
@@ -59,8 +60,9 @@ public class DispatchingChatClient(LanguageModelPurpose purpose, IAIChatClients 
         }
 
         // A member can only be passed over until its first update has arrived; after that the vendor has started answering.
+        using var reservation = spend.Reserve(plan);
         var started = await PoolWalker.Walk(
-            plan,
+            plan with { Used = reservation.UsedBefore },
             async member =>
             {
                 var client = inner.For(purpose, plan.Agent with { ProviderId = member.Provider });
@@ -78,14 +80,18 @@ public class DispatchingChatClient(LanguageModelPurpose purpose, IAIChatClients 
             },
             cancellationToken);
 
-        UsageDetails? usage = null;
+        var usage = new UsageDetails();
         try
         {
             var hasUpdate = started.HasFirst;
             while (hasUpdate)
             {
                 var update = started.Updates.Current;
-                usage = update.Contents.OfType<UsageContent>().Select(_ => _.Details).LastOrDefault() ?? usage;
+                foreach (var reported in update.Contents.OfType<UsageContent>())
+                {
+                    usage.Add(reported.Details);
+                }
+
                 yield return update;
                 hasUpdate = await started.Updates.MoveNextAsync();
             }
@@ -94,9 +100,10 @@ public class DispatchingChatClient(LanguageModelPurpose purpose, IAIChatClients 
         {
             await started.Updates.DisposeAsync();
             started.Client.Dispose();
-        }
 
-        await spend.Record(plan.PoolKey, usage, cancellationToken);
+            // In the finally so the spend is settled once whether the stream ended, the consumer stopped early or enumeration threw.
+            reservation.Settle(usage);
+        }
     }
 
     /// <inheritdoc/>
