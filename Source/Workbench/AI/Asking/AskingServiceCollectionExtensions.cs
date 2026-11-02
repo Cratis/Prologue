@@ -4,6 +4,7 @@
 using Cratis.AI.LanguageModels;
 using Cratis.AI.Providers;
 using Cratis.AI.Usage.Daily;
+using Cratis.Prologue.Workbench.AI.Dispatch;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 
@@ -29,6 +30,7 @@ public static class AskingServiceCollectionExtensions
             services,
             ActivatorUtilities.CreateInstance<ProviderAwareLanguageModel>(services)));
         builder.Services.TryAddScoped<IRecordedAgentSessions, Usage.RecordedAgentSessions>();
+        builder.AddDispatch();
         builder.Services.TryAddScoped<IAgentAsker, LanguageModelAsker>();
         return builder;
     }

@@ -19,8 +19,13 @@ export const networkExplanation =
 /** Said on the pools list, where the order and the fallback decide whether work can leave the network. */
 export const poolsExplanation =
     'A named group of providers an agent draws from. A pool tries its members by most capacity left, or in the order you put them, ' +
-    'and either continues on the next provider or pauses and asks when its first choice cannot take the work.';
+    'and either continues on the next provider or pauses and asks when its first choice cannot take the work. The Workbench enforces this whenever an agent runs.';
 
-/** Said on the pool arrangement, which the Workbench keeps itself. */
+/** Said on the pool arrangement, which the dispatcher follows whenever an agent draws on the pool. */
 export const arrangementExplanation =
-    'The tier, order, ordering and fallback are recorded by the Workbench and are what the network posture is derived from.';
+    'Work goes to the members in this order. In priority order uses the order above; most capacity left first asks each provider what it has left and keeps the order above when it cannot tell. ' +
+    'When a member cannot take the work the pool either continues on the next provider or, set to pause and ask, never moves from a provider inside your network to one outside it: the call stops and says so.';
+
+/** Said on the pool ceiling, which the dispatcher holds the pool to. */
+export const ceilingExplanation =
+    'The most tokens the pool may use in a UTC day, counted from the usage each answer reports. Once it is reached the pool\'s agents stop with a clear message until midnight UTC or until you raise it; the count can run slightly over while calls are in flight.';
