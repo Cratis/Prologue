@@ -9,11 +9,12 @@ namespace Cratis.Prologue.Workbench.Rebuild.Parity;
 public interface IParityRecorder
 {
     /// <summary>
-    /// Records an observation for a prologue. A failure is logged and never thrown: the Extractor must not retry on a Workbench problem.
+    /// Records an observation for a prologue. A failure is logged and never thrown; it is reported to the caller, which may try again because
+    /// recording the same observation twice records it once.
     /// </summary>
     /// <param name="prologue">The prologue the Extractor is configured for.</param>
     /// <param name="observation">The observation.</param>
     /// <param name="cancellationToken">A <see cref="CancellationToken"/> for the operation.</param>
-    /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
-    Task Record(Guid prologue, ParityObservation observation, CancellationToken cancellationToken = default);
+    /// <returns>True when the observation is recorded or was refused for good (trying again would not change that); false when recording failed and may succeed later.</returns>
+    Task<bool> Record(Guid prologue, ParityObservation observation, CancellationToken cancellationToken = default);
 }

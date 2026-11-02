@@ -16,7 +16,7 @@ The Receiver is the service the Extractor posts captures to directly instead of 
 
 Both capture endpoints accept a single `Capture` (the shape defined in `Cratis.Prologue.Contracts`) and respond `202 Accepted` once it's stored. After storing, the Receiver records a summary of the capture for the [Workbench](../guides/running-the-workbench.md); a failure to record it is logged and does not change the response. A capture posted without a prologue is collected under an unassigned prologue.
 
-The parity endpoint takes a `ParityObservation` (see [Extractor shadowing](shadowing.md#the-parity-endpoint)) and responds `202 Accepted`. Any other path that is not a file is served the Workbench's client-side router.
+The parity endpoint takes a `ParityObservation` (see [Extractor shadowing](shadowing.md#the-parity-endpoint)) and responds `202 Accepted` at once. Like captures, it is recorded for the Workbench from a bounded in-memory queue (5000 observations) by a background worker, so a slow or stopped Chronicle never holds the Extractor up. A full queue or a failed recording is logged and the observation is dropped. Any other path that is not a file is served the Workbench's client-side router.
 
 A capture carries the `service` it was correlated within — empty for the default service — so one Receiver collects the captures of every [named service](configuration.md#prologueservices), and stored captures keep that attribution. Captures stored before named services existed read back as the default service.
 

@@ -4,6 +4,7 @@
 using Cratis.Arc.Chronicle.ReadModels;
 using Cratis.Prologue.Workbench.Events.Boundaries;
 using Cratis.Prologue.Workbench.Events.NotEvents;
+using Cratis.Prologue.Workbench.Events.Questions;
 using Cratis.Prologue.Workbench.Events.Suggestions;
 using Cratis.Prologue.Workbench.Prologues;
 
@@ -18,13 +19,15 @@ namespace Cratis.Prologue.Workbench.Events.Interpreting;
 /// <param name="Model">The structure around them.</param>
 /// <param name="Boundaries">The consistency boundaries the evidence raises.</param>
 /// <param name="NotEvents">What the evidence shows is not an event.</param>
+/// <param name="Questions">The questions the Workbench raises from its own evidence.</param>
 [Command]
 public record RecordInterpretation(
     PrologueId Prologue,
     IEnumerable<SuggestedEvent> Suggestions,
     InterpretedModel Model,
     IEnumerable<ConsistencyBoundary> Boundaries,
-    IEnumerable<NotEvent> NotEvents) : ICanProvideEventSourceId
+    IEnumerable<NotEvent> NotEvents,
+    IEnumerable<RaisedQuestion> Questions) : ICanProvideEventSourceId
 {
     /// <inheritdoc/>
     public EventSourceId GetEventSourceId() => Prologue;
@@ -35,5 +38,5 @@ public record RecordInterpretation(
     /// <param name="current">The review as it is now.</param>
     /// <returns>The events that differ from the last interpretation.</returns>
     public IEnumerable<object> Handle([Unprotected("Interpretations run one at a time; comparing with a read model that trails the log costs at most one repeated fact, never a lost decision")] EventReview? current) =>
-        InterpretationDecision.Decide(current, Suggestions, Model, Boundaries, NotEvents);
+        InterpretationDecision.Decide(current, Suggestions, Model, Boundaries, NotEvents, Questions);
 }

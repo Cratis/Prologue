@@ -9,6 +9,7 @@ import { poolPosture } from '../networkPosture';
 import { PoolFallback } from '../Pools/PoolFallback';
 import { PoolOrdering } from '../Pools/PoolOrdering';
 import { PoolView } from '../useAISetup';
+import { PoolCeilingControl } from './PoolCeilingControl';
 import { arrangementExplanation } from './explanations';
 import { fallbackOptions, orderingOptions, postureChips, tierOptions } from './poolLabels';
 import { usePoolActions } from './usePoolActions';
@@ -80,6 +81,7 @@ export const PoolCard = ({ view, providers, agents, isInside, actions }: PoolCar
                     {available.map(provider => <option key={provider.id.toString()} value={provider.id.toString()}>{provider.name}</option>)}
                 </select>
             )}
+            <PoolCeilingControl view={view} actions={actions} />
             <span className="muted small-text">Used by {usedBy.length > 0 ? usedBy.join(', ') : 'no agent'}</span>
             <span className="muted small-text">{arrangementExplanation}</span>
             <div className="row">

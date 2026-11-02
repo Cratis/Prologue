@@ -30,7 +30,17 @@ A pool is a named group of providers that agents draw from. Each pool has:
 - **Ordering**: *Most capacity left first*, or *In priority order*.
 - **Fallback**: *Continue on the next provider*, or *Pause and ask* when the first choice cannot take the work.
 
-**The Workbench records a pool's tier, order, ordering and fallback, and derives the network posture from them. Cratis.AI dispatch does not enforce the ordering or the fallback.** Cratis.AI's dispatch does not act on them, so treat these settings as a statement of your intent and as the input to the posture, not as a guarantee of which provider serves a request. If the guarantee matters, keep a pool's members all inside your network.
+**The Workbench enforces a pool's order and fallback whenever an agent runs.** Cratis.AI picks the least-used member of a pool and has no notion of your network, so the Workbench puts its own dispatch in front of it. For each call an agent's pool is read, the members are put in order, and each is tried through Cratis.AI as one provider, so Cratis.AI's concurrency limits, rate-limit cooldowns and usage recording still apply.
+
+- **In priority order** tries the members in the order you put them.
+- **Most capacity left first** asks Cratis.AI how much of its allowance each member has left and tries the one with the most first. A provider whose capacity Cratis.AI cannot measure counts as fully available, and members that tie keep the order the pool lists them in.
+- A member that cannot take the work (unavailable, rate limited, out of capacity or failing) is passed over. With **Continue on the next provider** the pool moves on to the next member.
+- With **Pause and ask** the pool moves on from a provider inside your network to another one inside it, but never to a provider outside it. The call stops instead, and the agent's status says which provider would have been next, for example "The Code analysis pool paused before sending work outside your network". Allow the provider on the Systems page, or switch the pool to continue, to carry on.
+- A pool that starts on a provider outside your network uses it straight away; the posture shows that as *Leaves network*.
+
+### Daily ceiling
+
+A pool can have a ceiling: the most tokens its agents may use in a UTC day. Cratis.AI has no pool-wide ceiling, so the Workbench keeps it. It counts the tokens each answer reports (providers that report no usage add nothing) and, once the day's use reaches the ceiling, the pool's agents stop with "The Code analysis pool reached its ceiling" until midnight UTC or until you raise or remove it. The pool card shows the ceiling and how much of it is used. The count trails the answers by a moment, so calls already in flight when the ceiling is reached can take a pool slightly over it.
 
 ## Agents
 
@@ -55,4 +65,4 @@ The Workbench shows, from your pools, how far AI work can leave your network. A 
 | Local first | A pool starts on a provider inside your network, is in priority order, and pauses and asks before falling back to a provider outside it |
 | Leaves network | At least one pool can send work to a provider outside your network without asking |
 
-The overall posture is the weakest of the pools that have members. Because ordering and fallback are recorded rather than enforced (see [Pools](#pools)), *Local first* describes the configuration you chose. Only *Local only* is a property of the providers alone.
+The overall posture is the weakest of the pools that have members. The dispatch described under [Pools](#pools) follows the same rules, so the posture describes what actually happens: *Local only* never reaches a provider outside your network, *Local first* stops before it does, and *Leaves network* can use one without asking.

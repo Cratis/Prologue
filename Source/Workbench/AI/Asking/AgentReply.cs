@@ -9,7 +9,8 @@ namespace Cratis.Prologue.Workbench.AI.Asking;
 /// <param name="Succeeded">Whether the agent produced an answer.</param>
 /// <param name="Text">The answer; empty when it did not succeed.</param>
 /// <param name="Reason">Why there is no answer; empty when there is one.</param>
-public record AgentReply(bool Succeeded, string Text, string Reason)
+/// <param name="Stopped">Why the dispatcher did not hand the work on, when it deliberately did not; otherwise null.</param>
+public record AgentReply(bool Succeeded, string Text, string Reason, Dispatch.AgentDispatchOutcome? Stopped = null)
 {
     /// <summary>
     /// Creates the reply of an agent that answered.
@@ -24,4 +25,11 @@ public record AgentReply(bool Succeeded, string Text, string Reason)
     /// <param name="reason">Why, in words a person can act on.</param>
     /// <returns>The reply.</returns>
     public static AgentReply Unavailable(string reason) => new(false, string.Empty, reason);
+
+    /// <summary>
+    /// Creates the reply of an agent the dispatcher deliberately did not run: its pool paused, reached its ceiling or had no provider left.
+    /// </summary>
+    /// <param name="stop">The stop, whose message a person can act on.</param>
+    /// <returns>The reply.</returns>
+    public static AgentReply StoppedBy(Dispatch.AgentDispatchStopped stop) => new(false, string.Empty, stop.Message, stop.Outcome);
 }

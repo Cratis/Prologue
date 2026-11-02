@@ -1,44 +1,44 @@
 // Copyright (c) Cratis. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using Cratis.AI.LanguageModels;
-using Microsoft.Extensions.DependencyInjection;
+using Cratis.AI.Conversations;
+using Cratis.Prologue.Workbench.AI.Dispatch;
+using Microsoft.Extensions.AI;
 using Microsoft.Extensions.Logging;
 
 namespace Cratis.Prologue.Workbench.AI.Asking;
 
 /// <summary>
-/// Asks an agent through the Cratis.AI language model, which resolves the agent's provider or pool from its configuration.
+/// Asks an agent through its chat client, which the Workbench's dispatch sends to the members of the agent's pool in the recorded order,
+/// under the pool's fallback and ceiling.
 /// </summary>
-/// <param name="services">Resolves the language model when it is asked for, so a host without one still starts.</param>
+/// <param name="clients">Hands out the chat client of an agent.</param>
 /// <param name="logger">The logger a failure to ask is reported to.</param>
-public class LanguageModelAsker(IServiceProvider services, ILogger<LanguageModelAsker> logger) : IAgentAsker
+public class LanguageModelAsker(IAIChatClients clients, ILogger<LanguageModelAsker> logger) : IAgentAsker
 {
     /// <inheritdoc/>
     public async Task<AgentReply> Ask(PrologueAgent agent, string prompt, CancellationToken cancellationToken)
     {
         try
         {
-            var model = services.GetService<ILanguageModel>();
-            if (model is null)
-            {
-                return AgentReply.Unavailable("No language model is registered for this Workbench");
-            }
-
-            var result = await model.Complete(prompt, agent.Purpose, cancellationToken);
-            if (result.Succeeded)
-            {
-                return AgentReply.Answered(result.Text);
-            }
-
-            var reason = string.IsNullOrWhiteSpace(result.FailureReason) ? "The agent did not answer" : result.FailureReason;
-            logger.CouldNotAsk(agent.Name, reason);
-            return AgentReply.Unavailable(reason);
+            using var client = clients.For(agent.Purpose);
+            var response = await client.GetResponseAsync(prompt, cancellationToken: cancellationToken);
+            return AgentReply.Answered(response.Text);
         }
-        catch (Exception exception) when (exception is not OperationCanceledException)
+        catch (AgentDispatchStopped stopped)
+        {
+            logger.CouldNotAsk(agent.Name, stopped.Message);
+            return AgentReply.StoppedBy(stopped);
+        }
+        catch (AIChatClientUnavailable unavailable)
+        {
+            logger.CouldNotAsk(agent.Name, unavailable.Reason);
+            return AgentReply.Unavailable(unavailable.Reason);
+        }
+        catch (Exception exception) when (!(exception is OperationCanceledException && cancellationToken.IsCancellationRequested))
         {
             logger.AskingFailed(agent.Name, exception);
-            return AgentReply.Unavailable("The agent could not be reached");
+            return AgentReply.Unavailable(exception is OperationCanceledException ? "The agent took too long to answer" : "The agent could not be reached");
         }
     }
 }

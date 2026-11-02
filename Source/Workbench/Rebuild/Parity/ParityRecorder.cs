@@ -13,19 +13,25 @@ namespace Cratis.Prologue.Workbench.Rebuild.Parity;
 public class ParityRecorder(ICommandPipeline pipeline, ILogger<ParityRecorder> logger) : IParityRecorder
 {
     /// <inheritdoc/>
-    public async Task Record(Guid prologue, ParityObservation observation, CancellationToken cancellationToken = default)
+    public async Task<bool> Record(Guid prologue, ParityObservation observation, CancellationToken cancellationToken = default)
     {
         try
         {
             var result = await pipeline.Execute(ParityMapping.ToCommand(prologue, observation));
-            if (!result.IsSuccess)
+            if (result.IsSuccess)
             {
-                logger.ParityRefused(observation.Id, result.ValidationResults.FirstOrDefault()?.Message ?? result.ExceptionMessages.FirstOrDefault() ?? result.AuthorizationFailureReason);
+                return true;
             }
+
+            logger.ParityRefused(observation.Id, result.ValidationResults.FirstOrDefault()?.Message ?? result.ExceptionMessages.FirstOrDefault() ?? result.AuthorizationFailureReason);
+
+            // A refusal for a reason in the observation itself is final; one caused by an exception on the way to the event store may pass.
+            return !result.HasExceptions;
         }
         catch (Exception exception) when (exception is not OperationCanceledException)
         {
             logger.ParityFailed(observation.Id, exception);
+            return false;
         }
     }
 }

@@ -67,7 +67,7 @@ public class when_cloning_a_monorepo_with_git : Specification, IDisposable
         _firstCommit = await Commit("first");
 
         var server = new ServerUrl(HostAddress);
-        var cloner = new RepositoryCloner(new HostOnDisk(_git, HostAddress, new Uri(Path.Combine(_directory, "host")).AbsoluteUri.TrimEnd('/')), new NoSecrets(), Options.Create(new RepositoryOptions { CloneDirectory = Path.Combine(_directory, "clones") }), Microsoft.Extensions.Logging.Abstractions.NullLogger<RepositoryCloner>.Instance);
+        var cloner = new RepositoryCloner(new HostOnDisk(_git, HostAddress, new Uri(Path.Combine(_directory, "host")).AbsoluteUri.TrimEnd('/')), new NoSecrets(), Substitute.For<IInstallationTokens>(), Options.Create(new RepositoryOptions { CloneDirectory = Path.Combine(_directory, "clones") }), Microsoft.Extensions.Logging.Abstractions.NullLogger<RepositoryCloner>.Instance);
 
         _core = Request(server, "services/core", "services/search");
         _search = Request(server, "services/search", "services/core");

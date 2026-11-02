@@ -4,6 +4,7 @@
 using System.Text.Json;
 using Cratis.Prologue.Workbench.Events.Boundaries;
 using Cratis.Prologue.Workbench.Events.NotEvents;
+using Cratis.Prologue.Workbench.Events.Questions;
 using Cratis.Prologue.Workbench.Events.Suggestions;
 
 namespace Cratis.Prologue.Workbench.Events.Interpreting;
@@ -21,13 +22,15 @@ public static class InterpretationDecision
     /// <param name="model">The structure the interpretation found.</param>
     /// <param name="boundaries">The consistency boundaries the evidence raises.</param>
     /// <param name="notEvents">What the evidence shows is not an event.</param>
+    /// <param name="questions">The questions the Workbench raises from its own evidence.</param>
     /// <returns>The events; none when nothing differs.</returns>
     public static IEnumerable<object> Decide(
         EventReview? current,
         IEnumerable<SuggestedEvent> suggestions,
         InterpretedModel model,
         IEnumerable<ConsistencyBoundary> boundaries,
-        IEnumerable<NotEvent> notEvents)
+        IEnumerable<NotEvent> notEvents,
+        IEnumerable<RaisedQuestion> questions)
     {
         var found = suggestions.ToList();
         var known = current?.Suggestions.Where(suggestion => !suggestion.Withdrawn).Select(suggestion => suggestion.Suggestion) ?? [];
@@ -47,9 +50,24 @@ public static class InterpretationDecision
         {
             yield return new InterpretationFindingsRecorded(derived, notes);
         }
+
+        var raised = questions.ToList();
+        if (!SameQuestions(current?.Raised ?? [], raised))
+        {
+            yield return new RaisedQuestionsRecorded(raised);
+        }
     }
+
+    // A question is the same question while it is about the same thing and offers the same answers. Its prompt and context carry counts that move with every
+    // capture, and recording the question again for a count would append an event for looking, not for a change.
+    static bool SameQuestions(IEnumerable<RaisedQuestion> left, IEnumerable<RaisedQuestion> right) =>
+        Same(left.Select(Identity), right.Select(Identity));
+
+    static QuestionIdentity Identity(RaisedQuestion question) => new(question.Key.Value, question.Choices);
 
     static bool Same<T>(IEnumerable<T> left, IEnumerable<T> right) => JsonSerializer.Serialize(left) == JsonSerializer.Serialize(right);
 
     static bool Same(InterpretedModel left, InterpretedModel right) => JsonSerializer.Serialize(left) == JsonSerializer.Serialize(right);
+
+    sealed record QuestionIdentity(string Key, IEnumerable<QuestionOption> Choices);
 }

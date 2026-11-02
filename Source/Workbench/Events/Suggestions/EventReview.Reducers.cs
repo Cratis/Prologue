@@ -44,6 +44,16 @@ public partial record EventReview
         ReviewState.Existing(current, context) with { Boundaries = @event.Boundaries, NotEvents = @event.NotEvents };
 
     /// <summary>
+    /// Reduces an interpretation raising different questions of its own.
+    /// </summary>
+    /// <param name="event">The event.</param>
+    /// <param name="current">The current state.</param>
+    /// <param name="context">The context of the event, which carries the prologue's identity.</param>
+    /// <returns>The new state.</returns>
+    public static EventReview Reduce(RaisedQuestionsRecorded @event, EventReview? current, EventContext context) =>
+        ReviewState.Existing(current, context) with { Raised = @event.Questions };
+
+    /// <summary>
     /// Reduces a suggestion being accepted.
     /// </summary>
     /// <param name="event">The event.</param>

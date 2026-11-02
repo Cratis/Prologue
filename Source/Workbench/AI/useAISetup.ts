@@ -3,6 +3,10 @@
 
 import { useMemo } from 'react';
 import { AIProvider, AIProviderPool, AIProviderType, Agent, AllAIProviderPools, AllAIProviders, AllAgents } from '@cratis/ai';
+import { AllPoolCeilings } from './Pools/Ceiling/PoolCeiling';
+import { AllPoolSpends } from './Pools/Spending/PoolSpend';
+import { usedToday } from './poolUsage';
+import { useUtcDay } from './useUtcDay';
 import { AllProviderNetworkPositions } from './Network/ProviderNetworkPosition';
 import { AllPoolArrangements, PoolArrangement } from './Pools/PoolArrangement';
 import { PoolFallback } from './Pools/PoolFallback';
@@ -19,6 +23,12 @@ export interface PoolView {
 
     /** The members' provider ids in the order the pool tries them. */
     readonly members: readonly string[];
+
+    /** The most tokens the pool may use in a day (UTC); zero when it has no ceiling. */
+    readonly ceiling: number;
+
+    /** The tokens the pool used today. */
+    readonly usedToday: number;
 }
 
 /** Everything the AI panel and the shell's posture read: Cratis.AI's providers, pools and agents plus the Workbench's own facts. */
@@ -46,24 +56,31 @@ export const useAISetup = (): AISetup => {
     const [agentsResult] = AllAgents.use();
     const [arrangementsResult] = AllPoolArrangements.use();
     const [positionsResult] = AllProviderNetworkPositions.use();
+    const [ceilingsResult] = AllPoolCeilings.use();
+    const [spendsResult] = AllPoolSpends.use();
 
+    const today = useUtcDay();
     const providers = providersResult.data;
     const pools = poolsResult.data;
     const agents = agentsResult.data;
     const arrangements = arrangementsResult.data;
     const positions = positionsResult.data;
+    const ceilings = ceilingsResult.data;
+    const spends = spendsResult.data;
 
     return useMemo(() => {
         const marks = new Map(positions.map(position => [position.id, position.isInside]));
         const providerById = new Map(providers.map(provider => [provider.id.toString(), provider]));
         const arrangementById = new Map(arrangements.map(arrangement => [arrangement.id, arrangement]));
+        const ceilingById = new Map(ceilings.map(ceiling => [ceiling.id, ceiling.tokensPerDay]));
+        const spendById = new Map(spends.map(spend => [spend.id, spend]));
 
         const poolViews = pools.map<PoolView>(pool => {
             const arrangement = arrangementById.get(pool.id.toString());
             const ordering = arrangement?.ordering ?? PoolOrdering.byRemainingCapacity;
             const listed = (pool.members ?? []).map(member => member.providerId.toString());
             const order = (arrangement?.order ?? []).map(id => id.toString());
-            return { pool, arrangement, ordering, fallback: arrangement?.fallback ?? PoolFallback.continueOnNext, members: ordering === PoolOrdering.inPriorityOrder ? effectiveOrder(listed, order) : listed };
+            return { pool, arrangement, ordering, fallback: arrangement?.fallback ?? PoolFallback.continueOnNext, members: ordering === PoolOrdering.inPriorityOrder ? effectiveOrder(listed, order) : listed, ceiling: ceilingById.get(pool.id.toString()) ?? 0, usedToday: usedToday(spendById.get(pool.id.toString()), today) };
         });
 
         const isInside = (providerId: string) => {
@@ -80,5 +97,5 @@ export const useAISetup = (): AISetup => {
             isInside,
             isMarked: (providerId: string) => marks.has(providerId)
         };
-    }, [providers, pools, agents, arrangements, positions, providersResult.isPerforming, poolsResult.isPerforming, arrangementsResult.isPerforming, positionsResult.isPerforming]);
+    }, [today, providers, pools, agents, arrangements, positions, ceilings, spends, providersResult.isPerforming, poolsResult.isPerforming, arrangementsResult.isPerforming, positionsResult.isPerforming]);
 };

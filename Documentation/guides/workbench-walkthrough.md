@@ -77,6 +77,13 @@ You decide what the interpreter works from: **exclude** a shape as noise, or **s
 
 Run the interpretation. The Interpreter proposes past-tense events from the evidence in scope. Mechanical names come from tables and routes, refined names from the language model. When it cannot decide it asks you a question, and your answer is recorded and applied. For each suggestion you accept, reject or rename it; nothing becomes part of the model until you accept it. You can also mark boundaries between features and set aside things that are not events.
 
+Not every suggestion rests on captured commands. Two kinds of evidence the captures cannot give are suggested too, and they go through the same accept, rename, reject and restore review:
+
+- **Code only.** A capability Discover mapped in the code whose command was never captured becomes a suggestion marked **Code only**, with low confidence. Its evidence is the place in the code (file and line when Discover found a decision point there) and the note "Found only in code; no capture backs this yet." The name is derived from the route, for example `POST /api/loans/{id}/renew` gives `LoanRenewed`. When the command is captured later, the captured suggestion takes over and keeps your decision and any name you chose; when the capability disappears from the code, the suggestion is withdrawn but not lost.
+- **No command.** Tables written by transactions with no HTTP command (a nightly job, for example) are grouped in Explore. When Discover found a job that mentions the table, the Events step suggests an event tied to that job and marked **No command**, named from the job (`InventoryReconciled`). When no code explains the writes, the Interpreter asks, for example "Reminders changes 4 times with no command, mostly around 03:00. What is that?" You choose *A scheduled job* (suggest an event), *Staff correcting data* (suggest a correction event) or *Ignore*. Your answer is recorded and the interpretation runs again with it.
+
+Both kinds count in the filters, link their evidence to Discover (code) or Explore (table), and appear on the Model board as dashed, open events until you accept them.
+
 ## 6. Model
 
 *Needs:* accepted events.

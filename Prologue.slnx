@@ -9,6 +9,7 @@
         <Project Path="Source/Screenplay/Screenplay.csproj" />
         <Project Path="Source/Interpreter/Interpreter.csproj" />
         <Project Path="Source/Workbench/Workbench.csproj" />
+        <Project Path="Source/Workbench.Specs/Workbench.Specs.csproj" />
         <Project Path="Source/Receiver/Receiver.csproj" />
     </Folder>
     <Folder Name="/Samples/Library/">

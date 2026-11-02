@@ -4,7 +4,13 @@
         <AssemblyName>Cratis.Prologue.Workbench</AssemblyName>
         <RootNamespace>Cratis.Prologue.Workbench</RootNamespace>
         <Description>The Prologue Workbench: backend slices and their frontend, hosted by the Receiver.</Description>
-        <!-- A library in Release; Debug is an executable only because the specs are (see Source/Directory.Build.props). -->
+        <!--
+            The specs live in Workbench.Specs. This assembly is hosted by the Receiver and must not reference
+            Cratis.Chronicle.Testing: that package carries the Chronicle kernel, whose [Authorize] artifacts Arc would
+            then discover in the Receiver and refuse to start on policies only the Chronicle server defines.
+        -->
+        <DedicatedSpecsProject>true</DedicatedSpecsProject>
+        <!-- A library in Release; Debug stays an executable because xUnit flows in from the spec-bearing project references. -->
         <OutputType Condition="'$(Configuration)' == 'Release'">Library</OutputType>
         <!-- Prologue models with Screenplay elsewhere; there are no .play documents for Arc to embed. -->
         <CratisEmbeddedScreenplayEnabled>false</CratisEmbeddedScreenplayEnabled>
@@ -39,12 +45,6 @@
         <PackageReference Include="Cratis.Fundamentals" />
     </ItemGroup>
 
-    <!-- Command and read model specs run the real Arc and Chronicle pipelines in process. -->
-    <ItemGroup Condition="'$(Configuration)' == 'Debug'">
-        <PackageReference Include="Cratis.Arc.Chronicle.Testing" />
-        <PackageReference Include="Cratis.Chronicle.Testing" />
-    </ItemGroup>
-
     <ItemGroup>
         <ProjectReference Include="../Configuration/Configuration.csproj" />
         <ProjectReference Include="../Contracts/Contracts.csproj" />
@@ -58,5 +58,7 @@
         <Content Remove="package.json;tsconfig*.json" />
         <None Remove="package.json;tsconfig*.json" />
         <Compile Remove="node_modules/**" />
+        <!-- Specs are compiled by Workbench.Specs. -->
+        <Compile Remove="**/for_*/**;**/when_*/**;**/given/**" />
     </ItemGroup>
 </Project>

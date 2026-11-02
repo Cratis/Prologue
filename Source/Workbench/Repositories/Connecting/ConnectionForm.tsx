@@ -19,6 +19,8 @@ export interface ConnectionFormProps {
     readonly onClose: () => void;
 }
 
+const defaultApi = 'https://api.github.com';
+
 const defaultUrls: Partial<Record<RepositoryHost, string>> = {
     [RepositoryHost.gitHub]: 'https://github.com',
     [RepositoryHost.azureDevOps]: 'https://dev.azure.com/',
@@ -32,6 +34,9 @@ export const ConnectionForm = ({ host, connection, onClose }: ConnectionFormProp
     const [url, setUrl] = useState(connection?.url ?? defaultUrls[host] ?? '');
     const [secret, setSecret] = useState(connection?.secret ?? '');
     const [installation, setInstallation] = useState(connection?.installation ? String(connection.installation) : '');
+    const [appId, setAppId] = useState(connection?.app?.app ? String(connection.app.app) : '');
+    const [privateKey, setPrivateKey] = useState(connection?.app?.privateKey ?? '');
+    const [api, setApi] = useState(connection?.app && connection.app.api !== defaultApi ? connection.app.api : '');
     const useApp = host === RepositoryHost.gitHub && installation.trim().length > 0 && secret.trim().length === 0;
 
     const connect = () => {
@@ -39,6 +44,9 @@ export const ConnectionForm = ({ host, connection, onClose }: ConnectionFormProp
             const command = new ConnectGitHubApp();
             command.url = url;
             command.installation = Number(installation);
+            command.app = Number(appId);
+            command.privateKey = privateKey;
+            command.api = api;
             return run('connect', command, 'GitHub connected');
         }
 
@@ -69,9 +77,24 @@ export const ConnectionForm = ({ host, connection, onClose }: ConnectionFormProp
                 <input value={secret} placeholder={host === RepositoryHost.azureDevOps ? 'ado/prologue-read' : `${info.label.toLowerCase().replace(' ', '')}/prologue-read`} onChange={event => setSecret(event.target.value)} />
             </Field>
             {host === RepositoryHost.gitHub && (
-                <Field label="Or a GitHub App installation" hint="Leave the secret name empty to use an installation id instead.">
-                    <input inputMode="numeric" value={installation} onChange={event => setInstallation(event.target.value.replace(/\D/g, ''))} />
-                </Field>
+                <>
+                    <Field label="Or a GitHub App installation" hint="Leave the access token's secret name empty to clone through an app installation instead. The Receiver mints a short-lived token for it whenever it clones.">
+                        <input inputMode="numeric" placeholder="Installation id" value={installation} onChange={event => setInstallation(event.target.value.replace(/\D/g, ''))} />
+                    </Field>
+                    {installation.trim().length > 0 && (
+                        <>
+                            <Field label="App id">
+                                <input inputMode="numeric" value={appId} onChange={event => setAppId(event.target.value.replace(/\D/g, ''))} />
+                            </Field>
+                            <Field label="Private key, by secret name" hint="The name of the secret that holds the app's PEM private key. The key is never stored or shown.">
+                                <input value={privateKey} placeholder="github/prologue-app-key" onChange={event => setPrivateKey(event.target.value)} />
+                            </Field>
+                            <Field label="API address (GitHub Enterprise)" hint={`Leave empty for github.com, whose API is ${defaultApi}.`}>
+                                <input value={api} placeholder={defaultApi} onChange={event => setApi(event.target.value)} />
+                            </Field>
+                        </>
+                    )}
+                </>
             )}
             <div className="row form-actions">
                 <Button type="submit" variant="primary" small disabled={isBusy('connect')}>{connection ? 'Save' : 'Connect'}</Button>

@@ -16,10 +16,11 @@ namespace Cratis.Prologue.Workbench.Repositories.Cloning;
 /// </summary>
 /// <param name="git">Runs git.</param>
 /// <param name="secrets">Resolves the access token by its name.</param>
+/// <param name="installationTokens">Mints the installation token a GitHub App connection clones with.</param>
 /// <param name="options">The configured clone directory.</param>
 /// <param name="logger">The logger.</param>
 [Singleton]
-public class RepositoryCloner(IGitRunner git, ISecretResolver secrets, IOptions<RepositoryOptions> options, ILogger<RepositoryCloner> logger) : IRepositoryCloner
+public class RepositoryCloner(IGitRunner git, ISecretResolver secrets, IInstallationTokens installationTokens, IOptions<RepositoryOptions> options, ILogger<RepositoryCloner> logger) : IRepositoryCloner
 {
     readonly ConcurrentDictionary<string, SemaphoreSlim> _gates = new(StringComparer.Ordinal);
 
@@ -47,19 +48,10 @@ public class RepositoryCloner(IGitRunner git, ISecretResolver secrets, IOptions<
             return CloneResult.Failed(refusal);
         }
 
-        string? token = null;
-        if (request.Secret is { } secret)
+        var (token, failure) = await TryAuthenticate(request, url, cancellationToken);
+        if (failure is not null)
         {
-            if (!CloneUrl.MayCarryToken(request, url))
-            {
-                return CloneResult.Failed($"The repository address is not on the server of the {request.Host} connection, so its access token is not sent there");
-            }
-
-            token = secrets.Resolve(secret);
-            if (token is null)
-            {
-                return CloneResult.Failed($"The secret '{secret.Value}' is not configured on the Receiver");
-            }
+            return CloneResult.Failed(failure);
         }
 
         var directory = CloneDirectories.For(options.Value.CloneDirectory, request);
@@ -88,11 +80,6 @@ public class RepositoryCloner(IGitRunner git, ISecretResolver secrets, IOptions<
             return "The system has no repository";
         }
 
-        if (request.Installation is not null)
-        {
-            return "Cloning through a GitHub App installation is not available yet; connect GitHub with an access token";
-        }
-
         if (new[] { request.SubPath }.Concat(request.SharedSubPaths).Any(SparsePaths.EscapesRepository))
         {
             return "A sub path has to stay inside the repository";
@@ -102,6 +89,12 @@ public class RepositoryCloner(IGitRunner git, ISecretResolver secrets, IOptions<
             ? "The repository and branch cannot start with a dash"
             : null;
     }
+
+    static bool RejectedCredentials(string error) =>
+        error.Contains("401", StringComparison.Ordinal)
+        || error.Contains("403", StringComparison.Ordinal)
+        || error.Contains("Authentication failed", StringComparison.OrdinalIgnoreCase)
+        || error.Contains("Invalid username or token", StringComparison.OrdinalIgnoreCase);
 
     static string Redact(string text, CloneRequest request, string? token) =>
         SecretRedaction.Redact(text, token is null ? [] : [token, GitCredentials.Encode(request.Host, token)]);
@@ -118,6 +111,52 @@ public class RepositoryCloner(IGitRunner git, ISecretResolver secrets, IOptions<
         var text = $"git {step.Arguments[0]} failed ({result.ExitCode}): {string.Join(' ', lines)}";
         var redacted = Redact(text, request, token);
         return redacted.Length > 500 ? redacted[..500] : redacted;
+    }
+
+    // Whatever goes wrong while getting a credential ends as a failed clone with a redacted reason, never as an exception out of Clone.
+    async Task<(string? Token, string? Failure)> TryAuthenticate(CloneRequest request, string url, CancellationToken cancellationToken)
+    {
+        try
+        {
+            return await Authenticate(request, url, cancellationToken);
+        }
+        catch (Exception exception) when (exception is not OperationCanceledException)
+        {
+            logger.CloneFailed(request.Repository.Value, exception.GetType().Name);
+            return (null, $"Getting the credential to clone {request.Repository.Value} failed ({exception.GetType().Name})");
+        }
+    }
+
+    async Task<(string? Token, string? Failure)> Authenticate(CloneRequest request, string url, CancellationToken cancellationToken)
+    {
+        if (request.Installation is { } installation)
+        {
+            if (request.App is not { } app)
+            {
+                return (null, "The GitHub App connection was recorded without the app's id and private key. Connect GitHub again with them");
+            }
+
+            if (!CloneUrl.MayCarryToken(request, url))
+            {
+                return (null, $"The repository address is not on the server of the {request.Host} connection, so no installation token is minted for it");
+            }
+
+            var minted = await installationTokens.Mint(app, installation, cancellationToken);
+            return minted.Succeeded ? (minted.Token, null) : (null, minted.Failure);
+        }
+
+        if (request.Secret is not { } secret)
+        {
+            return (null, null);
+        }
+
+        if (!CloneUrl.MayCarryToken(request, url))
+        {
+            return (null, $"The repository address is not on the server of the {request.Host} connection, so its access token is not sent there");
+        }
+
+        var token = secrets.Resolve(secret);
+        return token is null ? (null, $"The secret '{secret.Value}' is not configured on the Receiver") : (token, null);
     }
 
     async Task<CloneResult> Local(CloneRequest request, CancellationToken cancellationToken)
@@ -153,6 +192,12 @@ public class RepositoryCloner(IGitRunner git, ISecretResolver secrets, IOptions<
             var result = await git.Run(step.Arguments, step.InDirectory ? directory : null, environment, cancellationToken);
             if (!result.Succeeded)
             {
+                if (request.Installation is { } installation && request.App is { } app && RejectedCredentials(result.Error))
+                {
+                    // The cached installation token may have been revoked or may belong to a suspended installation; mint a fresh one next time.
+                    installationTokens.Evict(app, installation);
+                }
+
                 return CloneResult.Failed(Describe(step, result, request, token));
             }
         }

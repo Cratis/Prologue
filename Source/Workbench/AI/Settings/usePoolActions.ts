@@ -8,6 +8,8 @@ import { ArrangePool } from '../Pools/Arranging/ArrangePool';
 import { moveMember } from '../poolOrder';
 import { useCommandRunner } from '../../Shell/useCommandRunner';
 import { PoolView } from '../useAISetup';
+import { ClearPoolCeiling } from '../Pools/Ceiling/ClearPoolCeiling';
+import { SetPoolCeiling } from '../Pools/Ceiling/SetPoolCeiling';
 
 /**
  * The actions on provider pools. Every change to how a pool picks its members is an arrangement the Workbench records,
@@ -43,6 +45,19 @@ export const usePoolActions = () => {
         return run(`remove-member-${view.pool.id}-${providerId}`, command);
     };
 
+    const setCeiling = (view: PoolView, tokens: number) => {
+        const command = new SetPoolCeiling();
+        command.pool = view.pool.id;
+        command.tokensPerDay = tokens;
+        return run(`ceiling-${view.pool.id}`, command, `Set the ceiling of ${view.pool.name}`);
+    };
+
+    const clearCeiling = (view: PoolView) => {
+        const command = new ClearPoolCeiling();
+        command.pool = view.pool.id;
+        return run(`ceiling-${view.pool.id}`, command, `Removed the ceiling of ${view.pool.name}`);
+    };
+
     const create = (name: string) => {
         const command = new CreateAIProviderPool();
         command.name = name.trim();
@@ -55,5 +70,5 @@ export const usePoolActions = () => {
         return run(`remove-pool-${view.pool.id}`, command, `Removed ${view.pool.name}`);
     };
 
-    return { arrange, move, addMember, removeMember, create, remove, isBusy };
+    return { arrange, move, addMember, removeMember, setCeiling, clearCeiling, create, remove, isBusy };
 };

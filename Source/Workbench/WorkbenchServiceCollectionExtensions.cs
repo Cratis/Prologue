@@ -7,6 +7,7 @@ using Cratis.Chronicle.Connections;
 using Cratis.Prologue.Workbench.AI;
 using Cratis.Prologue.Workbench.AI.Asking;
 using Cratis.Prologue.Workbench.Captures;
+using Cratis.Prologue.Workbench.Common.Recording;
 using Cratis.Prologue.Workbench.Discover;
 using Cratis.Prologue.Workbench.Events;
 using Cratis.Prologue.Workbench.Identity;
@@ -62,6 +63,8 @@ public static class WorkbenchServiceCollectionExtensions
         // Arc's read protection and the scoped IEventStore resolve the event store from the client options, which the
         // configureChronicleOptions callback above does not reach: without this they ask for an event store with no name.
         builder.Services.PostConfigure<ChronicleClientOptions>(options => options.EventStore = EventStore);
+
+        builder.Services.Configure<RecordingOptions>(builder.Configuration.GetSection(RecordingOptions.SectionName));
 
         builder.AddRepositories();
         builder.AddCaptures();

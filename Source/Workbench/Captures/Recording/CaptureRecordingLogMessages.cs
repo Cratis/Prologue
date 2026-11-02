@@ -15,4 +15,7 @@ internal static partial class CaptureRecordingLogMessages
 
     [LoggerMessage(LogLevel.Error, "Recording capture {Capture} for the Workbench failed unexpectedly")]
     internal static partial void RecordingCrashed(this ILogger<CaptureRecordingWorker> logger, Guid capture, Exception exception);
+
+    [LoggerMessage(LogLevel.Error, "Recording capture {Capture} for the Workbench did not finish within {Timeout}; Chronicle may be unreachable. The capture stays stored but is not recorded")]
+    internal static partial void RecordingTimedOut(this ILogger<CaptureRecordingWorker> logger, Guid capture, TimeSpan timeout);
 }

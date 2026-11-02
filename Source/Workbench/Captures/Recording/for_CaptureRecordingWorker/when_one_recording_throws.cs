@@ -3,6 +3,7 @@
 
 #if DEBUG
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Options;
 
 namespace Cratis.Prologue.Workbench.Captures.Recording.for_CaptureRecordingWorker;
 
@@ -37,7 +38,7 @@ public class when_one_recording_throws : Specification
         });
 
         var services = new ServiceCollection().AddScoped(_ => recorder).BuildServiceProvider();
-        var worker = new CaptureRecordingWorker(queue, services.GetRequiredService<IServiceScopeFactory>(), Microsoft.Extensions.Logging.Abstractions.NullLogger<CaptureRecordingWorker>.Instance);
+        var worker = new CaptureRecordingWorker(queue, services.GetRequiredService<IServiceScopeFactory>(), Options.Create(new Common.Recording.RecordingOptions()), Microsoft.Extensions.Logging.Abstractions.NullLogger<CaptureRecordingWorker>.Instance);
         await worker.StartAsync(CancellationToken.None);
         using var timeout = new CancellationTokenSource(TimeSpan.FromSeconds(10));
         while (_recorded.Count == 0 && !timeout.IsCancellationRequested)

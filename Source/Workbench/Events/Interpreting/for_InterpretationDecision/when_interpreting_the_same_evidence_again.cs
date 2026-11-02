@@ -18,7 +18,7 @@ public class when_interpreting_the_same_evidence_again : a_library_interpretatio
         var boundaries = BoundaryDetection.Detect(_facts, _scope);
         var notEvents = NotEventDetection.Detect(_facts, _scope);
         var review = EventReview.Reduce(new InterpretationFindingsRecorded(boundaries, notEvents), _review, _context);
-        _events = InterpretationDecision.Decide(review, _suggestions, _model, boundaries, notEvents);
+        _events = InterpretationDecision.Decide(review, _suggestions, _model, boundaries, notEvents, []);
     }
 
     [Fact] void should_record_nothing() => _events.ShouldBeEmpty();

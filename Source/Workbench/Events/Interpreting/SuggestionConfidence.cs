@@ -28,4 +28,22 @@ public static class SuggestionConfidence
         var confidence = (strength * (0.6 + (0.4 * share))) + (codeConfirms ? 0.04 : 0);
         return Math.Round(Math.Min(0.99, confidence), 2, MidpointRounding.AwayFromZero);
     }
+
+    /// <summary>
+    /// Works out the confidence of an event that only the code evidences: low, and a little higher for every rule the code holds on the
+    /// command, because a command with rules in the code is more likely to be a real decision than a stray route.
+    /// </summary>
+    /// <param name="decisionPoints">How many decision points Discover found on the capability.</param>
+    /// <returns>The confidence, between 0.2 and 0.35.</returns>
+    public static Confidence ForCodeOnly(int decisionPoints) => Math.Round(0.2 + (0.05 * Math.Min(3, Math.Max(0, decisionPoints))), 2, MidpointRounding.AwayFromZero);
+
+    /// <summary>
+    /// Works out the confidence of an event that only writes with no command evidence: it grows with the number of transactions, and a
+    /// job in the code that explains them lifts it.
+    /// </summary>
+    /// <param name="transactions">How many transactions wrote the table with no command.</param>
+    /// <param name="jobFound">Whether Discover found a job in the code that writes the table.</param>
+    /// <returns>The confidence, at most 0.65.</returns>
+    public static Confidence ForUncorrelated(int transactions, bool jobFound) =>
+        Math.Round(Math.Min(0.65, (0.45 * (1 - (1 / (Math.Max(0, transactions) + 1.2)))) + (jobFound ? 0.2 : 0)), 2, MidpointRounding.AwayFromZero);
 }

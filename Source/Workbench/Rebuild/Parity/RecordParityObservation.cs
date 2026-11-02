@@ -1,6 +1,7 @@
 // Copyright (c) Cratis. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using Cratis.Arc.Chronicle.ReadModels;
 using Cratis.Prologue.Workbench.Captures;
 using Cratis.Prologue.Workbench.Prologues;
 
@@ -33,13 +34,23 @@ public record RecordParityObservation(
     ParityOutcome Outcome)
 {
     /// <summary>
-    /// Handles the command, refusing an observation with no command shape.
+    /// Handles the command, refusing an observation with no command shape. An observation already recorded is a retry of the
+    /// Extractor and records nothing, so the board never counts it twice.
     /// </summary>
-    /// <returns>The observation recorded, or a refusal.</returns>
-    public Result<ParityObserved, ValidationResult> Handle() =>
-        Shape.IsNone
-            ? ValidationResult.Error("An observation needs the shape of the command it is about")
-            : new ParityObserved(Observation, Occurred, Method, Path, Shape, Trace, LegacyStatus, ShadowStatus, Outcome);
+    /// <param name="recent">The latest observations of the prologue, which hold the identity of any retry.</param>
+    /// <returns>The observation recorded, nothing for a retry, or a refusal.</returns>
+    public Result<IEnumerable<ParityObserved>, ValidationResult> Handle([Unprotected("A retry racing the projection may record once more; the worker records one observation at a time, so the window is the projection lag")] RecentParity? recent)
+    {
+        if (Shape.IsNone)
+        {
+            return ValidationResult.Error("An observation needs the shape of the command it is about");
+        }
+
+        IEnumerable<ParityObserved> events = recent?.Observations.Any(observed => observed.Observation == Observation) == true
+            ? []
+            : [new ParityObserved(Observation, Occurred, Method, Path, Shape, Trace, LegacyStatus, ShadowStatus, Outcome)];
+        return Result<IEnumerable<ParityObserved>, ValidationResult>.Success(events);
+    }
 }
 
 /// <summary>

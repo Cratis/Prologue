@@ -13,13 +13,15 @@ namespace Cratis.Prologue.Workbench.Rebuild;
 public static class RebuildServiceCollectionExtensions
 {
     /// <summary>
-    /// Adds the parity recorder.
+    /// Adds the parity recorder, and the queue and worker that record reported observations in the background.
     /// </summary>
     /// <param name="builder">The <see cref="WebApplicationBuilder"/> to add to.</param>
     /// <returns>The builder for continuation.</returns>
     public static WebApplicationBuilder AddRebuild(this WebApplicationBuilder builder)
     {
         builder.Services.AddScoped<IParityRecorder, ParityRecorder>();
+        builder.Services.AddSingleton<IParityRecordingQueue, ParityRecordingQueue>();
+        builder.Services.AddHostedService<ParityRecordingWorker>();
         return builder;
     }
 }
