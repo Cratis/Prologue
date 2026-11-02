@@ -5,7 +5,8 @@ import { useMemo } from 'react';
 import { AIProvider, AIProviderPool, AIProviderType, Agent, AllAIProviderPools, AllAIProviders, AllAgents } from '@cratis/ai';
 import { AllPoolCeilings } from './Pools/Ceiling/PoolCeiling';
 import { AllPoolSpends } from './Pools/Spending/PoolSpend';
-import { usedToday, utcDay } from './poolUsage';
+import { usedToday } from './poolUsage';
+import { useUtcDay } from './useUtcDay';
 import { AllProviderNetworkPositions } from './Network/ProviderNetworkPosition';
 import { AllPoolArrangements, PoolArrangement } from './Pools/PoolArrangement';
 import { PoolFallback } from './Pools/PoolFallback';
@@ -58,6 +59,7 @@ export const useAISetup = (): AISetup => {
     const [ceilingsResult] = AllPoolCeilings.use();
     const [spendsResult] = AllPoolSpends.use();
 
+    const today = useUtcDay();
     const providers = providersResult.data;
     const pools = poolsResult.data;
     const agents = agentsResult.data;
@@ -72,7 +74,6 @@ export const useAISetup = (): AISetup => {
         const arrangementById = new Map(arrangements.map(arrangement => [arrangement.id, arrangement]));
         const ceilingById = new Map(ceilings.map(ceiling => [ceiling.id, ceiling.tokensPerDay]));
         const spendById = new Map(spends.map(spend => [spend.id, spend]));
-        const today = utcDay(new Date());
 
         const poolViews = pools.map<PoolView>(pool => {
             const arrangement = arrangementById.get(pool.id.toString());
@@ -96,5 +97,5 @@ export const useAISetup = (): AISetup => {
             isInside,
             isMarked: (providerId: string) => marks.has(providerId)
         };
-    }, [providers, pools, agents, arrangements, positions, ceilings, spends, providersResult.isPerforming, poolsResult.isPerforming, arrangementsResult.isPerforming, positionsResult.isPerforming]);
+    }, [today, providers, pools, agents, arrangements, positions, ceilings, spends, providersResult.isPerforming, poolsResult.isPerforming, arrangementsResult.isPerforming, positionsResult.isPerforming]);
 };

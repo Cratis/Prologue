@@ -9,6 +9,14 @@
 export const utcDay = (now: Date): string => now.toISOString().slice(0, 10);
 
 /**
+ * How long until the UTC day changes.
+ * @param now The moment to measure from.
+ * @returns The milliseconds until the next UTC midnight; always at least one.
+ */
+export const millisecondsToNextUtcDay = (now: Date): number =>
+    Math.max(1, Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() + 1) - now.getTime());
+
+/**
  * The tokens a pool used today. The recorded spend belongs to the last day the pool was used, so it counts for nothing on any other day.
  * @param spend What was recorded: the day and the tokens used on it, or undefined when the pool never used any.
  * @param today The UTC day, as yyyy-MM-dd.
