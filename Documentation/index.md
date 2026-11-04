@@ -3,6 +3,9 @@ title: Prologue
 description: Prologue captures selected HTTP, database, and telemetry signals from an existing system and proposes a Cratis event model for review.
 ---
 
+Prologue is **experimental** and belongs to the Cratis Platform's early-development model-first layer.
+You can adopt it independently without adopting the whole Platform.
+
 ## The system nobody fully understands anymore
 
 Somewhere in every organization there's a system like this: it works, it matters, and nobody left on the team can say with confidence what it actually does under load. The people who built it have moved on. The wiki page is three reorganizations out of date. Rewriting it as an event-sourced Cratis application would be the right long-term move, but the first step — figuring out what to model — usually means weeks of archaeology: reading code nobody trusts, interviewing whoever's left, and guessing at the rest.
@@ -15,7 +18,9 @@ treating observed implementation behavior as recovered domain intent.
 Prologue does not capture database row values or HTTP bodies. Its metadata can still be sensitive: HTTP
 observations include query strings, telemetry includes identifiers and names, and explicitly allowlisted
 OpenTelemetry attributes include their values. Minimize the capture configuration and protect the resulting
-files and persisted observations.
+files and persisted observations. Observe a real system only with its owner's permission. File-based batch
+interpretation can run without LLM refinement; the Workbench's Discover and interpretation steps can use AI providers you configure. Before using
+AI features, separately authorize any capture evidence or source code sent to the configured providers.
 
 ## How it fits together
 
@@ -56,10 +61,13 @@ See [Architecture](architecture.md) for how these pieces compose and deploy.
 
 ## Get started
 
-1. **[Getting started](getting-started.md)** — run the bundled sample system, watch Prologue capture it end to end, then turn a folder of captures into a `.play` file you can run.
+Start with the bundled sample to learn the pipeline without pointing Prologue at your own system. Opening the
+Workbench is a separate step from capturing a system and reviewing its model.
+
+1. **[Getting started](getting-started.md)** — run the bundled sample system, watch Prologue capture it end to end, then turn a folder of captures into a provisional `.play` file to review and continue authoring.
 2. **[Why Prologue](why-prologue.md)** — the problem it solves, and when it's the wrong tool for the job.
 3. **[How Prologue works](concepts.md)** — the capture, correlation, and interpretation pipeline in depth.
-4. **[Running the Workbench](guides/running-the-workbench.md)** — start the web interface and walk a system from definition to rebuild.
+4. **[Running the Workbench](guides/running-the-workbench.md)** — start the local web interface with Docker Compose, then follow the workflow from system definition to rebuild.
 5. **[Point Prologue at your system](guides/point-prologue-at-your-system.md)** — the practical checklist for your own system, not the sample.
 
 Prefer driving it from a terminal? The [Cratis CLI](/cli/reference/prologue/) wraps the wizard and the Interpreter in two commands: `cratis prologue start` and `cratis prologue interpret`.

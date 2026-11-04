@@ -31,7 +31,9 @@ exposing typed commands and queries.
 Prologue captures structural and operational metadata rather than database row values or HTTP bodies. Some
 metadata can still be sensitive: HTTP observations include query strings, telemetry contains identifiers and
 names, and explicitly allowlisted OpenTelemetry attributes include their values. Minimize and review the capture
-configuration, and protect capture files and persisted observations accordingly.
+configuration, and protect capture files and persisted observations accordingly. Observe a real system only with
+its owner's permission. File-based batch interpretation can run without LLM refinement; the Workbench's Discover and interpretation steps can use AI providers you configure. Before using AI features, separately authorize any capture evidence or source
+code sent to the configured providers.
 
 Prologue has no dependency on Studio. The **Receiver** hosts the **Prologue Workbench**, a web interface that takes a
 system from a definition of its code and evidence to a provisional event model and a piece-by-piece rebuild; it stores
@@ -39,11 +41,24 @@ its decisions in a Chronicle kernel and its read models in MongoDB. The Extracto
 Chronicle nor Orleans. The Interpreter's optional resumable service mode embeds an Orleans silo for persisted session
 grains; consumers that only need file-based interpretation do not use that mode.
 
-To run the Workbench:
+To learn the capture-to-model workflow, start with the [bundled sample guide](Documentation/getting-started.md).
+Once you have permission to capture your own system, follow the
+[Point Prologue at your system](Documentation/guides/point-prologue-at-your-system.md) checklist.
+To open the Workbench instead, you need Docker with Compose, a checkout of this repository, and available host
+ports `8080` and `35000`. Run this command from the repository root:
 
 ```shell
 docker compose -f Source/Receiver/docker-compose.yml up --build   # then open http://localhost:8080
 ```
+
+Compose builds the Receiver from the checkout and starts Chronicle's development image with bundled MongoDB.
+Port `8080` serves the Receiver/Workbench; `35000` serves Chronicle. This local-development stack uses development
+credentials and publishes both ports without a loopback-only binding. Restrict network access before running it;
+this is not a production deployment.
+
+The named `repositories` volume retains cloned repositories at `/var/prologue/repos`. It is not persistent storage
+for observations or Chronicle/MongoDB data. Opening the Workbench starts the interface; capturing a system and
+reviewing a model are separate steps.
 
 See [Running the Workbench](Documentation/guides/running-the-workbench.md) and the
 [walkthrough](Documentation/guides/workbench-walkthrough.md).
