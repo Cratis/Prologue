@@ -19,7 +19,7 @@ Prologue does not capture database row values or HTTP bodies. Its metadata can s
 observations include query strings, telemetry includes identifiers and names, and explicitly allowlisted
 OpenTelemetry attributes include their values. Minimize the capture configuration and protect the resulting
 files and persisted observations. Observe a real system only with its owner's permission. File-based batch
-interpretation can run without LLM refinement; the Workbench's interpretation workflow enables it. Before using
+interpretation can run without LLM refinement; the Workbench's Discover and interpretation steps can use AI providers you configure. Before using
 AI features, separately authorize any capture evidence or source code sent to the configured providers.
 
 ## How it fits together
