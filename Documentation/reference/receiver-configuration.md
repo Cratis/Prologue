@@ -1,6 +1,6 @@
 ---
 title: Receiver configuration
-description: Every configuration key the Receiver reads, and how secrets are resolved.
+description: Configure the Prologue Receiver's Chronicle, MongoDB, capture, repository and discovery settings, including environment overrides and secret resolution.
 ---
 
 The Receiver uses standard ASP.NET Core configuration, so every key below can be set in `appsettings.json` or as an environment variable with `__` in place of `:` (`Cratis:MongoDB:Server` is `Cratis__MongoDB__Server`). The defaults are those in `Source/Receiver/appsettings.json` and the options classes. [Running the Workbench](../guides/running-the-workbench.md) shows them used in `Source/Receiver/docker-compose.yml`.

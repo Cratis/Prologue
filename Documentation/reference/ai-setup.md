@@ -1,6 +1,6 @@
 ---
 title: AI setup
-description: Configure AI providers, pools and agents for the Workbench through Cratis.AI, and what the network posture means.
+description: Configure Prologue Workbench AI providers, pools and agents through Cratis.AI, with daily ceilings and network posture settings for model calls.
 ---
 
 The Workbench does not call any model vendor directly. Every model call goes through [Cratis.AI](https://github.com/Cratis/AI), and you set it up in the Workbench: providers, pools of providers and the four agents that draw on them. Discover and the Interpreter use these agents. Nothing in the Workbench needs AI to start, and a prologue that never runs Discover or asks for refined names works without any.

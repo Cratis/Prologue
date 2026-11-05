@@ -1,6 +1,6 @@
 ---
 title: Configuration
-description: Configuration used by the Extractor, Receiver, and batch or service Interpreter modes.
+description: Reference cratis-prologue.json settings for capture output, correlation, databases, telemetry and LLM refinement across Prologue deployment modes.
 ---
 
 The Extractor and Interpreter add `cratis-prologue.json` through the shared

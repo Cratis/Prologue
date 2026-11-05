@@ -1,6 +1,6 @@
 ---
 title: Why Prologue
-description: How Prologue adds observed evidence to existing-system modeling, what it cannot recover, and when it is the wrong tool.
+description: Evaluate Prologue for modeling an existing system from observed commands, database changes and telemetry, including evidence limits and unsuitable uses.
 ---
 
 ## Without Prologue
