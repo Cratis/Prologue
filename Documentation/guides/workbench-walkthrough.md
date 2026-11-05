@@ -1,6 +1,6 @@
 ---
 title: Workbench walkthrough
-description: The seven steps of the Prologue Workbench, which ones are optional, what each needs and produces, and how they connect.
+description: Walk through the Prologue Workbench's seven steps from Systems to Rebuild, understanding required inputs, produced evidence and optional modeling stages.
 ---
 
 The Workbench has seven steps, shown in the sidebar in four groups. You work through them in order, and you can come back to any of them.

@@ -1,6 +1,6 @@
 ---
 title: Receiver API
-description: The Receiver's HTTP endpoints, how captures are stored in MongoDB, and what it needs to host the Workbench.
+description: Reference the Prologue Receiver HTTP API, MongoDB capture storage and Workbench hosting requirements, and choose API delivery instead of JSON files.
 ---
 
 The Receiver is the service the Extractor posts captures to directly instead of writing JSON files — set `prologue.output.kind` to `"Api"` (see [Configuration](configuration.md#prologueoutput)) and point it at a running Receiver. It also hosts the [Workbench](../guides/running-the-workbench.md), the web interface for the whole path from defining systems to an event model, so besides MongoDB it needs a Chronicle kernel. See [Receiver configuration](receiver-configuration.md) for every setting.

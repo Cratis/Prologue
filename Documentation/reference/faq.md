@@ -1,6 +1,6 @@
 ---
 title: Troubleshooting and FAQ
-description: Common problems when running Prologue, and what usually causes them.
+description: Troubleshoot missing Prologue captures, database capture configuration and interpretation issues, with answers to common deployment and usage questions.
 ---
 
 ## No captures are appearing

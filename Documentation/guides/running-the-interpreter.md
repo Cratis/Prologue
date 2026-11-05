@@ -1,6 +1,6 @@
 ---
 title: Running the Interpreter
-description: Batch mode versus service mode, the Interpreter's arguments and environment variables, and configuring LLM refinement.
+description: Run the Prologue Interpreter in batch or service mode to turn captures into extraction results and Screenplay files, with optional LLM name refinement.
 ---
 
 Turn a folder of captures into an `ExtractionResult` and a Screenplay `.play` file, and optionally configure a language model to refine the names.

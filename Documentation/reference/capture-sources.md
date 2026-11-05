@@ -1,6 +1,6 @@
 ---
 title: Capture sources
-description: What triggers a capture for each source the Extractor watches, and the configuration specific to it.
+description: Configure Prologue Extractor capture sources for SQL Server, PostgreSQL, HTTP and OpenTelemetry, including triggers, correlation and data boundaries.
 ---
 
 The Extractor can run four source families at once. SQL Server and PostgreSQL observations exclude row values,

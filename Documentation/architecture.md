@@ -1,6 +1,6 @@
 ---
 title: Architecture
-description: How the Extractor, Receiver, and batch or service Interpreter modes deploy and compose.
+description: Understand Prologue's Extractor, Receiver and Interpreter deployment shapes, including Workbench dependencies, batch processing and resumable service mode.
 ---
 
 Prologue is deliberately self-contained and has no dependency on Studio. The Extractor is an ordinary sidecar

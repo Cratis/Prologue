@@ -1,6 +1,6 @@
 ---
 title: Guides
-description: Task-focused recipes for running Prologue against your own system.
+description: Run Prologue against an existing system with task-focused guides for capture setup, Workbench operation, interpretation and event-model refinement.
 ---
 
 Recipes for the things you'll actually do with Prologue day to day, once [Getting started](../getting-started.md) has shown you the shape of it.

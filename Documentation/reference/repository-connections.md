@@ -1,6 +1,6 @@
 ---
 title: Repository connections
-description: How the Workbench connects to GitHub, Azure DevOps and GitLab, and clones code read-only for Discover.
+description: Connect the Prologue Workbench to GitHub, Azure DevOps or GitLab for read-only Discover clones, using named secrets, GitHub Apps or local folders.
 ---
 
 Discover reads each system's source code. The Systems step records where a system's code lives; a repository connection says how the Receiver may reach the host. A connection is per host: one for GitHub, one for Azure DevOps, one for GitLab. A local folder needs none.

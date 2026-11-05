@@ -1,6 +1,6 @@
 ---
 title: Extractor shadowing
-description: Mirror legacy commands to a new system and report whether both decided the same way, for the Workbench's Rebuild step.
+description: Configure Prologue Extractor shadowing to mirror legacy commands to a rebuilt system, compare responses and report parity without changing caller results.
 ---
 
 Shadowing lets the Extractor try a rebuilt slice against live traffic. After the legacy system has answered a command, the Extractor sends a copy of the request to the new system, compares the two answers and reports the result to the Receiver as **parity**. The Rebuild step shows it. The legacy system's answer is the one the caller gets; the copy never affects the real request.
