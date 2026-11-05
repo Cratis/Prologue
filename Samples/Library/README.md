@@ -71,7 +71,7 @@ choose where captures go — a folder of `.jsonl` files is the simplest starting
 
 ### Cratis Studio
 
-The Prologue setup wizard in [Cratis Studio](https://github.com/Cratis/Studio) walks the same decisions
+The Prologue setup wizard in Cratis Studio walks the same decisions
 visually: name the Prologue, choose **Database** as a source, paste the connection string, and select **Connect**
 — Studio reads the schema and lets you narrow the capture to specific tables before generating
 `cratis-prologue.json` for you to download.
