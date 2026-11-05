@@ -6,6 +6,17 @@ description: Run the bundled sample system, inspect its captures, then produce a
 By the end of this page you'll have watched Prologue capture an ordinary sample system and used batch mode to
 produce your own provisional `extraction-result.json` and `.play` file from a folder of captures.
 
+## Prerequisites
+
+- **Git** to clone the repository.
+- **.NET SDK 10.0.100 or a later 10.0 feature band**, as selected by the repository's `global.json`.
+- The **[Aspire CLI](https://aspire.dev/get-started/install-cli/)** to run the sample's Aspire 13.2.4 AppHost.
+- **Docker**, with the daemon running, for the sample's PostgreSQL and MongoDB containers and Part B's
+  Extractor and Interpreter containers.
+- **Node.js 22.12 or newer in the 22.x release line**, with **npm**, for the sample's Vite 7 frontend.
+- A browser for the Aspire dashboard. Part B's shell commands use POSIX syntax; on Windows, use WSL or
+  adapt the paths and line continuations for your shell.
+
 ## Part A — watch it work
 
 Prologue ships with [`Samples/Library`](https://github.com/Cratis/Prologue/tree/main/Samples/Library) — an ordinary ASP.NET + Entity Framework Core library system with authors, members, a catalog, and lending, built with **no Cratis constructs at all**. It's exactly the kind of system Prologue gets pointed at, and its Aspire composition wires the whole capture pipeline around it for you.

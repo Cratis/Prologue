@@ -3,17 +3,20 @@ title: Prologue
 description: Prologue captures selected HTTP, database, and telemetry signals from an existing system and proposes a Cratis event model for review.
 ---
 
-Prologue is **experimental** and belongs to the Cratis Platform's early-development model-first layer.
-You can adopt it independently without adopting the whole Platform.
+Prologue captures selected HTTP commands, database changes, and telemetry from an existing system and proposes
+an event model. You review and correct its candidate commands, events, read models, and projections rather than
+treating observed behavior as recovered domain intent.
 
-## The system nobody fully understands anymore
+## Get started
 
-Somewhere in every organization there's a system like this: it works, it matters, and nobody left on the team can say with confidence what it actually does under load. The people who built it have moved on. The wiki page is three reorganizations out of date. Rewriting it as an event-sourced Cratis application would be the right long-term move, but the first step — figuring out what to model — usually means weeks of archaeology: reading code nobody trusts, interviewing whoever's left, and guessing at the rest.
+- **[Run the bundled sample](getting-started.md)** — watch Prologue capture a sample system, then turn captures
+  into a provisional `.play` file for review.
+- **[Point Prologue at your system](guides/point-prologue-at-your-system.md)** — configure capture for a system
+  you have permission to observe.
 
-Prologue gives you another source of evidence. It stands beside the running system, observes selected HTTP
-commands, database changes, and telemetry, and proposes a structured event model: modules, features, and slices
-with candidate commands, events, read models, and projections. You review and correct that proposal rather than
-treating observed implementation behavior as recovered domain intent.
+You can adopt Prologue independently without adopting the whole Cratis Platform. Its observations give you
+evidence to compare with the team's understanding of the system and use when deciding what to preserve or
+change. They do not, on their own, establish that the system needs a rewrite.
 
 Prologue does not capture database row values or HTTP bodies. Its metadata can still be sensitive: HTTP
 observations include query strings, telemetry includes identifiers and names, and explicitly allowlisted
@@ -59,15 +62,10 @@ Interpreter's optional resumable service mode embeds an Orleans silo for persist
 
 See [Architecture](architecture.md) for how these pieces compose and deploy.
 
-## Get started
+## Further reading
 
-Start with the bundled sample to learn the pipeline without pointing Prologue at your own system. Opening the
-Workbench is a separate step from capturing a system and reviewing its model.
-
-1. **[Getting started](getting-started.md)** — run the bundled sample system, watch Prologue capture it end to end, then turn a folder of captures into a provisional `.play` file to review and continue authoring.
-2. **[Why Prologue](why-prologue.md)** — the problem it solves, and when it's the wrong tool for the job.
-3. **[How Prologue works](concepts.md)** — the capture, correlation, and interpretation pipeline in depth.
-4. **[Running the Workbench](guides/running-the-workbench.md)** — start the local web interface with Docker Compose, then follow the workflow from system definition to rebuild.
-5. **[Point Prologue at your system](guides/point-prologue-at-your-system.md)** — the practical checklist for your own system, not the sample.
+- **[Why Prologue](why-prologue.md)** — the problem it solves, and when it's the wrong tool for the job.
+- **[How Prologue works](concepts.md)** — the capture, correlation, and interpretation pipeline in depth.
+- **[Running the Workbench](guides/running-the-workbench.md)** — start the local web interface with Docker Compose, then follow the workflow from system definition to rebuild. Opening the Workbench is a separate step from capturing a system and reviewing its model.
 
 Prefer driving it from a terminal? The [Cratis CLI](/cli/reference/prologue/) wraps the wizard and the Interpreter in two commands: `cratis prologue start` and `cratis prologue interpret`.
