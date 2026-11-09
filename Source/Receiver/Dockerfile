@@ -30,7 +30,7 @@ RUN yarn build
 # one build serves every target platform without emulation. Only the runtime stage below is per-platform.
 # The runtime stage below installs git for cloning system repositories, so it has a RUN step and the arm64 build
 # needs docker/setup-qemu-action (publish.yml has it).
-FROM --platform=$BUILDPLATFORM mcr.microsoft.com/dotnet/sdk:11.0.100-rc.3 AS builder
+FROM --platform=$BUILDPLATFORM mcr.microsoft.com/dotnet/sdk:11.0.100-rc.3-resolute AS builder
 
 ARG VERSION
 ARG COMMIT
@@ -74,7 +74,7 @@ RUN dotnet publish ./Source/Receiver/Receiver.csproj \
 ####################################
 # Stage 3: Runtime
 ####################################
-FROM mcr.microsoft.com/dotnet/aspnet:11.0.0-rc.3
+FROM mcr.microsoft.com/dotnet/aspnet:11.0.0-rc.3-resolute
 
 # The Workbench clones the repositories systems live in with the git command line.
 RUN apt-get update \
