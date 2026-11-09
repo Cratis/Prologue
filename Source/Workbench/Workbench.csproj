@@ -14,6 +14,8 @@
         <OutputType Condition="'$(Configuration)' == 'Release'">Library</OutputType>
         <!-- Prologue models with Screenplay elsewhere; there are no .play documents for Arc to embed. -->
         <CratisEmbeddedScreenplayEnabled>false</CratisEmbeddedScreenplayEnabled>
+        <!-- Receiver hosts hot reload; a browser-tools module here leaves an unmatched JS-module endpoint in the .NET 11 SDK. -->
+        <EnableHotReloadInRuntimeConfigDevFile>false</EnableHotReloadInRuntimeConfigDevFile>
         <!-- Hosted by the Receiver, never shipped as a package; the release packs the whole solution. -->
         <WarnOnPackingNonPackableProject>false</WarnOnPackingNonPackableProject>
     </PropertyGroup>

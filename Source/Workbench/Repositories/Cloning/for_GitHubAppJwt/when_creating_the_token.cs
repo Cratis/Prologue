@@ -26,8 +26,8 @@ public class when_creating_the_token : a_github_app
         _jwt = GitHubAppJwt.Create(_app.App, _pem, Now);
         _withEscapedLineBreaks = GitHubAppJwt.Create(_app.App, _pem.Replace("\n", "\\n", StringComparison.Ordinal), Now);
         _parts = _jwt.Split('.');
-        _header = JsonDocument.Parse(Decode(_parts[0])).RootElement;
-        _claims = JsonDocument.Parse(Decode(_parts[1])).RootElement;
+        _header = JsonElement.Parse(Decode(_parts[0]));
+        _claims = JsonElement.Parse(Decode(_parts[1]));
         _signatureIsValid = _key.VerifyData(Encoding.ASCII.GetBytes($"{_parts[0]}.{_parts[1]}"), DecodeBytes(_parts[2]), HashAlgorithmName.SHA256, RSASignaturePadding.Pkcs1);
         try
         {

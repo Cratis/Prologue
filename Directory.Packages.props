@@ -7,9 +7,9 @@
     <!-- Cratis -->
     <PackageVersion Include="Cratis.Fundamentals" Version="7.33.1" />
     <PackageVersion Include="Cratis" Version="22.177.0" />
-    <PackageVersion Include="Cratis.Arc.Core" Version="22.177.0" />
-    <PackageVersion Include="Cratis.Arc.MongoDB" Version="22.177.0" />
-    <PackageVersion Include="Cratis.Arc.ProxyGenerator.Build" Version="22.177.0" />
+    <PackageVersion Include="Cratis.Arc.Core" Version="22.179.0" />
+    <PackageVersion Include="Cratis.Arc.MongoDB" Version="22.179.0" />
+    <PackageVersion Include="Cratis.Arc.ProxyGenerator.Build" Version="22.179.0" />
     <PackageVersion Include="Cratis.AI" Version="7.142.1" />
     <PackageVersion Include="Cratis.Chronicle" Version="19.147.2" />
     <PackageVersion Include="Cratis.Chronicle.Contracts" Version="19.147.2" />
