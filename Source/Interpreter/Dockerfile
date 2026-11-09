@@ -16,7 +16,7 @@ ARG COMMIT=dev
 # The build stage runs on the builder's own platform and publishes portable, framework-dependent output, so
 # one build serves every target platform without emulation. Only the runtime stage below is per-platform.
 # Keep the runtime stage free of RUN steps, or add docker/setup-qemu-action to publish.yml for the arm64 build.
-FROM --platform=$BUILDPLATFORM mcr.microsoft.com/dotnet/sdk:10.0 AS builder
+FROM --platform=$BUILDPLATFORM mcr.microsoft.com/dotnet/sdk:11.0.100-rc.3 AS builder
 
 ARG VERSION
 ARG COMMIT
@@ -57,7 +57,7 @@ RUN dotnet publish ./Source/Interpreter/Interpreter.csproj \
 ####################################
 # Stage 2: Runtime
 ####################################
-FROM mcr.microsoft.com/dotnet/aspnet:10.0
+FROM mcr.microsoft.com/dotnet/aspnet:11.0.0-rc.3
 
 WORKDIR /app
 COPY --from=builder /app/out ./

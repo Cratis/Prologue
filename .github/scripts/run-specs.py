@@ -4,6 +4,7 @@
 
 """Run one native Debug spec executable and reject missing or empty results."""
 
+import argparse
 import subprocess
 import sys
 import tempfile
@@ -22,12 +23,13 @@ def result_count(report):
     return sum(counts)
 
 
-def run(project, arguments):
+def run(project, arguments, framework="net11.0"):
     with tempfile.TemporaryDirectory(prefix="prologue-specs-") as directory:
         report = Path(directory) / "results.xml"
         status = subprocess.run([
             "dotnet", "run", "--project", project, "--configuration", "Debug",
-            "--no-build", "--no-restore", "--", *arguments, "-result-xml", str(report),
+            "--framework", framework, "--no-build", "--no-restore", "--", *arguments,
+            "-result-xml", str(report),
         ], check=False).returncode
         if status != 0:
             return status if status > 0 else 128 - status
@@ -42,10 +44,14 @@ def run(project, arguments):
 
 def main():
     if len(sys.argv) < 2:
-        print("Usage: run-specs.py PROJECT [native runner options]", file=sys.stderr)
+        print("Usage: run-specs.py PROJECT [--framework FRAMEWORK] [native runner options]", file=sys.stderr)
         return 2
+    parser = argparse.ArgumentParser(allow_abbrev=False)
+    parser.add_argument("project")
+    parser.add_argument("--framework", choices=["net10.0", "net11.0"], default="net11.0")
+    options, arguments = parser.parse_known_args()
     try:
-        return run(sys.argv[1], sys.argv[2:])
+        return run(options.project, arguments, options.framework)
     except OSError as error:
         print(f"Unable to run native specs: {error}", file=sys.stderr)
         return 2

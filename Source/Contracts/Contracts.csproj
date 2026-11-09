@@ -4,6 +4,8 @@
         <AssemblyName>Cratis.Prologue.Contracts</AssemblyName>
         <RootNamespace>Cratis.Prologue.Contracts</RootNamespace>
         <IsPackable>true</IsPackable>
+        <TargetFramework />
+        <TargetFrameworks>net10.0;net11.0</TargetFrameworks>
         <Description>The Cratis Prologue capture contract — capture and observation types with the canonical JSON and capture-file serialization.</Description>
     </PropertyGroup>
 

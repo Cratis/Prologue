@@ -21,7 +21,6 @@
         <PackageReference Include="Grpc.Net.Client" />
 
         <!-- Lift the vulnerable transitive to the patched version; see Directory.Packages.props. -->
-        <PackageReference Include="System.Security.Cryptography.Pkcs" />
     </ItemGroup>
 
     <ItemGroup>

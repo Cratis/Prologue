@@ -5,7 +5,9 @@ concurrency:
   cancel-in-progress: true
 
 env:
-  DOTNET_VERSION: "10.0.x"
+  DOTNET_VERSION: |
+    10.0.x
+    11.0.x
 
 on:
   workflow_dispatch:
@@ -15,6 +17,7 @@ on:
     paths:
       - "Source/**"
       - "Samples/**"
+      - "global.json"
       - "Directory.Build.props"
       - "Directory.Packages.props"
       - ".github/workflows/dotnet-build.yml"
@@ -41,6 +44,7 @@ jobs:
         uses: actions/setup-dotnet@v4
         with:
           dotnet-version: ${{ env.DOTNET_VERSION }}
+          dotnet-quality: preview
 
       # The Workbench frontend. Corepack provides the Yarn version pinned in package.json.
       - name: Enable Corepack
@@ -76,22 +80,30 @@ jobs:
       # Run each non-empty native suite explicitly. Library integration tests require Docker
       # and browsers and are not run here; see Samples/Library/README.md.
       - name: Run Configuration specs
-        run: python3 .github/scripts/run-specs.py Source/Configuration/Configuration.csproj -trait- Category=Integration
+        run: |
+          python3 .github/scripts/run-specs.py Source/Configuration/Configuration.csproj --framework net10.0 -trait- Category=Integration
+          python3 .github/scripts/run-specs.py Source/Configuration/Configuration.csproj --framework net11.0 -trait- Category=Integration
 
       - name: Run Screenplay specs
-        run: python3 .github/scripts/run-specs.py Source/Screenplay/Screenplay.csproj -trait- Category=Integration
+        run: |
+          python3 .github/scripts/run-specs.py Source/Screenplay/Screenplay.csproj --framework net10.0 -trait- Category=Integration
+          python3 .github/scripts/run-specs.py Source/Screenplay/Screenplay.csproj --framework net11.0 -trait- Category=Integration
 
       - name: Run Extractor specs
         run: python3 .github/scripts/run-specs.py Source/Extractor/Extractor.csproj --specifications -trait- Category=Integration
 
       - name: Run Storage specs
-        run: python3 .github/scripts/run-specs.py Source/Storage/Storage.csproj -trait- Category=Integration
+        run: |
+          python3 .github/scripts/run-specs.py Source/Storage/Storage.csproj --framework net10.0 -trait- Category=Integration
+          python3 .github/scripts/run-specs.py Source/Storage/Storage.csproj --framework net11.0 -trait- Category=Integration
 
       - name: Run Workbench specs
         run: python3 .github/scripts/run-specs.py Source/Workbench.Specs/Workbench.Specs.csproj -trait- Category=Integration
 
       - name: Run Interpretation specs
-        run: python3 .github/scripts/run-specs.py Source/Interpretation/Interpretation.csproj -trait- Category=Integration
+        run: |
+          python3 .github/scripts/run-specs.py Source/Interpretation/Interpretation.csproj --framework net10.0 -trait- Category=Integration
+          python3 .github/scripts/run-specs.py Source/Interpretation/Interpretation.csproj --framework net11.0 -trait- Category=Integration
 
       - name: Run Interpreter specs
         run: python3 .github/scripts/run-specs.py Source/Interpreter/Interpreter.csproj --specifications -trait- Category=Integration
