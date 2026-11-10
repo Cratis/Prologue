@@ -8,6 +8,8 @@
         <AssemblyName>Cratis.Prologue.Receiver</AssemblyName>
         <RootNamespace>Cratis.Prologue.Receiver</RootNamespace>
         <NoWarn>$(NoWarn);CS7022</NoWarn>
+        <!-- Prologue models with Screenplay elsewhere; there are no .play documents for Arc to embed. -->
+        <CratisEmbeddedScreenplayEnabled>false</CratisEmbeddedScreenplayEnabled>
         <WarnOnPackingNonPackableProject>false</WarnOnPackingNonPackableProject>
     </PropertyGroup>
 

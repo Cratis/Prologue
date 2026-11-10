@@ -10,6 +10,7 @@ public class when_selecting_headers : Specification
 {
     IReadOnlyList<KeyValuePair<string, string[]>> _selected;
     IReadOnlyList<KeyValuePair<string, string[]>> _withForwarded;
+    IReadOnlyList<KeyValuePair<string, string[]>> _mixedCase;
 
     static readonly KeyValuePair<string, StringValues>[] _headers =
     [
@@ -39,6 +40,9 @@ public class when_selecting_headers : Specification
     {
         _selected = ShadowHeaders.Select(_headers, new HashSet<string>());
         _withForwarded = ShadowHeaders.Select(_headers, new HashSet<string>(StringComparer.OrdinalIgnoreCase) { "authorization", "Connection", "x-tenant" });
+        _mixedCase = ShadowHeaders.Select(
+            [new("cOnTeNt-TyPe", "application/json"), new("cOnNeCtIoN", "keep-alive"), new("hOsT", "legacy.example"), new("x-PrOlOgUe-ShAdOw", "false")],
+            new HashSet<string>(StringComparer.OrdinalIgnoreCase) { "Connection", "Host" });
     }
 
     bool Has(IReadOnlyList<KeyValuePair<string, string[]>> headers, string name) => headers.Any(header => string.Equals(header.Key, name, StringComparison.OrdinalIgnoreCase));
@@ -57,5 +61,8 @@ public class when_selecting_headers : Specification
     [Fact] void should_forward_a_credential_a_rule_lists() => Has(_withForwarded, "Authorization").ShouldBeTrue();
     [Fact] void should_still_drop_the_other_credentials() => (Has(_withForwarded, "Cookie") || Has(_withForwarded, "X-Api-Key")).ShouldBeFalse();
     [Fact] void should_never_forward_a_hop_by_hop_header_even_when_listed() => Has(_withForwarded, "Connection").ShouldBeFalse();
+    [Fact] void should_match_the_allowlist_case_insensitively() => Has(_mixedCase, "Content-Type").ShouldBeTrue();
+    [Fact] void should_match_the_denylist_case_insensitively_even_when_forwarded() => (Has(_mixedCase, "Connection") || Has(_mixedCase, "Host")).ShouldBeFalse();
+    [Fact] void should_replace_a_mixed_case_marker_with_its_own() => _mixedCase.Count(header => string.Equals(header.Key, ShadowHeaders.MarkerHeader, StringComparison.OrdinalIgnoreCase)).ShouldEqual(1);
 }
 #endif

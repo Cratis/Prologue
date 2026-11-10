@@ -4,6 +4,8 @@
         <RootNamespace>Cratis.Prologue.Screenplay</RootNamespace>
         <GenerateDocumentationFile>true</GenerateDocumentationFile>
         <IsPackable>true</IsPackable>
+        <TargetFramework />
+        <TargetFrameworks>net10.0;net11.0</TargetFrameworks>
         <Description>The Cratis Prologue Screenplay generation — turns an extraction result into a Cratis Screenplay syntax tree and prints it as a .play document.</Description>
     </PropertyGroup>
 

@@ -1,6 +1,7 @@
 // Copyright (c) Cratis. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System.Collections.Frozen;
 using Microsoft.Extensions.Primitives;
 
 namespace Cratis.Prologue.Extractor.Shadowing;
@@ -22,16 +23,14 @@ public static class ShadowHeaders
     /// </summary>
     public const string MarkerHeader = "X-Prologue-Shadow";
 
-    static readonly HashSet<string> _neverCopied = new(StringComparer.OrdinalIgnoreCase)
-    {
-        "Connection", "Keep-Alive", "Proxy-Authenticate", "Proxy-Authorization", "Proxy-Connection", "TE", "Trailer",
-        "Transfer-Encoding", "Upgrade", "Host", "Content-Length", "Expect"
-    };
+    static readonly FrozenSet<string> _neverCopied = FrozenSet.ToFrozenSet(
+        ["Connection", "Keep-Alive", "Proxy-Authenticate", "Proxy-Authorization", "Proxy-Connection", "TE", "Trailer",
+        "Transfer-Encoding", "Upgrade", "Host", "Content-Length", "Expect"],
+        StringComparer.OrdinalIgnoreCase);
 
-    static readonly HashSet<string> _allowed = new(StringComparer.OrdinalIgnoreCase)
-    {
-        "Content-Type", "Content-Encoding", "Accept", "Accept-Language", "Accept-Encoding", "traceparent", "tracestate", "baggage", "User-Agent"
-    };
+    static readonly FrozenSet<string> _allowed = FrozenSet.ToFrozenSet(
+        ["Content-Type", "Content-Encoding", "Accept", "Accept-Language", "Accept-Encoding", "traceparent", "tracestate", "baggage", "User-Agent"],
+        StringComparer.OrdinalIgnoreCase);
 
     /// <summary>
     /// Gets whether a header is copied without a rule asking for it.

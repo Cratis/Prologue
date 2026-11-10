@@ -9,7 +9,7 @@ produce your own provisional `extraction-result.json` and `.play` file from a fo
 ## Prerequisites
 
 - **Git** to clone the repository.
-- **.NET SDK 10.0.100 or a later 10.0 feature band**, as selected by the repository's `global.json`.
+- **.NET SDK 11.0.100**, as selected by the repository's `global.json`. The published libraries target .NET 10 and .NET 11; applications, samples and standalone specs target .NET 11. Install the .NET 10 runtime too to run the library specs on both targets.
 - The **[Aspire CLI](https://aspire.dev/get-started/install-cli/)** to run the sample's Aspire 13.2.4 AppHost.
 - **Docker**, with the daemon running, for the sample's PostgreSQL and MongoDB containers and Part B's
   Extractor and Interpreter containers.

@@ -31,7 +31,7 @@ public static class AgentJson
 
         try
         {
-            var root = JsonDocument.Parse(json, _options).RootElement.Clone();
+            var root = JsonElement.Parse(json, _options);
             if (root.ValueKind == JsonValueKind.Array)
             {
                 return [.. root.EnumerateArray()];

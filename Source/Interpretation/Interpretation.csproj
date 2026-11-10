@@ -4,6 +4,8 @@
         <RootNamespace>Cratis.Prologue.Interpretation</RootNamespace>
         <GenerateDocumentationFile>true</GenerateDocumentationFile>
         <IsPackable>true</IsPackable>
+        <TargetFramework />
+        <TargetFrameworks>net10.0;net11.0</TargetFrameworks>
         <Description>The Cratis Prologue interpretation engine — deterministic heuristic extraction of an event model from captures, with optional language-model naming refinement.</Description>
     </PropertyGroup>
 

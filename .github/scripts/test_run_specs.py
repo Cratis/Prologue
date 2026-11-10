@@ -15,14 +15,15 @@ SPEC.loader.exec_module(RUNNER)
 
 
 class NativeResults(unittest.TestCase):
-    def invoke(self, xml, status=0):
+    def invoke(self, xml, status=0, framework="net11.0"):
         reports = []
 
         def execute(command, check):
             self.assertFalse(check)
             self.assertEqual(command[:-2], [
                 "dotnet", "run", "--project", "project with spaces.csproj",
-                "--configuration", "Debug", "--no-build", "--no-restore", "--",
+                "--configuration", "Debug", "--framework", framework,
+                "--no-build", "--no-restore", "--",
                 "-trait-", "Category=Integration",
             ])
             self.assertEqual(command[-2], "-result-xml")
@@ -33,12 +34,15 @@ class NativeResults(unittest.TestCase):
             return subprocess.CompletedProcess(command, status)
 
         with patch.object(RUNNER.subprocess, "run", side_effect=execute):
-            result = RUNNER.run("project with spaces.csproj", ["-trait-", "Category=Integration"])
+            result = RUNNER.run("project with spaces.csproj", ["-trait-", "Category=Integration"], framework)
         self.assertFalse(reports[0].parent.exists())
         return result
 
     def test_nonempty_report_passes(self):
         self.assertEqual(self.invoke('<assemblies><assembly total="3"/></assemblies>'), 0)
+
+    def test_net10_framework_is_forwarded(self):
+        self.assertEqual(self.invoke('<assemblies><assembly total="3"/></assemblies>', framework="net10.0"), 0)
 
     def test_multiple_assemblies_pass(self):
         self.assertEqual(self.invoke('<assemblies><assembly total="3"/><assembly total="2"/></assemblies>'), 0)

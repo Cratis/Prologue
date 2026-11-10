@@ -4,6 +4,8 @@
         <AssemblyName>Cratis.Prologue.Storage</AssemblyName>
         <RootNamespace>Cratis.Prologue.Storage</RootNamespace>
         <IsPackable>true</IsPackable>
+        <TargetFramework />
+        <TargetFrameworks>net10.0;net11.0</TargetFrameworks>
         <Description>MongoDB persistence of Cratis Prologue captures, shared by the Receiver and consumers such as Studio.</Description>
     </PropertyGroup>
 
