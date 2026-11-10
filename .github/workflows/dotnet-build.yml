@@ -44,7 +44,6 @@ jobs:
         uses: actions/setup-dotnet@v4
         with:
           dotnet-version: ${{ env.DOTNET_VERSION }}
-          dotnet-quality: preview
 
       # The Workbench frontend. Corepack provides the Yarn version pinned in package.json.
       - name: Enable Corepack
