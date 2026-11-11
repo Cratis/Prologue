@@ -72,12 +72,12 @@ public class SessionActivityTracker(TimeProvider timeProvider) : ISessionActivit
         lock (_gate)
         {
             var now = _timeProvider.GetUtcNow();
-            if (_awaitingAnswersSince is { } awaitingSince && now - awaitingSince >= gracePeriod)
+            if (GracePeriodExpired(now, gracePeriod))
             {
                 return ShutdownReason.GracePeriodExpired;
             }
 
-            if (_finished && _resultFetched && now - (_lastActivity ?? _startedAt) >= idleTimeout)
+            if (IdleAfterCompletion(now, idleTimeout))
             {
                 return ShutdownReason.IdleAfterCompletion;
             }
@@ -90,4 +90,8 @@ public class SessionActivityTracker(TimeProvider timeProvider) : ISessionActivit
             return ShutdownReason.None;
         }
     }
+
+    bool GracePeriodExpired(DateTimeOffset now, TimeSpan gracePeriod) => _awaitingAnswersSince is { } awaitingSince && now - awaitingSince >= gracePeriod;
+
+    bool IdleAfterCompletion(DateTimeOffset now, TimeSpan idleTimeout) => _finished && _resultFetched && now - (_lastActivity ?? _startedAt) >= idleTimeout;
 }

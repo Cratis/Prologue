@@ -92,46 +92,70 @@ public record InterpreterArguments(
     /// <returns>The parsed arguments, or <see langword="null"/> when the arguments are malformed.</returns>
     public static InterpreterArguments? Parse(string[] args)
     {
+        var arguments = FromEnvironment();
+        for (var index = 0; index < args.Length; index++)
+        {
+            if (Apply(arguments, args, ref index) is not { } applied)
+            {
+                return null;
+            }
+
+            arguments = applied;
+        }
+
+        return arguments;
+    }
+
+    static InterpreterArguments FromEnvironment()
+    {
         var captures = Environment.GetEnvironmentVariable("PROLOGUE_CAPTURES") is { Length: > 0 } capturesFromEnvironment ? capturesFromEnvironment : DefaultCapturesFolder;
         var output = Environment.GetEnvironmentVariable("PROLOGUE_OUTPUT") is { Length: > 0 } outputFromEnvironment ? outputFromEnvironment : DefaultOutputFile;
         var playOutput = Environment.GetEnvironmentVariable("PROLOGUE_PLAY_OUTPUT") is { Length: > 0 } playOutputFromEnvironment ? playOutputFromEnvironment : string.Empty;
         var prologueId = Guid.TryParse(Environment.GetEnvironmentVariable("PROLOGUE_ID"), out var idFromEnvironment) ? idFromEnvironment : Guid.Empty;
         var serve = string.Equals(Environment.GetEnvironmentVariable("PROLOGUE_MODE"), "service", StringComparison.OrdinalIgnoreCase);
-        var servicePort = PositiveNumberFromEnvironment("PROLOGUE_SERVICE_PORT", DefaultServicePort);
-        var gracePeriod = PositiveNumberFromEnvironment("PROLOGUE_GRACE_PERIOD", DefaultGracePeriodSeconds);
-        var idleTimeout = PositiveNumberFromEnvironment("PROLOGUE_IDLE_TIMEOUT", DefaultIdleTimeoutSeconds);
         var capturedService = Environment.GetEnvironmentVariable("PROLOGUE_CAPTURED_SERVICE") is { Length: > 0 } serviceFromEnvironment ? new ServiceName(serviceFromEnvironment) : null;
+        return new InterpreterArguments(
+            captures,
+            output,
+            prologueId,
+            playOutput,
+            serve,
+            PositiveNumberFromEnvironment("PROLOGUE_SERVICE_PORT", DefaultServicePort),
+            PositiveNumberFromEnvironment("PROLOGUE_GRACE_PERIOD", DefaultGracePeriodSeconds),
+            PositiveNumberFromEnvironment("PROLOGUE_IDLE_TIMEOUT", DefaultIdleTimeoutSeconds),
+            capturedService);
+    }
 
-        for (var index = 0; index < args.Length; index++)
+    static InterpreterArguments? Apply(InterpreterArguments current, string[] args, ref int index)
+    {
+        if (args[index] == "--serve")
         {
-            switch (args[index])
-            {
-                case "--captures" when index + 1 < args.Length:
-                    captures = args[++index];
-                    break;
-                case "--output" when index + 1 < args.Length:
-                    output = args[++index];
-                    break;
-                case "--play-output" when index + 1 < args.Length:
-                    playOutput = args[++index];
-                    break;
-                case "--prologue-id" when index + 1 < args.Length && Guid.TryParse(args[index + 1], out var parsed):
-                    prologueId = parsed;
-                    index++;
-                    break;
-                case "--captured-service" when index + 1 < args.Length:
-                    capturedService = new ServiceName(args[++index]);
-                    break;
-                case "--serve":
-                    serve = true;
-                    break;
-                default:
-                    return null;
-            }
+            return current with { Serve = true };
         }
 
-        return new InterpreterArguments(captures, output, prologueId, playOutput, serve, servicePort, gracePeriod, idleTimeout, capturedService);
+        if (index + 1 >= args.Length)
+        {
+            return null;
+        }
+
+        var applied = WithValue(current, args[index], args[index + 1]);
+        if (applied is not null)
+        {
+            index++;
+        }
+
+        return applied;
     }
+
+    static InterpreterArguments? WithValue(InterpreterArguments current, string option, string value) => option switch
+    {
+        "--captures" => current with { CapturesFolder = value },
+        "--output" => current with { OutputFile = value },
+        "--play-output" => current with { PlayOutput = value },
+        "--prologue-id" => Guid.TryParse(value, out var parsed) ? current with { PrologueId = parsed } : null,
+        "--captured-service" => current with { CapturedService = new ServiceName(value) },
+        _ => null
+    };
 
     static int PositiveNumberFromEnvironment(string variable, int fallback) =>
         int.TryParse(Environment.GetEnvironmentVariable(variable), out var value) && value > 0 ? value : fallback;
