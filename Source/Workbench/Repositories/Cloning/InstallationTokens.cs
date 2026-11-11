@@ -76,6 +76,18 @@ public class InstallationTokens(IHttpClientFactory http, ISecretResolver secrets
         _ => $"GitHub answered {(int)status} when asked for a token for installation {installation.Value}"
     };
 
+    static (string Value, DateTimeOffset ExpiresAt)? ReadToken(JsonElement root)
+    {
+        if (!root.TryGetProperty("token", out var token) || token.GetString() is not { Length: > 0 } value)
+        {
+            return null;
+        }
+
+        return root.TryGetProperty("expires_at", out var expires) && DateTimeOffset.TryParse(expires.GetString(), CultureInfo.InvariantCulture, DateTimeStyles.AssumeUniversal, out var expiresAt)
+            ? (value, expiresAt)
+            : null;
+    }
+
     void EvictExpired()
     {
         var now = time.GetUtcNow();
@@ -113,7 +125,7 @@ public class InstallationTokens(IHttpClientFactory http, ISecretResolver secrets
 
         try
         {
-            return await Exchange(key, address, jwt, app, installation, [pem, jwt], cancellationToken);
+            return await Exchange(new(key, address, app, installation, [pem, jwt]), jwt, cancellationToken);
         }
         catch (Exception exception) when (exception is HttpRequestException or TaskCanceledException && !cancellationToken.IsCancellationRequested)
         {
@@ -123,8 +135,9 @@ public class InstallationTokens(IHttpClientFactory http, ISecretResolver secrets
         }
     }
 
-    async Task<InstallationTokenResult> Exchange(string key, Uri address, string jwt, GitHubAppIdentity app, InstallationId installation, string[] secretsInPlay, CancellationToken cancellationToken)
+    async Task<InstallationTokenResult> Exchange(TokenExchange exchange, string jwt, CancellationToken cancellationToken)
     {
+        var (key, address, app, installation, secretsInPlay) = exchange;
         using var request = new HttpRequestMessage(HttpMethod.Post, address);
         request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", jwt);
         request.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("application/vnd.github+json"));
@@ -144,8 +157,7 @@ public class InstallationTokens(IHttpClientFactory http, ISecretResolver secrets
         try
         {
             using var document = await JsonDocument.ParseAsync(body, cancellationToken: cancellationToken);
-            if (!document.RootElement.TryGetProperty("token", out var token) || token.GetString() is not { Length: > 0 } value
-                || !document.RootElement.TryGetProperty("expires_at", out var expires) || !DateTimeOffset.TryParse(expires.GetString(), CultureInfo.InvariantCulture, DateTimeStyles.AssumeUniversal, out var expiresAt))
+            if (ReadToken(document.RootElement) is not var (value, expiresAt))
             {
                 return InstallationTokenResult.Failed("GitHub answered without an installation token");
             }
@@ -161,6 +173,8 @@ public class InstallationTokens(IHttpClientFactory http, ISecretResolver secrets
             return InstallationTokenResult.Failed(failure);
         }
     }
+
+    readonly record struct TokenExchange(string Key, Uri Address, GitHubAppIdentity App, InstallationId Installation, string[] SecretsInPlay);
 
     sealed record CachedToken(string Token, DateTimeOffset ExpiresAt);
 }

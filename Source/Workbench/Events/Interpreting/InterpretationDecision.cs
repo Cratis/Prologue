@@ -32,25 +32,42 @@ public static class InterpretationDecision
         IEnumerable<NotEvent> notEvents,
         IEnumerable<RaisedQuestion> questions)
     {
+        return Suggested(current, suggestions)
+            .Concat(Modelled(current, model))
+            .Concat(Findings(current, boundaries, notEvents))
+            .Concat(Raised(current, questions));
+    }
+
+    static IEnumerable<object> Suggested(EventReview? current, IEnumerable<SuggestedEvent> suggestions)
+    {
         var found = suggestions.ToList();
         var known = current?.Suggestions.Where(suggestion => !suggestion.Withdrawn).Select(suggestion => suggestion.Suggestion) ?? [];
         if (!Same(known, found))
         {
             yield return new EventSuggestionsInterpreted(found);
         }
+    }
 
+    static IEnumerable<object> Modelled(EventReview? current, InterpretedModel model)
+    {
         if (!Same(current?.Model ?? InterpretedModel.Empty, model))
         {
             yield return new InterpretedModelRecorded(model);
         }
+    }
 
+    static IEnumerable<object> Findings(EventReview? current, IEnumerable<ConsistencyBoundary> boundaries, IEnumerable<NotEvent> notEvents)
+    {
         var derived = boundaries.ToList();
         var notes = notEvents.ToList();
         if (!Same(current?.Boundaries ?? [], derived) || !Same(current?.NotEvents ?? [], notes))
         {
             yield return new InterpretationFindingsRecorded(derived, notes);
         }
+    }
 
+    static IEnumerable<object> Raised(EventReview? current, IEnumerable<RaisedQuestion> questions)
+    {
         var raised = questions.ToList();
         if (!SameQuestions(current?.Raised ?? [], raised))
         {

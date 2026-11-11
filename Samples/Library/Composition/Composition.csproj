@@ -1,4 +1,4 @@
-<Project Sdk="Aspire.AppHost.Sdk/13.2.4">
+<Project Sdk="Aspire.AppHost.Sdk/13.6.5">
 
     <PropertyGroup>
         <OutputType>Exe</OutputType>
@@ -8,6 +8,9 @@
 
         <!-- The AppHost is an orchestrator, not a library; its resource wiring is not documented API. -->
         <NoWarn>$(NoWarn);CS1591</NoWarn>
+
+        <!-- The sample runs without the Aspire CLI bundle, which only gates optional CLI features. -->
+        <NoWarn>$(NoWarn);ASPIRE010</NoWarn>
     </PropertyGroup>
 
     <ItemGroup>

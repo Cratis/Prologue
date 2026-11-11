@@ -51,8 +51,7 @@ public static class ConnectionRules
             return ValidationResult.Error("The GitHub API address has to start with https://");
         }
 
-        return Uri.TryCreate(url.Value, UriKind.Absolute, out var server)
-            && (string.Equals(apiUri.Host, server.Host, StringComparison.OrdinalIgnoreCase) || string.Equals(apiUri.Host, $"api.{server.Host}", StringComparison.OrdinalIgnoreCase))
+        return Uri.TryCreate(url.Value, UriKind.Absolute, out var server) && IsOwnHost(apiUri, server)
             ? null
             : ValidationResult.Error("The GitHub API has to be on the server's own host, such as https://api.github.com for github.com or https://<host>/api/v3 for GitHub Enterprise");
     }
@@ -86,8 +85,12 @@ public static class ConnectionRules
     /// </summary>
     /// <param name="value">The value.</param>
     /// <returns>True when it does.</returns>
-    public static bool LooksLikeCredential(string value) =>
-        value.Any(char.IsWhiteSpace) ||
-        _tokenPrefixes.Any(prefix => value.StartsWith(prefix, StringComparison.OrdinalIgnoreCase)) ||
-        (value.Length >= 40 && value.All(char.IsLetterOrDigit));
+    public static bool LooksLikeCredential(string value) => value.Any(char.IsWhiteSpace) || HasTokenPrefix(value) || IsLongToken(value);
+
+    static bool IsOwnHost(Uri api, Uri server) =>
+        string.Equals(api.Host, server.Host, StringComparison.OrdinalIgnoreCase) || string.Equals(api.Host, $"api.{server.Host}", StringComparison.OrdinalIgnoreCase);
+
+    static bool HasTokenPrefix(string value) => _tokenPrefixes.Any(prefix => value.StartsWith(prefix, StringComparison.OrdinalIgnoreCase));
+
+    static bool IsLongToken(string value) => value.Length >= 40 && value.All(char.IsLetterOrDigit);
 }

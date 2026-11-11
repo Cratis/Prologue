@@ -54,7 +54,7 @@ public class AgentDispatchPaused(string pool, string failed, string next) : Agen
 public class PoolCeilingReached(string pool, long ceiling, long used) : AgentDispatchStopped(
     AgentDispatchOutcome.CeilingReached,
     pool,
-    $"The {pool} pool reached its ceiling of {ceiling:N0} tokens for today ({used:N0} used). It starts over at midnight UTC; raise the ceiling on the Systems page to continue sooner.")
+    $"The {pool} pool reached its ceiling of {ceiling.ToString("N0", System.Globalization.CultureInfo.InvariantCulture)} tokens for today ({used.ToString("N0", System.Globalization.CultureInfo.InvariantCulture)} used). It starts over at midnight UTC; raise the ceiling on the Systems page to continue sooner.")
 {
     /// <summary>
     /// Gets the ceiling, in tokens per day.
