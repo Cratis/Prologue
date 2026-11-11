@@ -2,6 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Cratis.Prologue.Interpretation;
+using Cratis.Prologue.Workbench.Captures;
 
 namespace Cratis.Prologue.Workbench.Events.Interpreting;
 
@@ -18,9 +19,9 @@ public static class CaptureAttribution
     public static IReadOnlyDictionary<SuggestionKey, Attribution> Attribute(IReadOnlyList<CapturePartition> partitions)
     {
         var attributions = new Dictionary<SuggestionKey, Attribution>();
-        foreach (var capture in partitions.SelectMany(part => part.Captures.GroupBy(capture => capture.Service).Select(service => (Service: service.Key, Captures: service.ToList()))))
+        foreach (var (service, captures) in partitions.SelectMany(ServicesOf))
         {
-            AttributeService(capture.Service, capture.Captures, attributions);
+            AttributeService(service, captures, attributions);
         }
 
         return attributions;
@@ -34,35 +35,47 @@ public static class CaptureAttribution
     /// <returns>The key.</returns>
     public static SuggestionKey KeyOf(string module, string mechanical) => $"{module}/{mechanical}";
 
+    static IEnumerable<(ServiceName Service, List<Capture> Captures)> ServicesOf(CapturePartition partition) =>
+        partition.Captures.GroupBy(capture => capture.Service).Select(service => (service.Key, service.ToList()));
+
     static void AttributeService(ServiceName service, List<Capture> captures, Dictionary<SuggestionKey, Attribution> attributions)
     {
         var schema = SchemaIndex.From(captures);
         foreach (var capture in captures)
         {
-            var shape = ScopedCaptures.ShapeOf(capture);
-            if (shape.IsNone)
+            AttributeCapture(service, capture, schema, attributions);
+        }
+    }
+
+    static void AttributeCapture(ServiceName service, Capture capture, SchemaIndex schema, Dictionary<SuggestionKey, Attribution> attributions)
+    {
+        var shape = ScopedCaptures.ShapeOf(capture);
+        if (shape.IsNone)
+        {
+            return;
+        }
+
+        var transactions = capture.Entries.Select(entry => entry.Payload).OfType<DatabaseTransactionObserved>().ToList();
+        var seen = new HashSet<SuggestionKey>();
+        foreach (var draft in CaptureAnalyzer.Analyze(capture, schema).Where(draft => draft.Events.Count > 0))
+        {
+            var module = service.IsDefault ? draft.Module : Naming.Pascalize(service.Value);
+            CountEvents(draft, module, shape, seen, attributions);
+            foreach (var (name, change) in transactions.SelectMany(TableEvents.In))
             {
-                continue;
+                AttributionOf(attributions, KeyOf(module, name)).Add(change);
             }
+        }
+    }
 
-            var transactions = capture.Entries.Select(entry => entry.Payload).OfType<DatabaseTransactionObserved>().ToList();
-            var seen = new HashSet<SuggestionKey>();
-            foreach (var draft in CaptureAnalyzer.Analyze(capture, schema).Where(draft => draft.Events.Count > 0))
+    static void CountEvents(SliceDraft draft, string module, CommandShape shape, HashSet<SuggestionKey> seen, Dictionary<SuggestionKey, Attribution> attributions)
+    {
+        foreach (var key in draft.Events.Select(@event => KeyOf(module, @event.Name)))
+        {
+            var attribution = AttributionOf(attributions, key);
+            if (seen.Add(key))
             {
-                var module = service.IsDefault ? draft.Module : Naming.Pascalize(service.Value);
-                foreach (var key in draft.Events.Select(@event => KeyOf(module, @event.Name)))
-                {
-                    var attribution = AttributionOf(attributions, key);
-                    if (seen.Add(key))
-                    {
-                        attribution.Count(shape);
-                    }
-                }
-
-                foreach (var (name, change) in transactions.SelectMany(TableEvents.In))
-                {
-                    AttributionOf(attributions, KeyOf(module, name)).Add(change);
-                }
+                attribution.Count(shape);
             }
         }
     }

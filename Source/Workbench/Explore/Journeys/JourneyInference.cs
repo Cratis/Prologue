@@ -69,33 +69,7 @@ public static class JourneyInference
 
         foreach (var identity in PathIdentities.From(command.Path).Distinct())
         {
-            var index = kept.FindIndex(trail => trail.Kind == identity.Kind && trail.Id == identity.Id);
-            if (index < 0 && letGo.Exists(gone => gone.Kind == identity.Kind && gone.Id == identity.Id))
-            {
-                // Already counted once, in a sequence that cannot be told apart from the others now; counting it again would
-                // make it a new one-step thing every time it comes back.
-                continue;
-            }
-
-            var before = index < 0 ? [] : kept[index].Steps.ToList();
-            var after = Extend(before, command.Shape);
-            if (after.Count == before.Count)
-            {
-                continue;
-            }
-
-            if (index >= 0)
-            {
-                kept.RemoveAt(index);
-            }
-
-            kept.Add(new EntityTrail(identity.Kind, identity.Id, after));
-            if (before.Count > 0)
-            {
-                Count(counted, identity.Kind, before, -1);
-            }
-
-            Count(counted, identity.Kind, after, 1);
+            Follow(kept, letGo, counted, identity, command.Shape);
         }
 
         var dropped = kept.Take(Math.Max(0, kept.Count - TrailsKept)).Select(trail => new EvictedEntity(trail.Kind, trail.Id));
@@ -125,6 +99,40 @@ public static class JourneyInference
         return described;
     }
 
+    static void Follow(List<EntityTrail> kept, List<EvictedEntity> letGo, List<JourneySequence> counted, PathIdentity identity, CommandShape shape)
+    {
+        var index = kept.FindIndex(trail => trail.Kind == identity.Kind && trail.Id == identity.Id);
+        if (index < 0 && WasLetGo(letGo, identity))
+        {
+            // Already counted once, in a sequence that cannot be told apart from the others now; counting it again would
+            // make it a new one-step thing every time it comes back.
+            return;
+        }
+
+        var before = index < 0 ? [] : kept[index].Steps.ToList();
+        var after = Extend(before, shape);
+        if (after.Count == before.Count)
+        {
+            return;
+        }
+
+        if (index >= 0)
+        {
+            kept.RemoveAt(index);
+        }
+
+        kept.Add(new EntityTrail(identity.Kind, identity.Id, after));
+        if (before.Count > 0)
+        {
+            Count(counted, identity.Kind, before, -1);
+        }
+
+        Count(counted, identity.Kind, after, 1);
+    }
+
+    static bool WasLetGo(List<EvictedEntity> letGo, PathIdentity identity) =>
+        letGo.Exists(gone => gone.Kind == identity.Kind && gone.Id == identity.Id);
+
     static List<JourneySequence> Cap(List<JourneySequence> counted)
     {
         var capped = new List<JourneySequence>();
@@ -146,13 +154,12 @@ public static class JourneyInference
 
     static List<CommandShape> Extend(List<CommandShape> steps, CommandShape shape)
     {
-        if (steps.Count >= StepsKept || (steps.Count > 0 && steps[^1] == shape))
-        {
-            return steps;
-        }
-
-        return [.. steps, shape];
+        return IsFull(steps) || RepeatsLast(steps, shape) ? steps : [.. steps, shape];
     }
+
+    static bool IsFull(List<CommandShape> steps) => steps.Count >= StepsKept;
+
+    static bool RepeatsLast(List<CommandShape> steps, CommandShape shape) => steps.Count > 0 && steps[^1] == shape;
 
     static void Count(List<JourneySequence> counted, EntityKind kind, List<CommandShape> steps, int change)
     {
