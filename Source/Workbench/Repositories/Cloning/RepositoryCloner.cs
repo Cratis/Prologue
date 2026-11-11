@@ -38,17 +38,12 @@ public class RepositoryCloner(IGitRunner git, ISecretResolver secrets, IInstalla
         }
 
         var url = CloneUrl.For(request);
-        if (url is null)
-        {
-            return CloneResult.Failed($"Connect {request.Host} before cloning from it");
-        }
-
-        if (CloneUrl.Refusal(request, url) is { } refusal)
+        if (UrlProblem(request, url) is { } refusal)
         {
             return CloneResult.Failed(refusal);
         }
 
-        var (token, failure) = await TryAuthenticate(request, url, cancellationToken);
+        var (token, failure) = await TryAuthenticate(request, url!, cancellationToken);
         if (failure is not null)
         {
             return CloneResult.Failed(failure);
@@ -59,7 +54,7 @@ public class RepositoryCloner(IGitRunner git, ISecretResolver secrets, IInstalla
         await gate.WaitAsync(cancellationToken);
         try
         {
-            return await Synchronize(request, url, directory, token, cancellationToken);
+            return await Synchronize(new(request, url!, directory, token), cancellationToken);
         }
         catch (Exception exception) when (exception is not OperationCanceledException)
         {
@@ -89,6 +84,9 @@ public class RepositoryCloner(IGitRunner git, ISecretResolver secrets, IInstalla
             ? "The repository and branch cannot start with a dash"
             : null;
     }
+
+    static string? UrlProblem(CloneRequest request, string? url) =>
+        url is null ? $"Connect {request.Host} before cloning from it" : CloneUrl.Refusal(request, url);
 
     static bool RejectedCredentials(string error) =>
         error.Contains("401", StringComparison.Ordinal)
@@ -127,24 +125,29 @@ public class RepositoryCloner(IGitRunner git, ISecretResolver secrets, IInstalla
         }
     }
 
-    async Task<(string? Token, string? Failure)> Authenticate(CloneRequest request, string url, CancellationToken cancellationToken)
+    Task<(string? Token, string? Failure)> Authenticate(CloneRequest request, string url, CancellationToken cancellationToken) =>
+        request.Installation is { } installation
+            ? AuthenticateInstallation(request, url, installation, cancellationToken)
+            : Task.FromResult(AuthenticateSecret(request, url));
+
+    async Task<(string? Token, string? Failure)> AuthenticateInstallation(CloneRequest request, string url, InstallationId installation, CancellationToken cancellationToken)
     {
-        if (request.Installation is { } installation)
+        if (request.App is not { } app)
         {
-            if (request.App is not { } app)
-            {
-                return (null, "The GitHub App connection was recorded without the app's id and private key. Connect GitHub again with them");
-            }
-
-            if (!CloneUrl.MayCarryToken(request, url))
-            {
-                return (null, $"The repository address is not on the server of the {request.Host} connection, so no installation token is minted for it");
-            }
-
-            var minted = await installationTokens.Mint(app, installation, cancellationToken);
-            return minted.Succeeded ? (minted.Token, null) : (null, minted.Failure);
+            return (null, "The GitHub App connection was recorded without the app's id and private key. Connect GitHub again with them");
         }
 
+        if (!CloneUrl.MayCarryToken(request, url))
+        {
+            return (null, $"The repository address is not on the server of the {request.Host} connection, so no installation token is minted for it");
+        }
+
+        var minted = await installationTokens.Mint(app, installation, cancellationToken);
+        return minted.Succeeded ? (minted.Token, null) : (null, minted.Failure);
+    }
+
+    (string? Token, string? Failure) AuthenticateSecret(CloneRequest request, string url)
+    {
         if (request.Secret is not { } secret)
         {
             return (null, null);
@@ -172,34 +175,23 @@ public class RepositoryCloner(IGitRunner git, ISecretResolver secrets, IInstalla
         return CloneResult.Cloned(head.Succeeded ? head.Output.Trim() : "working tree", CountFiles(path), root);
     }
 
-    async Task<CloneResult> Synchronize(CloneRequest request, string url, string directory, string? token, CancellationToken cancellationToken)
+    async Task<CloneResult> Synchronize(CloneWorkspace workspace, CancellationToken cancellationToken)
     {
+        var (request, url, directory, token) = workspace;
         var environment = GitCredentials.Environment(request.Host, token);
         var sparse = SparsePaths.For([.. request.SharedSubPaths, request.SubPath]);
         var branch = request.Branch.Value.Trim();
 
-        var steps = Directory.Exists(Path.Combine(directory, ".git"))
-            ? CloneSteps.Update(branch, sparse)
-            : CloneSteps.Clone(url, directory, branch, sparse);
-
-        if (!Directory.Exists(Path.Combine(directory, ".git")))
+        var cloned = Directory.Exists(Path.Combine(directory, ".git"));
+        var steps = cloned ? CloneSteps.Update(branch, sparse) : CloneSteps.Clone(url, directory, branch, sparse);
+        if (!cloned)
         {
             Directory.CreateDirectory(Path.GetDirectoryName(directory)!);
         }
 
-        foreach (var step in steps)
+        if (await RunSteps(workspace, steps, environment, cancellationToken) is { } failed)
         {
-            var result = await git.Run(step.Arguments, step.InDirectory ? directory : null, environment, cancellationToken);
-            if (!result.Succeeded)
-            {
-                if (request.Installation is { } installation && request.App is { } app && RejectedCredentials(result.Error))
-                {
-                    // The cached installation token may have been revoked or may belong to a suspended installation; mint a fresh one next time.
-                    installationTokens.Evict(app, installation);
-                }
-
-                return CloneResult.Failed(Describe(step, result, request, token));
-            }
+            return failed;
         }
 
         var head = await git.Run(["rev-parse", "HEAD"], directory, environment, cancellationToken);
@@ -210,4 +202,29 @@ public class RepositoryCloner(IGitRunner git, ISecretResolver secrets, IInstalla
 
         return CloneResult.Cloned(head.Output.Trim(), CountFiles(Path.Combine(directory, SparsePaths.Normalize(request.SubPath))), directory);
     }
+
+    async Task<CloneResult?> RunSteps(CloneWorkspace workspace, IEnumerable<CloneStep> steps, IReadOnlyDictionary<string, string> environment, CancellationToken cancellationToken)
+    {
+        var (request, _, directory, token) = workspace;
+        foreach (var step in steps)
+        {
+            var result = await git.Run(step.Arguments, step.InDirectory ? directory : null, environment, cancellationToken);
+            if (result.Succeeded)
+            {
+                continue;
+            }
+
+            if (request.Installation is { } installation && request.App is { } app && RejectedCredentials(result.Error))
+            {
+                // The cached installation token may have been revoked or may belong to a suspended installation; mint a fresh one next time.
+                installationTokens.Evict(app, installation);
+            }
+
+            return CloneResult.Failed(Describe(step, result, request, token));
+        }
+
+        return null;
+    }
+
+    readonly record struct CloneWorkspace(CloneRequest Request, string Url, string Directory, string? Token);
 }

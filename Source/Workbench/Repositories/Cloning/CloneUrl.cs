@@ -29,20 +29,7 @@ public static class CloneUrl
             return WithoutCredentials(repository);
         }
 
-        repository = repository.Trim('/');
-        if (repository.EndsWith(".git", StringComparison.OrdinalIgnoreCase))
-        {
-            repository = repository[..^4];
-        }
-
-        var server = request.Server?.Value.Trim().TrimEnd('/');
-        return request.Host switch
-        {
-            RepositoryHost.GitHub => $"{(string.IsNullOrEmpty(server) ? "https://github.com" : server)}/{repository}.git",
-            RepositoryHost.GitLab => $"{(string.IsNullOrEmpty(server) ? "https://gitlab.com" : server)}/{repository}.git",
-            RepositoryHost.AzureDevOps => string.IsNullOrEmpty(server) ? null : AzureDevOps(server, repository),
-            _ => repository
-        };
+        return Hosted(request, repository.Trim('/'));
     }
 
     /// <summary>
@@ -97,13 +84,29 @@ public static class CloneUrl
         && uri.Scheme == Uri.UriSchemeHttps
         && string.Equals(uri.Host, host, StringComparison.OrdinalIgnoreCase);
 
-    static bool IsLocalReference(string repository) =>
-        repository.StartsWith('.')
-        || repository.StartsWith('~')
-        || repository.Contains('\\', StringComparison.Ordinal)
-        || repository.Contains("::", StringComparison.Ordinal)
-        || repository.StartsWith("file:", StringComparison.OrdinalIgnoreCase)
-        || (repository.Length > 1 && repository[1] == ':' && char.IsLetter(repository[0]) && !repository.Contains("://", StringComparison.Ordinal));
+    static string? Hosted(CloneRequest request, string path)
+    {
+        var repository = path.EndsWith(".git", StringComparison.OrdinalIgnoreCase) ? path[..^4] : path;
+        var server = request.Server?.Value.Trim().TrimEnd('/');
+        return request.Host switch
+        {
+            RepositoryHost.GitHub => $"{(string.IsNullOrEmpty(server) ? "https://github.com" : server)}/{repository}.git",
+            RepositoryHost.GitLab => $"{(string.IsNullOrEmpty(server) ? "https://gitlab.com" : server)}/{repository}.git",
+            RepositoryHost.AzureDevOps => string.IsNullOrEmpty(server) ? null : AzureDevOps(server, repository),
+            _ => repository
+        };
+    }
+
+    static bool IsLocalReference(string repository) => HasLocalPrefix(repository) || HasLocalMarker(repository) || IsDriveLetterPath(repository);
+
+    static bool HasLocalPrefix(string repository) =>
+        repository.StartsWith('.') || repository.StartsWith('~') || repository.StartsWith("file:", StringComparison.OrdinalIgnoreCase);
+
+    static bool HasLocalMarker(string repository) =>
+        repository.Contains('\\', StringComparison.Ordinal) || repository.Contains("::", StringComparison.Ordinal);
+
+    static bool IsDriveLetterPath(string repository) =>
+        repository.Length > 1 && repository[1] == ':' && char.IsLetter(repository[0]) && !repository.Contains("://", StringComparison.Ordinal);
 
     static string AzureDevOps(string organization, string repository)
     {
