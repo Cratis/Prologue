@@ -34,41 +34,56 @@ public static class CodeOnlySuggestions
         var found = new Dictionary<SuggestionKey, (SuggestedEvent, MappedCapability)>();
         foreach (var capability in facts.Capabilities.OrderBy(capability => capability.Module.Value, StringComparer.OrdinalIgnoreCase).ThenBy(capability => capability.Capability.Value, StringComparer.OrdinalIgnoreCase))
         {
-            var shapes = capability.Shapes.Where(shape => shape.Value.Length > 0).ToList();
-            if (shapes.Exists(shape => captured.Exists(seen => SuggestionNotes.Same(seen, new Captures.CommandShape(shape.Value)))) || (shapes.Count == 0 && jobFiles.Contains(capability.File.Value.ToLowerInvariant())))
+            if (CandidateOf(capability, captured, taken, jobFiles) is not { } candidate)
             {
                 continue;
             }
 
-            var mechanical = shapes.Count == 0 ? CodeOnlyNames.FromCapability(capability.Capability.Value) : shapes.Select(shape => CodeOnlyNames.From(shape.Value)).FirstOrDefault(name => name.Length > 0) ?? string.Empty;
-            if (mechanical.Length == 0)
-            {
-                continue;
-            }
-
-            var module = Interpretation.Naming.Pascalize(capability.Module.Value);
-            var key = CaptureAttribution.KeyOf(module.Length == 0 ? "Code" : module, mechanical);
-            if (taken.Contains(key))
-            {
-                continue;
-            }
-
-            var suggestion = Suggest(key, mechanical, module, capability, shapes, facts);
-            if (found.TryGetValue(key, out var existing))
-            {
-                var also = new SuggestionNote(NoteKind.Observation, $"The same event also follows from {capability.Capability.Value} ({capability.File.Value}).");
-                found[key] = (SuggestionCombining.Combine(existing.Item1, suggestion with { Notes = [.. suggestion.Notes, also] }), existing.Item2);
-                continue;
-            }
-
-            found[key] = (suggestion, capability);
+            Record(found, candidate, Suggest(candidate, facts));
         }
 
         return [.. found.Values];
     }
 
-    static SuggestedEvent Suggest(SuggestionKey key, string mechanical, string module, MappedCapability capability, List<RouteShape> shapes, EvidenceFacts facts)
+    static Candidate? CandidateOf(MappedCapability capability, List<Captures.CommandShape> captured, IReadOnlySet<SuggestionKey> taken, IReadOnlySet<string> jobFiles)
     {
+        var shapes = capability.Shapes.Where(shape => shape.Value.Length > 0).ToList();
+        if (AlreadyCaptured(capability, shapes, captured, jobFiles))
+        {
+            return null;
+        }
+
+        var mechanical = shapes.Count == 0 ? CodeOnlyNames.FromCapability(capability.Capability.Value) : shapes.Select(shape => CodeOnlyNames.From(shape.Value)).FirstOrDefault(name => name.Length > 0) ?? string.Empty;
+        if (mechanical.Length == 0)
+        {
+            return null;
+        }
+
+        var module = Interpretation.Naming.Pascalize(capability.Module.Value);
+        var key = CaptureAttribution.KeyOf(module.Length == 0 ? "Code" : module, mechanical);
+        return taken.Contains(key) ? null : new Candidate(key, mechanical, module, capability, shapes);
+    }
+
+    static bool AlreadyCaptured(MappedCapability capability, List<RouteShape> shapes, List<Captures.CommandShape> captured, IReadOnlySet<string> jobFiles) =>
+        shapes.Exists(shape => captured.Exists(seen => SuggestionNotes.Same(seen, new Captures.CommandShape(shape.Value))))
+        || (shapes.Count == 0 && jobFiles.Contains(capability.File.Value.ToLowerInvariant()));
+
+    static void Record(Dictionary<SuggestionKey, (SuggestedEvent, MappedCapability)> found, Candidate candidate, SuggestedEvent suggestion)
+    {
+        var (key, _, _, capability, _) = candidate;
+        if (!found.TryGetValue(key, out var existing))
+        {
+            found[key] = (suggestion, capability);
+            return;
+        }
+
+        var also = new SuggestionNote(NoteKind.Observation, $"The same event also follows from {capability.Capability.Value} ({capability.File.Value}).");
+        found[key] = (SuggestionCombining.Combine(existing.Item1, suggestion with { Notes = [.. suggestion.Notes, also] }), existing.Item2);
+    }
+
+    static SuggestedEvent Suggest(Candidate candidate, EvidenceFacts facts)
+    {
+        var (key, mechanical, module, capability, shapes) = candidate;
         var points = facts.CodePoints.Where(point => shapes.Exists(shape => SuggestionNotes.Same(point.Shape, new Captures.CommandShape(shape.Value)))).ToList();
         var code = points.Select(point => new CodeEvidence(point.File, point.Line, point.Rule.Value)).Distinct().ToList();
         if (code.Count == 0)
@@ -95,4 +110,6 @@ public static class CodeOnlySuggestions
             notes,
             SuggestionOrigin.CodeOnly);
     }
+
+    readonly record struct Candidate(SuggestionKey Key, string Mechanical, string Module, MappedCapability Capability, List<RouteShape> Shapes);
 }

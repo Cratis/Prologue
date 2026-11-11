@@ -44,23 +44,12 @@ public static class NoCommandSuggestions
 
             if (job is null && meaning is null)
             {
-                if (table.Transactions >= UncorrelatedQuestions.MinimumTransactions)
-                {
-                    questions.Add(UncorrelatedQuestions.For(table));
-                }
-
+                AskAbout(table, questions);
                 continue;
             }
 
-            var suggestion = Suggest(table, job, meaning == UncorrelatedMeaning.Correction, answer?.Answer ?? string.Empty, facts);
-            var duplicate = suggestions.FindIndex(item => item.Suggestion.Key == suggestion.Key);
-            if (duplicate < 0)
-            {
-                suggestions.Add((suggestion, job));
-                continue;
-            }
-
-            suggestions[duplicate] = (SuggestionCombining.Combine(suggestions[duplicate].Suggestion, suggestion), suggestions[duplicate].Job);
+            var reading = new TableReading(table, job, meaning == UncorrelatedMeaning.Correction, answer?.Answer ?? string.Empty);
+            Absorb(suggestions, Suggest(reading), job);
         }
 
         return (suggestions, questions);
@@ -76,14 +65,38 @@ public static class NoCommandSuggestions
     public static SuggestionKey KeyOf(UncorrelatedTable table, string mechanical) =>
         CaptureAttribution.KeyOf(KeyModule, $"{table.Write.Schema.Value}.{table.Write.Table.Value}.{mechanical}");
 
-    static SuggestedEvent Suggest(UncorrelatedTable table, CodeJob? job, bool correction, string answer, EvidenceFacts facts)
+    static void AskAbout(UncorrelatedTable table, List<RaisedQuestion> questions)
     {
+        if (table.Transactions >= UncorrelatedQuestions.MinimumTransactions)
+        {
+            questions.Add(UncorrelatedQuestions.For(table));
+        }
+    }
+
+    static void Absorb(List<(SuggestedEvent Suggestion, CodeJob? Job)> suggestions, SuggestedEvent suggestion, CodeJob? job)
+    {
+        var duplicate = suggestions.FindIndex(item => item.Suggestion.Key == suggestion.Key);
+        if (duplicate < 0)
+        {
+            suggestions.Add((suggestion, job));
+            return;
+        }
+
+        suggestions[duplicate] = (SuggestionCombining.Combine(suggestions[duplicate].Suggestion, suggestion), suggestions[duplicate].Job);
+    }
+
+    static IEnumerable<string> ColumnsOf(UncorrelatedTable table, string entity) =>
+        table.Write.Columns.Select(column => column.Value).Where(column => !column.Equals("Id", StringComparison.OrdinalIgnoreCase) && !column.Equals($"{entity}Id", StringComparison.OrdinalIgnoreCase)).Distinct().Order();
+
+    static SuggestedEvent Suggest(TableReading reading)
+    {
+        var (table, job, correction, _) = reading;
         var entity = TableEvents.Entity(table.Write.Table.Value);
         var operation = table.Write.Operations.OrderByDescending(runs => runs.Runs).Select(runs => runs.Operation).FirstOrDefault(ChangeOperation.Update);
         var mechanical = correction ? $"{entity}Corrected" : Naming.EventName(entity, operation);
         var refined = correction ? mechanical : JobNaming.EventName(entity, job is null ? string.Empty : $"{job.Name} {job.Detail}", operation);
         var code = Located(job);
-        var columns = table.Write.Columns.Select(column => column.Value).Where(column => !column.Equals("Id", StringComparison.OrdinalIgnoreCase) && !column.Equals($"{entity}Id", StringComparison.OrdinalIgnoreCase)).Distinct().Order();
+        var columns = ColumnsOf(table, entity);
         var module = ModuleOf(job);
         return new SuggestedEvent(
             KeyOf(table, mechanical),
@@ -94,7 +107,7 @@ public static class NoCommandSuggestions
             [.. columns.Select(column => new SuggestedProperty(Naming.Pascalize(column), Naming.InferType(column), true, 0))],
             SuggestionConfidence.ForUncorrelated(table.Transactions, job is not null),
             new SuggestionEvidence([], [.. table.Write.Operations.Select(runs => new TableEvidence(table.Write.Schema.Value, table.Write.Table.Value, runs.Operation.ToString(), table.Write.Columns.Select(column => column.Value)))], code, []),
-            Notes(table, job, correction, answer),
+            Notes(reading),
             SuggestionOrigin.NoCommand);
     }
 
@@ -118,8 +131,9 @@ public static class NoCommandSuggestions
         return [new(new SourceFilePath(job.File.Value), new Decisions.LineNumber(job.Line.Value), job.Name)];
     }
 
-    static IReadOnlyList<SuggestionNote> Notes(UncorrelatedTable table, CodeJob? job, bool correction, string answer)
+    static IReadOnlyList<SuggestionNote> Notes(TableReading reading)
     {
+        var (table, job, correction, answer) = reading;
         var happening = $"{table.Write.Table.Value} changes {table.Transactions} times with no command{UncorrelatedQuestions.When(table)} (UTC).";
         return [new(NoteKind.Observation, $"{happening} {Source(job, correction, answer)}")];
     }
@@ -133,4 +147,6 @@ public static class NoCommandSuggestions
 
         return correction ? "You said staff correct this data. A correction command would own the event." : $"No code explains it. You answered: {answer}.";
     }
+
+    readonly record struct TableReading(UncorrelatedTable Table, CodeJob? Job, bool Correction, string Answer);
 }
