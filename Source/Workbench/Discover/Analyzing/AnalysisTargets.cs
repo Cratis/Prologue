@@ -37,42 +37,16 @@ public static class AnalysisTargets
             return ValidationResult.Error("Say where the system's code lives before analyzing it");
         }
 
-        var subject = AnalysisSubjectId.For(id);
-        var name = new SubjectName(system.Name.Value);
         if (SparsePaths.EscapesRepository(location.SubPath))
         {
             return ValidationResult.Error("The system's sub path has to stay inside its repository");
         }
 
         var subPath = SparsePaths.Normalize(location.SubPath);
-
-        if (location.Host == RepositoryHost.LocalFolder)
-        {
-            var directory = Path.Combine(location.Repository.Value.Trim(), subPath);
-            if (isAllowed is not null && !isAllowed(directory))
-            {
-                return ValidationResult.Error(OutsideAllowedRoots);
-            }
-
-            var source = clone is { Status: CloneStatus.Cloned, Commit: { } head } ? head.Value : "working tree";
-            return new AnalysisTarget(subject, name, directory, source, location.Host, location.Repository, location.Branch, location.SubPath);
-        }
-
-        if (clone is not { Status: CloneStatus.Cloned, Commit: { } commit })
-        {
-            return ValidationResult.Error("Clone the system's repository before analyzing it");
-        }
-
-        var request = ClonePlan.For(prologue!, location, null);
-        return new AnalysisTarget(
-            subject,
-            name,
-            Path.Combine(CloneDirectories.For(cloneRoot, request), subPath),
-            commit.Value,
-            location.Host,
-            location.Repository,
-            location.Branch,
-            location.SubPath);
+        var target = new AnalysisTarget(AnalysisSubjectId.For(id), new SubjectName(system.Name.Value), string.Empty, string.Empty, location.Host, location.Repository, location.Branch, location.SubPath);
+        return location.Host == RepositoryHost.LocalFolder
+            ? LocalTarget(target, subPath, clone, isAllowed)
+            : ClonedTarget(target, prologue!, subPath, clone, cloneRoot);
     }
 
     /// <summary>
@@ -116,5 +90,28 @@ public static class AnalysisTargets
             new RepositoryName(path),
             new BranchName(string.Empty),
             new SubPath(string.Empty));
+    }
+
+    static Result<AnalysisTarget, ValidationResult> LocalTarget(AnalysisTarget target, string subPath, SystemClone? clone, Func<string, bool>? isAllowed)
+    {
+        var directory = Path.Combine(target.Repository.Value.Trim(), subPath);
+        if (isAllowed is not null && !isAllowed(directory))
+        {
+            return ValidationResult.Error(OutsideAllowedRoots);
+        }
+
+        var source = clone is { Status: CloneStatus.Cloned, Commit: { } head } ? head.Value : "working tree";
+        return target with { Directory = directory, Source = source };
+    }
+
+    static Result<AnalysisTarget, ValidationResult> ClonedTarget(AnalysisTarget target, PrologueDefinition prologue, string subPath, SystemClone? clone, string cloneRoot)
+    {
+        if (clone is not { Status: CloneStatus.Cloned, Commit: { } commit })
+        {
+            return ValidationResult.Error("Clone the system's repository before analyzing it");
+        }
+
+        var request = ClonePlan.For(prologue, new SystemCodeLocation(target.Host, target.Repository, target.Branch, target.SubPath), null);
+        return target with { Directory = Path.Combine(CloneDirectories.For(cloneRoot, request), subPath), Source = commit.Value };
     }
 }

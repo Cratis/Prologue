@@ -51,45 +51,34 @@ public static partial class AspNetControllerExtractor
 
     static IEnumerable<FoundCapability> Controllers(SourcePath file, string content)
     {
-        var attributes = new List<Attribute>();
-        string? controller = null;
-        string? controllerRoute = null;
-
-        foreach (var raw in content.Split('\n'))
-        {
-            var line = raw.Trim();
-            while (line.StartsWith('[') && AttributeGroup.Match(line) is { Success: true } group)
-            {
-                attributes.AddRange(Attributes(group.Groups["group"].Value));
-                line = line[group.Length..].TrimStart();
-            }
-
-            if (line.Length == 0 || line.StartsWith("//", StringComparison.Ordinal))
-            {
-                continue;
-            }
-
-            if (ClassDeclaration.Match(line) is { Success: true } declaration)
-            {
-                var name = declaration.Groups["name"].Value;
-                var isController = name.EndsWith("Controller", StringComparison.Ordinal) || attributes.Exists(_ => _.Name == "ApiController");
-                controller = isController ? name.RemoveSuffix("Controller") : null;
-                controllerRoute = attributes.FirstOrDefault(_ => _.Name == "Route")?.Template;
-            }
-            else if (controller is not null && attributes.Exists(_ => _verbs.ContainsKey(_.Name)) && Member.Match(line) is { Success: true } member)
-            {
-                foreach (var capability in Capabilities(file, controller, controllerRoute, member.Groups["name"].Value, attributes))
-                {
-                    yield return capability;
-                }
-            }
-
-            attributes.Clear();
-        }
+        var reader = new ControllerReader(file);
+        return content.Split('\n').SelectMany(raw => reader.Read(raw.Trim()));
     }
 
-    static IEnumerable<FoundCapability> Capabilities(SourcePath file, string controller, string? controllerRoute, string action, List<Attribute> attributes)
+    static string TakeAttributes(string line, List<Attribute> attributes)
     {
+        while (line.StartsWith('[') && AttributeGroup.Match(line) is { Success: true } group)
+        {
+            attributes.AddRange(Attributes(group.Groups["group"].Value));
+            line = line[group.Length..].TrimStart();
+        }
+
+        return line;
+    }
+
+    static ControllerContext ControllerOf(Match declaration, List<Attribute> attributes)
+    {
+        var name = declaration.Groups["name"].Value;
+        var isController = name.EndsWith("Controller", StringComparison.Ordinal) || attributes.Exists(_ => _.Name == "ApiController");
+        return new(isController ? name.RemoveSuffix("Controller") : null, attributes.FirstOrDefault(_ => _.Name == "Route")?.Template);
+    }
+
+    static bool IsAction(List<Attribute> attributes) => attributes.Exists(_ => _verbs.ContainsKey(_.Name));
+
+    static IEnumerable<FoundCapability> Capabilities((SourcePath File, string Controller, string? Route) owner, Match member, List<Attribute> attributes)
+    {
+        var action = member.Groups["name"].Value;
+        var (file, controller, controllerRoute) = owner;
         var actionRoute = attributes.FirstOrDefault(_ => _.Name == "Route")?.Template;
         var shapes = attributes
             .Where(_ => _verbs.ContainsKey(_.Name))
@@ -128,6 +117,51 @@ public static partial class AspNetControllerExtractor
 
     static IEnumerable<Attribute> Attributes(string group) =>
         AttributeParts.Matches(group).Select(_ => new Attribute(_.Groups["name"].Value, _.Groups["template"].Success ? _.Groups["template"].Value : null));
+
+    readonly record struct ControllerContext(string? Name, string? Route);
+
+    sealed class ControllerReader(SourcePath file)
+    {
+        readonly List<Attribute> _attributes = [];
+        ControllerContext _current = new(null, null);
+
+        public List<FoundCapability> Read(string raw)
+        {
+            var line = TakeAttributes(raw, _attributes);
+            if (line.Length == 0 || line.StartsWith("//", StringComparison.Ordinal))
+            {
+                return [];
+            }
+
+            List<FoundCapability> capabilities = [];
+            if (ClassDeclaration.Match(line) is { Success: true } declaration)
+            {
+                _current = ControllerOf(declaration, _attributes);
+            }
+            else
+            {
+                capabilities = ActionCapabilities(line);
+            }
+
+            _attributes.Clear();
+            return capabilities;
+        }
+
+        List<FoundCapability> ActionCapabilities(string line)
+        {
+            if (_current.Name is null || !IsAction(_attributes))
+            {
+                return [];
+            }
+
+            if (Member.Match(line) is not { Success: true } member)
+            {
+                return [];
+            }
+
+            return [.. Capabilities((file, _current.Name, _current.Route), member, _attributes)];
+        }
+    }
 
     sealed record Attribute(string Name, string? Template);
 }

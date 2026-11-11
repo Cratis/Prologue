@@ -43,17 +43,17 @@ public class IgnoreRules
         foreach (var raw in gitignore.Split('\n'))
         {
             var line = raw.Trim();
-            if (line.Length == 0 || line.StartsWith('#') || line.StartsWith('!'))
+            if (!IsEntry(line))
             {
                 continue;
             }
 
             var pattern = line.Trim('/');
-            if (pattern.StartsWith("*.", StringComparison.Ordinal) && pattern[1..].IndexOfAny(['*', '?', '/', '[']) < 0)
+            if (pattern.StartsWith("*.", StringComparison.Ordinal) && IsPlain(pattern[1..]))
             {
                 rules._ignoredSuffixes.Add(pattern[1..]);
             }
-            else if (pattern.Length > 0 && pattern.IndexOfAny(['*', '?', '/', '[']) < 0)
+            else if (pattern.Length > 0 && IsPlain(pattern))
             {
                 rules._names.Add(pattern);
             }
@@ -76,10 +76,14 @@ public class IgnoreRules
     /// <returns>True when it is read.</returns>
     public bool Reads(string name)
     {
-        var extension = Path.GetExtension(name);
-        return _extensions.Contains(extension)
-            && !_names.Contains(name)
-            && !_ignoredSuffixes.Exists(suffix => name.EndsWith(suffix, StringComparison.OrdinalIgnoreCase))
-            && !_generatedSuffixes.Any(suffix => name.EndsWith(suffix, StringComparison.OrdinalIgnoreCase));
+        return _extensions.Contains(Path.GetExtension(name)) && !_names.Contains(name) && !HasIgnoredSuffix(name);
     }
+
+    static bool IsEntry(string line) => line.Length > 0 && !line.StartsWith('#') && !line.StartsWith('!');
+
+    static bool IsPlain(string pattern) => pattern.IndexOfAny(['*', '?', '/', '[']) < 0;
+
+    bool HasIgnoredSuffix(string name) =>
+        _ignoredSuffixes.Exists(suffix => name.EndsWith(suffix, StringComparison.OrdinalIgnoreCase))
+        || _generatedSuffixes.Any(suffix => name.EndsWith(suffix, StringComparison.OrdinalIgnoreCase));
 }
