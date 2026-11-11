@@ -41,14 +41,16 @@ public static class NetworkPositions
             return false;
         }
 
-        var host = uri.Host.Trim('[', ']').ToLowerInvariant();
-        return host == "localhost"
-            || host.EndsWith(".localhost", StringComparison.Ordinal)
-            || host == "::1"
-            || IsPrivateAddress(host)
-            || _privateSuffixes.Any(suffix => host.EndsWith(suffix, StringComparison.Ordinal))
-            || (!host.Contains('.') && !host.Contains(':'));
+        return IsPrivateHost(uri.Host.Trim('[', ']').ToLowerInvariant());
     }
+
+    static bool IsPrivateHost(string host) => IsLoopbackName(host) || IsPrivateAddress(host) || HasPrivateSuffix(host) || IsBareName(host);
+
+    static bool IsLoopbackName(string host) => host == "localhost" || host.EndsWith(".localhost", StringComparison.Ordinal) || host == "::1";
+
+    static bool HasPrivateSuffix(string host) => _privateSuffixes.Any(suffix => host.EndsWith(suffix, StringComparison.Ordinal));
+
+    static bool IsBareName(string host) => !host.Contains('.') && !host.Contains(':');
 
     static bool IsPrivateAddress(string host)
     {
@@ -58,10 +60,12 @@ public static class NetworkPositions
             return false;
         }
 
-        var octets = parts.Select(int.Parse).ToArray();
-        return octets[0] is 10 or 127
-            || (octets[0] == 172 && octets[1] is >= 16 and <= 31)
-            || (octets[0] == 192 && octets[1] == 168)
-            || (octets[0] == 169 && octets[1] == 254);
+        return IsPrivateRange([.. parts.Select(int.Parse)]);
     }
+
+    static bool IsPrivateRange(int[] octets) =>
+        octets[0] is 10 or 127
+        || (octets[0] == 172 && octets[1] is >= 16 and <= 31)
+        || (octets[0] == 192 && octets[1] == 168)
+        || (octets[0] == 169 && octets[1] == 254);
 }

@@ -25,7 +25,7 @@ public static class PoolWalker
     /// <exception cref="PoolExhausted">No member could take the work.</exception>
     public static async Task<T> Walk<T>(PoolPlan plan, Func<DispatchMember, Task<T>> attempt, CancellationToken cancellationToken)
     {
-        if (plan.Ceiling > 0 && plan.Used >= plan.Ceiling)
+        if (IsAtCeiling(plan))
         {
             throw new PoolCeilingReached(plan.Pool, plan.Ceiling, plan.Used);
         }
@@ -34,7 +34,7 @@ public static class PoolWalker
         string? insideFailure = null;
         foreach (var member in plan.Members)
         {
-            if (plan.Fallback == PoolFallback.PauseAndAsk && !member.IsInside && insideFailure is not null)
+            if (insideFailure is not null && MustPause(plan, member))
             {
                 throw new AgentDispatchPaused(plan.Pool, insideFailure, member.Name);
             }
@@ -54,6 +54,10 @@ public static class PoolWalker
 
         throw new PoolExhausted(plan.Pool, reasons);
     }
+
+    static bool IsAtCeiling(PoolPlan plan) => plan.Ceiling > 0 && plan.Used >= plan.Ceiling;
+
+    static bool MustPause(PoolPlan plan, DispatchMember member) => plan.Fallback == PoolFallback.PauseAndAsk && !member.IsInside;
 
     static async Task<(Holder<T>?, string)> TryAttempt<T>(DispatchMember member, Func<DispatchMember, Task<T>> attempt, CancellationToken cancellationToken)
     {
