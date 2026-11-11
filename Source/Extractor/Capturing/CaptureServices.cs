@@ -12,8 +12,8 @@ namespace Cratis.Prologue.Extractor.Capturing;
 /// </summary>
 public sealed class CaptureServices
 {
-    readonly Dictionary<string, ServiceName> _clusters = new(StringComparer.OrdinalIgnoreCase);
-    readonly Dictionary<string, ServiceName> _telemetryServiceNames = new(StringComparer.OrdinalIgnoreCase);
+    readonly Dictionary<string, ServiceName> _clusters = [with(StringComparer.OrdinalIgnoreCase)];
+    readonly Dictionary<string, ServiceName> _telemetryServiceNames = [with(StringComparer.OrdinalIgnoreCase)];
     readonly HashSet<string> _defaultTelemetryServiceNames;
 
     CaptureServices(PrologueOptions options)

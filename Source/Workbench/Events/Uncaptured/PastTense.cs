@@ -22,7 +22,7 @@ public static class PastTense
         ["pick"] = "Picked"
     };
 
-    static readonly HashSet<string> _doubling = new(StringComparer.OrdinalIgnoreCase) { "ship", "submit", "stop", "drop", "plan", "transfer", "admit", "commit", "refer", "permit" };
+    static readonly HashSet<string> _doubling = [with(StringComparer.OrdinalIgnoreCase), "ship", "submit", "stop", "drop", "plan", "transfer", "admit", "commit", "refer", "permit"];
 
     /// <summary>
     /// Puts a verb in the past tense.

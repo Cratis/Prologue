@@ -11,7 +11,7 @@ namespace Cratis.Prologue.Workbench.Events.Uncaptured;
 /// </summary>
 public static class CodeOnlyNames
 {
-    static readonly HashSet<string> _queries = new(StringComparer.Ordinal) { "GET", "HEAD", "OPTIONS" };
+    static readonly HashSet<string> _queries = [with(StringComparer.Ordinal), "GET", "HEAD", "OPTIONS"];
 
     static readonly string[] _ignored = ["api", "v1", "v2", "v3"];
 

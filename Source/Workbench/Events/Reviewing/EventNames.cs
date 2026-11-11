@@ -11,12 +11,13 @@ namespace Cratis.Prologue.Workbench.Events.Reviewing;
 /// </summary>
 public static partial class EventNames
 {
-    static readonly HashSet<string> _irregularPastTense = new(StringComparer.OrdinalIgnoreCase)
-    {
+    static readonly HashSet<string> _irregularPastTense =
+    [
+        with(StringComparer.OrdinalIgnoreCase),
         "Sent", "Paid", "Built", "Made", "Lent", "Left", "Kept", "Sold", "Bought", "Taken", "Given", "Written", "Done", "Hidden",
         "Began", "Won", "Lost", "Found", "Held", "Set", "Put", "Read", "Cut", "Shut", "Spent", "Brought", "Became", "Chosen", "Drawn",
         "Gone", "Known", "Seen", "Shown", "Told", "Thrown", "Worn", "Withdrawn", "Overdue"
-    };
+    ];
 
     [GeneratedRegex("^[A-Z][A-Za-z0-9]*$", RegexOptions.None, matchTimeoutMilliseconds: 1000)]
     private static partial Regex PascalCase { get; }

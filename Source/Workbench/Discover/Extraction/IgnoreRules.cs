@@ -9,20 +9,22 @@ namespace Cratis.Prologue.Workbench.Discover.Extraction;
 /// </summary>
 public class IgnoreRules
 {
-    static readonly HashSet<string> _folders = new(StringComparer.OrdinalIgnoreCase)
-    {
+    static readonly HashSet<string> _folders =
+    [
+        with(StringComparer.OrdinalIgnoreCase),
         "bin", "obj", "node_modules", ".git", ".vs", ".idea", ".vscode", "dist", "build", "out", "packages", ".next", ".nuget",
         "coverage", "TestResults", "vendor", "target", "__pycache__", ".venv", "venv", ".yarn", "wwwroot"
-    };
+    ];
 
-    static readonly HashSet<string> _extensions = new(StringComparer.OrdinalIgnoreCase)
-    {
+    static readonly HashSet<string> _extensions =
+    [
+        with(StringComparer.OrdinalIgnoreCase),
         ".cs", ".ts", ".tsx", ".js", ".jsx", ".mjs", ".java", ".kt", ".py", ".go", ".rb", ".php", ".rs", ".sql", ".yml", ".yaml", ".csproj"
-    };
+    ];
 
     static readonly string[] _generatedSuffixes = [".g.cs", ".designer.cs", ".generated.cs", ".min.js", ".d.ts", ".Designer.cs"];
 
-    readonly HashSet<string> _names = new(StringComparer.OrdinalIgnoreCase);
+    readonly HashSet<string> _names = [with(StringComparer.OrdinalIgnoreCase)];
     readonly List<string> _ignoredSuffixes = [];
 
     /// <summary>
